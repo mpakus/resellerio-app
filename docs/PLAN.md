@@ -1,0 +1,272 @@
+# ResellerIO Mobile Plan
+
+## Goal
+
+Build a React Native mobile app for iOS and Android that is as close as practical to the current web seller workspace, while using the existing `/api/v1` backend as the contract.
+
+Primary seller journey:
+
+- Registration / sign in
+- Stay signed in on device
+- Add product
+- Upload photos
+- Finalize uploads
+- Review AI-generated data
+- Get background-removed images
+- Generate lifestyle images
+- Select and order storefront gallery images
+- Publish and share to storefront
+- Manage inquiries
+- Manage settings, storefront, and marketplace defaults
+
+## Current Web Functionality Analyzed
+
+Current web seller surfaces in `~/www/elixir/reseller`:
+
+- `/app` dashboard with inventory summary and quick actions
+- `/app/products` products table with filters, search, sort, pagination, tabs, and exports
+- `/app/products/new` upload-first intake flow
+- `/app/products/:id` AI review, pricing, listings, image management, lifestyle previews, storefront publishing
+- `/app/inquiries` searchable storefront inquiry inbox
+- `/app/settings` storefront profile, theme presets, pages, branding assets, marketplace defaults, subscription/account
+- `/app/exports` exports and imports
+
+Current mobile-facing API already covers:
+
+- Auth
+- User profile
+- Usage counters and limits
+- Product tabs
+- Products list/detail/create/update/delete
+- Initial image upload finalization
+- Reprocess
+- Lifestyle image generation and approval
+- Inquiries list/delete
+- Storefront profile and page CRUD
+- Exports and imports
+
+## Product Decisions
+
+- [x] Use the existing bearer token API as the default mobile auth approach
+- [ ] Keep the user signed in for 1 year on one device
+- [x] Mirror the web upload-first product intake flow
+- [x] Mirror the web product review flow
+- [x] Include Inquiries
+- [x] Include Settings with Storefront and marketplace defaults
+- [ ] Add full mobile parity for every storefront publishing detail currently available in web
+
+Notes:
+
+- Backend currently issues mobile API tokens with `api_token_ttl_days = 30`.
+- To truly support 1-year login, we must either raise token TTL to `365` days or add a refresh-token/JWT flow.
+- Recommendation: keep the existing bearer-token design and increase TTL to 365 days first. It is the smallest change and matches the current backend architecture.
+
+## Phase 0: Backend Parity Prerequisites
+
+These are backend tasks required for real mobile parity with the existing web workspace.
+
+- [ ] Change mobile auth lifetime from 30 days to 365 days, or add refresh-token support
+- [ ] Return an absolute pricing URL in `402 limit_exceeded` responses for mobile upgrade CTAs
+- [ ] Expose `storefront_enabled` and `storefront_published_at` in `GET /api/v1/products/:id`
+- [ ] Expose `storefront_visible` and `storefront_position` on product images in product responses
+- [ ] Expose marketplace listing `external_url` fields in product responses
+- [ ] Accept marketplace external URLs in a public mobile API endpoint
+- [ ] Add public mobile API support for uploading storefront logo assets
+- [ ] Add public mobile API support for uploading storefront header assets
+- [ ] Add public mobile API support to reorder storefront pages
+- [ ] Add public mobile API support to prepare uploads for an existing product so mobile can match the web "upload new images" flow on the review screen
+
+Without these items, mobile can still ship a strong v1, but not a full web-parity version.
+
+## Phase 1: App Foundation
+
+- [ ] Replace the Expo starter screens with the real app shell
+- [ ] Add environment config for local, simulator, device, and production API hosts
+- [ ] Add typed API client and centralized error handling
+- [ ] Add secure token storage and session bootstrap
+- [ ] Add auth guard and protected-app routing
+- [ ] Add loading, empty, error, and retry states shared across the app
+- [ ] Add analytics/event hooks only after the primary flows are stable
+
+## Phase 2: Registration And Sign In
+
+- [ ] Registration screen using `POST /api/v1/auth/register`
+- [ ] Sign-in screen using `POST /api/v1/auth/login`
+- [ ] Persist token securely after auth
+- [ ] Restore session on launch and hydrate with `GET /api/v1/me`
+- [ ] Load `GET /api/v1/me/usage` after sign-in for plan and quota state
+- [ ] Sign-out flow that clears local session immediately
+- [ ] Friendly handling for `401`, validation errors, and expired tokens
+
+Acceptance:
+
+- User can create an account from mobile
+- User can sign in again on the same device
+- User session survives app restarts
+- Final "1 year login" acceptance depends on Phase 0 auth work
+
+## Phase 3: Navigation And Information Architecture
+
+Recommended mobile structure:
+
+- [ ] Auth stack: Register, Sign in
+- [ ] Main tabs: Products, Inquiries, Settings
+- [ ] Product stack: Products list, New Product, Product Detail
+- [ ] Optional dashboard/home tab if we want a mobile summary screen similar to web
+- [ ] Modal or sheet flows for filters, product tabs, image preview, and destructive confirmations
+
+Recommendation:
+
+- Start with `Products`, `Inquiries`, and `Settings` tabs
+- Put dashboard metrics inside `Products` header or a later `Home` tab
+- Keep exports/imports as a later phase or a nested Settings/Transfers screen
+
+## Phase 4: Inventory List And Product Tabs
+
+- [ ] Products list using `GET /api/v1/products`
+- [ ] Status filters: `all`, `draft`, `uploading`, `processing`, `review`, `ready`, `sold`, `archived`
+- [ ] Search by query
+- [ ] Sort and pagination
+- [ ] Updated date filters
+- [ ] Product tab filter
+- [ ] Product tabs list/create/rename/delete using `/api/v1/product_tabs`
+- [ ] Pull-to-refresh and infinite pagination or explicit next-page loading
+- [ ] Empty states for no products and no search matches
+
+Acceptance:
+
+- User can find a product quickly
+- User can organize inventory with product tabs
+- User can open product detail from list reliably
+
+## Phase 5: New Product Intake
+
+Mirror the current web `/app/products/new` flow.
+
+- [ ] New Product screen with optional tab selection
+- [ ] Camera and photo library multi-select
+- [ ] Local upload queue with filename, size, and preview
+- [ ] `POST /api/v1/products` with `uploads`
+- [ ] Direct `PUT` upload to each signed storage URL
+- [ ] `POST /api/v1/products/:id/finalize_uploads`
+- [ ] Redirect user into Product Detail after finalize
+- [ ] Show upload progress and actionable failure states per file
+
+Acceptance:
+
+- User can create a product from photos without leaving mobile
+- Upload failures are recoverable
+- Processing starts automatically after finalization
+
+## Phase 6: Product Review And Lifecycle
+
+Mirror the current web `/app/products/:id` review experience.
+
+- [ ] Product detail screen using `GET /api/v1/products/:id`
+- [ ] Processing banner and poll loop while AI is running
+- [ ] Review/edit fields: title, brand, category, condition, color, size, material, SKU, tags, price, cost, notes, status, tab
+- [ ] AI summary panel
+- [ ] Description draft panel
+- [ ] Price research panel
+- [ ] Marketplace listings panel
+- [ ] Save product changes with `PATCH /api/v1/products/:id`
+- [ ] Reprocess with `POST /api/v1/products/:id/reprocess`
+- [ ] Mark sold
+- [ ] Archive / unarchive
+- [ ] Delete product
+
+Acceptance:
+
+- User can fully review and edit AI-generated product data
+- User can retry failed processing
+- User can manage lifecycle without returning to web
+
+## Phase 7: Media, Lifestyle Images, And Storefront Gallery
+
+- [ ] Display original images
+- [ ] Display background-removed images when ready
+- [ ] Full-screen image preview
+- [ ] Generate lifestyle images with `POST /api/v1/products/:id/generate_lifestyle_images`
+- [ ] Poll lifestyle runs and show run history
+- [ ] Approve a lifestyle image
+- [ ] Delete a lifestyle image
+- [ ] Regenerate all or regenerate by scene when backend supports the UI cleanly
+- [ ] Choose which images belong in the storefront gallery
+- [ ] Reorder storefront gallery images
+- [ ] Publish product to storefront
+- [ ] Share public product URL once publication fields are exposed in the API
+
+Important dependency:
+
+- True storefront gallery management depends on Phase 0 API fixes because current product responses do not expose storefront image selection fields.
+
+## Phase 8: Inquiries
+
+- [ ] Inquiries list using `GET /api/v1/inquiries`
+- [ ] Search by name, contact, or message
+- [ ] Pagination
+- [ ] Inquiry row showing contact, message, product reference, and source path
+- [ ] Delete inquiry with `DELETE /api/v1/inquiries/:id`
+- [ ] Optional quick action to open related product detail
+
+Acceptance:
+
+- Seller can triage storefront leads entirely from mobile
+
+## Phase 9: Settings, Storefront, And Account
+
+Mirror the important parts of web `/app/settings`.
+
+- [ ] Marketplace defaults using `GET /api/v1/me` and `PATCH /api/v1/me`
+- [ ] Storefront profile using `GET /api/v1/storefront` and `PUT /api/v1/storefront`
+- [ ] Storefront fields: enabled, slug, title, tagline, description, theme
+- [ ] Storefront pages list/create/update/delete
+- [ ] Storefront page editor for About, Shipping, Returns, and similar content
+- [ ] Usage and quota screen using `GET /api/v1/me/usage`
+- [ ] Subscription/account section using `plan`, `plan_status`, `plan_expires_at`, `trial_ends_at`, and `addon_credits`
+- [ ] Deep link to `https://resellerio.com/pricing`
+- [ ] Deep link to billing management if required
+- [ ] Sign out
+
+Settings items blocked by current API gaps:
+
+- [ ] Storefront logo upload
+- [ ] Storefront header upload
+- [ ] Storefront page reordering
+
+## Phase 10: Optional Web-Parity Extensions
+
+Useful after the main seller flow is stable.
+
+- [ ] Dashboard summary screen similar to `/app`
+- [ ] Exports flow using `POST /api/v1/exports` and `GET /api/v1/exports/:id`
+- [ ] Imports flow using `POST /api/v1/imports` and `GET /api/v1/imports/:id`
+- [ ] Better sharing actions for storefront and product URLs
+- [ ] Push notifications for processing complete, lifestyle generation complete, and new inquiries
+- [ ] Offline draft capture before upload
+- [ ] Crash reporting and production analytics
+
+## Suggested Delivery Order
+
+- [ ] Milestone 1: App foundation + auth
+- [ ] Milestone 2: Products list + tabs + basic detail
+- [ ] Milestone 3: New product intake + upload + processing poll
+- [ ] Milestone 4: Full review flow + lifecycle actions
+- [ ] Milestone 5: Lifestyle images + storefront gallery
+- [ ] Milestone 6: Inquiries
+- [ ] Milestone 7: Settings + storefront + usage/account
+- [ ] Milestone 8: Exports/imports, dashboard, notifications, polish
+
+## Definition Of Done For V1
+
+- [ ] User can register and sign in from mobile
+- [ ] User session is persistent and meets the final agreed auth lifetime
+- [ ] User can create a product from photos
+- [ ] User can wait for AI processing and review results
+- [ ] User can edit product details and manage lifecycle
+- [ ] User can generate and approve lifestyle images
+- [ ] User can manage storefront-related product image selection
+- [ ] User can publish products to storefront once required API fields exist
+- [ ] User can read and clear inquiries
+- [ ] User can update storefront settings and marketplace defaults
+- [ ] App works on both iOS and Android
