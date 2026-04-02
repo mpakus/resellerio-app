@@ -6,6 +6,7 @@ import {
   deleteProduct,
   deleteGeneratedImage,
   generateLifestyleImages,
+  getCurrentStorefront,
   getProduct,
   listLifestyleGenerationRuns,
   markProductSold,
@@ -19,6 +20,7 @@ import { useProductDetail } from '@/src/features/products/use-product-detail';
 
 jest.mock('@/src/features/products/api', () => ({
   getProduct: jest.fn(),
+  getCurrentStorefront: jest.fn(),
   updateProduct: jest.fn(),
   reprocessProduct: jest.fn(),
   markProductSold: jest.fn(),
@@ -39,6 +41,7 @@ jest.mock('@/src/features/products/api', () => ({
 }));
 
 const mockedGetProduct = jest.mocked(getProduct);
+const mockedGetCurrentStorefront = jest.mocked(getCurrentStorefront);
 const mockedUpdateProduct = jest.mocked(updateProduct);
 const mockedReprocessProduct = jest.mocked(reprocessProduct);
 const mockedMarkProductSold = jest.mocked(markProductSold);
@@ -68,6 +71,14 @@ describe('useProductDetail', () => {
         runs: [],
       },
     });
+    mockedGetCurrentStorefront.mockResolvedValue({
+      data: {
+        storefront: {
+          id: 3,
+          slug: 'my-store',
+        },
+      },
+    } as never);
 
     mockedGetProduct.mockResolvedValue({
       data: {
@@ -169,6 +180,7 @@ describe('useProductDetail', () => {
               kind: 'original',
               position: 1,
               storage_key: 'users/1/products/11/original.jpg',
+              url: 'https://cdn.example.test/users/1/products/11/original.jpg',
               content_type: 'image/jpeg',
               width: 1200,
               height: 1600,
@@ -193,6 +205,7 @@ describe('useProductDetail', () => {
               kind: 'background_removed',
               position: 1,
               storage_key: 'users/1/products/11/background.png',
+              url: 'https://cdn.example.test/users/1/products/11/background.png',
               content_type: 'image/png',
               width: 1200,
               height: 1600,
@@ -217,6 +230,7 @@ describe('useProductDetail', () => {
               kind: 'lifestyle_generated',
               position: 2,
               storage_key: 'users/1/products/11/lifestyle.jpg',
+              url: 'https://cdn.example.test/users/1/products/11/lifestyle.jpg',
               content_type: 'image/jpeg',
               width: 1200,
               height: 1600,
@@ -250,8 +264,10 @@ describe('useProductDetail', () => {
     });
 
     expect(mockedGetProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedGetCurrentStorefront).toHaveBeenCalledWith('token-123');
     expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledWith('token-123', 11);
     expect(result.current.product?.title).toBe('Nike Air Max 90');
+    expect(result.current.storefrontSlug).toBe('my-store');
     expect(result.current.product?.images).toHaveLength(3);
   });
 

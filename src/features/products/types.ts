@@ -69,6 +69,7 @@ export type ProductImage = {
   kind: string;
   position: number | null;
   storage_key: string;
+  url?: string | null;
   content_type: string | null;
   width: number | null;
   height: number | null;
@@ -183,6 +184,7 @@ export type ProductDetail = ProductSummary & {
   description_draft: DescriptionDraft | null;
   price_research: PriceResearch | null;
   marketplace_listings: MarketplaceListing[];
+  image_urls?: string[];
   images: ProductImage[];
 };
 

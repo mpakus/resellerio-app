@@ -23,6 +23,9 @@ jest.mock('@/src/lib/api/auth', () => ({
 }));
 
 jest.mock('expo-image-picker', () => ({
+  PermissionStatus: {
+    GRANTED: 'granted',
+  },
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
 }));

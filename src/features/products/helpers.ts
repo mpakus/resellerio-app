@@ -7,6 +7,7 @@ import type {
   ProductStatusFilter,
   ProductsFilters,
 } from '@/src/features/products/types';
+import { appBaseUrl } from '@/src/lib/config/env';
 
 export const productStatusOptions: { label: string; value: ProductStatusFilter }[] = [
   { label: 'All', value: 'all' },
@@ -74,6 +75,40 @@ export function imageKindCounts(images: ProductDetail['images']) {
     accumulator[image.kind] = (accumulator[image.kind] ?? 0) + 1;
     return accumulator;
   }, {});
+}
+
+export function formatImageKindLabel(kind: ProductImage['kind']) {
+  const labels: Record<string, string> = {
+    original: 'Original',
+    background_removed: 'Background Removed',
+    lifestyle_generated: 'Lifestyle',
+  };
+
+  return labels[kind] ?? kind.replace(/_/g, ' ');
+}
+
+export function sortDisplayImages(images: ProductDetail['images']) {
+  return [...images].sort((left, right) => {
+    return (
+      (left.position ?? 99_999) - (right.position ?? 99_999) ||
+      (left.storefront_position ?? 99_999) - (right.storefront_position ?? 99_999) ||
+      left.id - right.id
+    );
+  });
+}
+
+export function filterRenderableImages(images: ProductDetail['images'], kind?: ProductImage['kind']) {
+  return sortDisplayImages(images).filter((image) => {
+    if (!image.url) {
+      return false;
+    }
+
+    if (kind && image.kind !== kind) {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 export function sortStorefrontImages(images: ProductDetail['images']) {
@@ -167,6 +202,30 @@ export function storefrontPublicationSummary(product: Pick<ProductDetail, 'store
   return 'Storefront publishing is enabled, but this product has not been published yet.';
 }
 
+export function buildStorefrontProductRef(product: Pick<ProductDetail, 'id' | 'title'>) {
+  const titleSlug = slugifyTitle(product.title ?? '');
+
+  if (!titleSlug) {
+    return String(product.id);
+  }
+
+  return `${product.id}-${titleSlug}`;
+}
+
+export function buildStorefrontProductUrl(
+  storefrontSlug: string | null,
+  product: Pick<ProductDetail, 'id' | 'title'>,
+  baseUrl: string = appBaseUrl,
+) {
+  const normalizedSlug = storefrontSlug?.trim();
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
+  return `${baseUrl}/store/${normalizedSlug}/products/${buildStorefrontProductRef(product)}`;
+}
+
 export function formatMarketplaceName(value: string) {
   const knownLabels: Record<string, string> = {
     ebay: 'eBay',
@@ -243,4 +302,14 @@ function isActiveAsyncRun(run: ProductRun | null) {
   }
 
   return ['queued', 'running', 'processing', 'started', 'pending'].includes(run.status);
+}
+
+function slugifyTitle(value: string) {
+  return value
+    .normalize('NFKD')
+    .replace(/[^\x00-\x7F]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 }

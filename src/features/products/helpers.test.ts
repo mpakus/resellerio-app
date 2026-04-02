@@ -1,5 +1,7 @@
 import {
+  buildStorefrontProductUrl,
   buildReorderedStorefrontImageIds,
+  filterRenderableImages,
   formatConfidenceScore,
   formatCurrencyAmount,
   formatMarketplaceName,
@@ -92,5 +94,22 @@ describe('product detail presentation helpers', () => {
         status: 'generated',
       }),
     ).toBe('Mercari · generated');
+  });
+
+  it('builds the public storefront product URL and filters previewable images', () => {
+    expect(
+      buildStorefrontProductUrl('my-store', {
+        id: 11,
+        title: 'Nike Air Max 90',
+      } as never, 'https://resellerio.com'),
+    ).toBe('https://resellerio.com/store/my-store/products/11-nike-air-max-90');
+
+    expect(
+      filterRenderableImages([
+        { id: 1, kind: 'original', url: null, position: 2, storefront_position: null },
+        { id: 2, kind: 'original', url: 'https://cdn.example/original.jpg', position: 1, storefront_position: null },
+        { id: 3, kind: 'background_removed', url: 'https://cdn.example/processed.png', position: 1, storefront_position: null },
+      ] as never, 'original'),
+    ).toEqual([expect.objectContaining({ id: 2 })]);
   });
 });

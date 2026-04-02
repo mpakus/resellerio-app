@@ -7,6 +7,7 @@ import {
   deleteProduct,
   deleteGeneratedImage,
   generateLifestyleImages,
+  getCurrentStorefront,
   getProduct,
   listLifestyleGenerationRuns,
   markProductSold,
@@ -30,6 +31,7 @@ export function useProductDetail(token: string, productId: number) {
   const lifestyleRunsRefreshRequestedRef = useRef(false);
   const lifestyleRunsPollRequestedRef = useRef(false);
   const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [storefrontSlug, setStorefrontSlug] = useState<string | null>(null);
   const [lifestyleRuns, setLifestyleRuns] = useState<LifestyleGenerationRun[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingLifestyleRuns, setIsLoadingLifestyleRuns] = useState(true);
@@ -59,13 +61,25 @@ export function useProductDetail(token: string, productId: number) {
       }
 
       try {
-        const response = await getProduct(token, productId);
+        const [productResult, storefrontResult] = await Promise.allSettled([
+          getProduct(token, productId),
+          getCurrentStorefront(token),
+        ]);
+
+        if (productResult.status === 'rejected') {
+          throw productResult.reason;
+        }
 
         if (cancelled) {
           return;
         }
 
-        setProduct(response.data.product);
+        setProduct(productResult.value.data.product);
+        setStorefrontSlug(
+          storefrontResult.status === 'fulfilled'
+            ? storefrontResult.value.data.storefront.slug
+            : null,
+        );
       } catch (loadError) {
         if (cancelled) {
           return;
@@ -328,6 +342,7 @@ export function useProductDetail(token: string, productId: number) {
 
   return {
     product,
+    storefrontSlug,
     lifestyleRuns,
     isLoading,
     isLoadingLifestyleRuns,

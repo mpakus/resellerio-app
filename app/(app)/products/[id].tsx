@@ -1,16 +1,19 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
 import { useState, type PropsWithChildren } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, Share, Text, View } from 'react-native';
 
 import { Button, DialogModal, InlineError, Screen, SectionCard, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
+import { manualProductStatusOptions } from '@/src/features/products/review-form';
 import {
-  manualProductStatusOptions,
-} from '@/src/features/products/review-form';
-import {
+  buildStorefrontProductUrl,
   buildReorderedStorefrontImageIds,
+  filterRenderableImages,
+  formatImageKindLabel,
   formatConfidenceScore,
   formatCurrencyAmount,
+  formatMarketplaceName,
   formatProductDetailTimestamp,
   imageKindCounts,
   marketplaceListingHeadline,
@@ -24,9 +27,11 @@ import {
   storefrontSelectionCount,
   shouldPollProductDetail,
 } from '@/src/features/products/helpers';
+import { useProductPublicationForm } from '@/src/features/products/use-product-publication-form';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
 import { useProductReviewForm } from '@/src/features/products/use-product-review-form';
 import { useProductTabs } from '@/src/features/products/use-product-tabs';
+import type { ProductImage } from '@/src/features/products/types';
 import { colors } from '@/src/theme/colors';
 
 type DetailPanelProps = PropsWithChildren<{
@@ -72,8 +77,105 @@ function DetailMetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ImagePreviewCard({
+  image,
+  onPreview,
+}: {
+  image: ProductImage;
+  onPreview: (image: ProductImage) => void;
+}) {
+  if (!image.url) {
+    return null;
+  }
+
+  return (
+    <View
+      style={{
+        gap: 10,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.background,
+        padding: 14,
+      }}
+    >
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          onPreview(image);
+        }}
+        style={{ gap: 10 }}
+      >
+        <Image
+          source={image.url}
+          style={{ height: 220, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
+          contentFit="cover"
+        />
+        <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+          {formatImageKindLabel(image.kind)} · #{image.id}
+        </Text>
+      </Pressable>
+      <DetailMetaRow label="Filename" value={image.original_filename ?? image.storage_key} />
+      <DetailMetaRow
+        label="Size"
+        value={image.width && image.height ? `${image.width}x${image.height}` : 'Unknown size'}
+      />
+      <Button
+        label="Preview full screen"
+        kind="secondary"
+        onPress={() => {
+          onPreview(image);
+        }}
+      />
+    </View>
+  );
+}
+
+function ImageLightbox({
+  image,
+  visible,
+  onClose,
+}: {
+  image: ProductImage | null;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Modal animationType="fade" transparent={false} visible={visible} onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: '#0b0d12', paddingHorizontal: 18, paddingVertical: 24 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={{ color: '#f7f8fb', fontSize: 20, fontWeight: '800' }}>
+              {image ? `${formatImageKindLabel(image.kind)} · #${image.id}` : 'Image preview'}
+            </Text>
+            <Text style={{ color: '#b1b8c5', fontSize: 14 }}>
+              {image ? image.original_filename ?? image.storage_key : 'No image selected'}
+            </Text>
+          </View>
+          <View style={{ width: 108 }}>
+            <Button label="Close" kind="secondary" onPress={onClose} />
+          </View>
+        </View>
+
+        <View style={{ flex: 1, justifyContent: 'center', paddingVertical: 18 }}>
+          {image?.url ? (
+            <Image
+              source={image.url}
+              style={{ flex: 1, width: '100%' }}
+              contentFit="contain"
+            />
+          ) : (
+            <Text style={{ color: '#b1b8c5', fontSize: 15 }}>This image is not available for preview.</Text>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function ProductDetailScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<ProductImage | null>(null);
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { session } = useAuth();
 
@@ -81,6 +183,7 @@ export default function ProductDetailScreen() {
 
   const {
     product,
+    storefrontSlug,
     isLoading,
     isLoadingLifestyleRuns,
     isPolling,
@@ -125,6 +228,19 @@ export default function ProductDetailScreen() {
     product,
     onSave: saveProduct,
   });
+  const {
+    draft: publicationDraft,
+    isDirty: isPublicationDirty,
+    isSaving: isPublicationSaving,
+    error: publicationError,
+    updateStorefrontEnabled,
+    updateMarketplaceUrl,
+    reset: resetPublication,
+    save: savePublication,
+  } = useProductPublicationForm({
+    product,
+    onSave: saveProduct,
+  });
 
   if (!Number.isFinite(productId) || productId <= 0) {
     return (
@@ -140,6 +256,17 @@ export default function ProductDetailScreen() {
   const storefrontImages = sortStorefrontImages(product?.images ?? []);
   const availableStorefrontImages = readyImages.filter((image) => !image.storefront_visible);
   const lifestyleImages = readyImages.filter((image) => image.kind === 'lifestyle_generated');
+  const originalImages = filterRenderableImages(product?.images ?? [], 'original');
+  const backgroundRemovedImages = filterRenderableImages(product?.images ?? [], 'background_removed');
+  const publicProductUrl = product ? buildStorefrontProductUrl(storefrontSlug, product) : null;
+  const canSharePublicProduct = Boolean(publicProductUrl && product?.storefront_published_at);
+
+  async function handleShareUrl(url: string) {
+    await Share.share({
+      message: url,
+      url,
+    });
+  }
 
   async function handleDelete() {
     const deleted = await removeProduct();
@@ -561,6 +688,101 @@ export default function ProductDetailScreen() {
                 label="Selected gallery images"
                 value={`${storefrontSelectionCount(product.images)} of ${product.images.length}`}
               />
+              <DetailMetaRow
+                label="Public URL"
+                value={
+                  publicProductUrl ??
+                  'Save a storefront slug in Settings before sharing public product links.'
+                }
+              />
+
+              {publicationError ? <InlineError message={publicationError} /> : null}
+
+              {publicationDraft ? (
+                <>
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+                      Storefront visibility
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      {[
+                        { label: 'Enabled', value: true },
+                        { label: 'Disabled', value: false },
+                      ].map((option) => {
+                        const isActive = publicationDraft.storefrontEnabled === option.value;
+
+                        return (
+                          <Pressable
+                            key={option.label}
+                            onPress={() => {
+                              updateStorefrontEnabled(option.value);
+                            }}
+                            style={{
+                              borderRadius: 999,
+                              borderWidth: 1,
+                              borderColor: isActive ? colors.accent : colors.border,
+                              backgroundColor: isActive ? colors.accentSoft : colors.background,
+                              paddingHorizontal: 14,
+                              paddingVertical: 10,
+                            }}
+                          >
+                            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                              {option.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label={isPublicationSaving ? 'Saving storefront...' : 'Save storefront settings'}
+                        disabled={!isPublicationDirty || isPublicationSaving}
+                        onPress={() => {
+                          void savePublication();
+                        }}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label="Reset"
+                        kind="secondary"
+                        disabled={!isPublicationDirty || isPublicationSaving}
+                        onPress={resetPublication}
+                      />
+                    </View>
+                  </View>
+                </>
+              ) : null}
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Open live page"
+                    kind="secondary"
+                    disabled={!canSharePublicProduct}
+                    onPress={() => {
+                      if (publicProductUrl) {
+                        void Linking.openURL(publicProductUrl);
+                      }
+                    }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Share product URL"
+                    kind="secondary"
+                    disabled={!canSharePublicProduct}
+                    onPress={() => {
+                      if (publicProductUrl) {
+                        void handleShareUrl(publicProductUrl);
+                      }
+                    }}
+                  />
+                </View>
+              </View>
             </DetailPanel>
 
             <DetailPanel
@@ -681,6 +903,46 @@ export default function ProductDetailScreen() {
             />
 
             <DetailPanel
+              eyebrow="Original Images"
+              title={`${originalImages.length} previewable original${originalImages.length === 1 ? '' : 's'}`}
+              description="Tap any original image to open a full-screen preview using the new public image URLs from the mobile API."
+            >
+              {originalImages.length > 0 ? (
+                originalImages.map((image) => (
+                  <ImagePreviewCard
+                    key={image.id}
+                    image={image}
+                    onPreview={setSelectedImage}
+                  />
+                ))
+              ) : (
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  No original images are available for preview yet.
+                </Text>
+              )}
+            </DetailPanel>
+
+            <DetailPanel
+              eyebrow="Background Removed"
+              title={`${backgroundRemovedImages.length} processed image${backgroundRemovedImages.length === 1 ? '' : 's'}`}
+              description="Background-removed images appear here as soon as processing finishes and a public URL is available."
+            >
+              {backgroundRemovedImages.length > 0 ? (
+                backgroundRemovedImages.map((image) => (
+                  <ImagePreviewCard
+                    key={image.id}
+                    image={image}
+                    onPreview={setSelectedImage}
+                  />
+                ))
+              ) : (
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  No background-removed images are ready for preview yet.
+                </Text>
+              )}
+            </DetailPanel>
+
+            <DetailPanel
               eyebrow="Marketplace Listings"
               title={`${product.marketplace_listings.length} generated listing${product.marketplace_listings.length === 1 ? '' : 's'}`}
               description={
@@ -737,9 +999,57 @@ export default function ProductDetailScreen() {
                           : 'No compliance warnings'
                       }
                     />
+                    {publicationDraft ? (
+                      <>
+                        <TextField
+                          label={`${formatMarketplaceName(listing.marketplace)} live URL`}
+                          copyable
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          keyboardType="url"
+                          value={publicationDraft.marketplaceExternalUrls[listing.marketplace] ?? ''}
+                          onChangeText={(value) => {
+                            updateMarketplaceUrl(listing.marketplace, value);
+                          }}
+                        />
+                        <Button
+                          label="Open marketplace URL"
+                          kind="secondary"
+                          disabled={!(publicationDraft.marketplaceExternalUrls[listing.marketplace] ?? '').trim()}
+                          onPress={() => {
+                            const liveUrl = publicationDraft.marketplaceExternalUrls[listing.marketplace]?.trim();
+
+                            if (liveUrl) {
+                              void Linking.openURL(liveUrl);
+                            }
+                          }}
+                        />
+                      </>
+                    ) : null}
                   </View>
                 ))
               )}
+              {product.marketplace_listings.length > 0 && publicationDraft ? (
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label={isPublicationSaving ? 'Saving URLs...' : 'Save storefront and URLs'}
+                      disabled={!isPublicationDirty || isPublicationSaving}
+                      onPress={() => {
+                        void savePublication();
+                      }}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Reset"
+                      kind="secondary"
+                      disabled={!isPublicationDirty || isPublicationSaving}
+                      onPress={resetPublication}
+                    />
+                  </View>
+                </View>
+              ) : null}
             </DetailPanel>
 
             <DetailPanel
@@ -830,6 +1140,16 @@ export default function ProductDetailScreen() {
                       label="Source images"
                       value={image.source_image_ids.length > 0 ? image.source_image_ids.join(', ') : 'Not available'}
                     />
+                    {image.url ? (
+                      <Button
+                        label="Preview full screen"
+                        kind="secondary"
+                        disabled={isUpdatingMedia}
+                        onPress={() => {
+                          setSelectedImage(image);
+                        }}
+                      />
+                    ) : null}
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                       {!image.seller_approved ? (
                         <View style={{ flex: 1 }}>
@@ -1043,7 +1363,15 @@ export default function ProductDetailScreen() {
             />
           </View>
         </View>
-      </DialogModal>
+        </DialogModal>
+
+      <ImageLightbox
+        image={selectedImage}
+        visible={selectedImage !== null}
+        onClose={() => {
+          setSelectedImage(null);
+        }}
+      />
     </Screen>
   );
 }

@@ -120,8 +120,7 @@ The web workspace already supports some behaviors that mobile still needs to cat
 
 Known gaps from backend analysis:
 
-- Product image payloads still return `storage_key` metadata rather than a renderable public or signed download URL, so mobile media preview remains partial.
-- Storefront publication/share actions are still incomplete in the mobile UI.
+- Scene-specific lifestyle regeneration UI is still narrower than web.
 
 Do not paper over these gaps with fragile client-only state. If mobile parity depends on them, extend the backend contract first.
 
@@ -133,14 +132,14 @@ Completed in the app:
 - Products list, tabs, search, pagination, and detail
 - Upload-first product intake with signed uploads and finalize
 - Product review editing and lifecycle actions
-- Lifestyle generation controls, approval/delete actions, and storefront image selection/order
+- Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions
+- Lifestyle generation controls, approval/delete actions, storefront image selection/order, and storefront publish/share flows
 - Inquiries inbox with search, pagination, delete, and open-product action
 - Settings workspace with marketplace defaults, storefront profile, branding assets, storefront pages, usage/account, billing links, and sign out
 
 Still in progress:
 
-- Actual image preview/full-screen media
-- Product storefront publish/share actions
+- Scene-specific lifestyle regeneration controls
 - Exports/imports, dashboard, and production polish
 
 ## Testing

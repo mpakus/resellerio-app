@@ -64,6 +64,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 41: Added storefront branding upload and delete flows for logo and header assets using the public mobile API plus direct signed uploads.
 - [x] 2026-04-02 Step 42: Added a richer subscription/account section with pricing and billing deep links in mobile Settings.
 - [x] 2026-04-02 Step 43: Added unit tests for storefront branding helpers, branding mutations, and new Settings account actions.
+- [x] 2026-04-02 Step 44: Replaced the old image-count-only detail view with real original and background-removed image preview panels backed by the new public image URLs.
+- [x] 2026-04-02 Step 45: Added full-screen image preview, storefront publication controls, marketplace live URL editing, and public product share actions on product detail.
+- [x] 2026-04-02 Step 46: Added unit tests for new image preview helpers, publication draft state, storefront slug loading, and public URL actions.
 
 ## Current Web Functionality Analyzed
 
@@ -232,9 +235,9 @@ Acceptance:
 
 ## Phase 7: Media, Lifestyle Images, And Storefront Gallery
 
-- [ ] Display original images
-- [ ] Display background-removed images when ready
-- [ ] Full-screen image preview
+- [x] Display original images
+- [x] Display background-removed images when ready
+- [x] Full-screen image preview
 - [x] Generate lifestyle images with `POST /api/v1/products/:id/generate_lifestyle_images`
 - [x] Poll lifestyle runs and show run history
 - [x] Approve a lifestyle image
@@ -242,13 +245,12 @@ Acceptance:
 - [ ] Regenerate all or regenerate by scene when backend supports the UI cleanly
 - [x] Choose which images belong in the storefront gallery
 - [x] Reorder storefront gallery images
-- [ ] Publish product to storefront
-- [ ] Share public product URL once publication fields are exposed in the API
+- [x] Publish product to storefront
+- [x] Share public product URL once publication fields are exposed in the API
 
 Dependency note:
 
-- Backend storefront image and publication fields are now available in the mobile API, so Phase 7 can build directly on the public contract.
-- Actual mobile image rendering still needs a public image URL or signed download URL in the product payload; current API returns `storage_key` metadata only.
+- Backend storefront image and publication fields are now available in the mobile API, and mobile image rendering is now wired to the public `images[*].url` fields.
 
 ## Phase 8: Inquiries
 

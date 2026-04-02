@@ -1,5 +1,6 @@
 import { apiRequest } from '@/src/lib/api/client';
 import { buildProductsQuery } from '@/src/features/products/helpers';
+import type { StorefrontResponse } from '@/src/features/settings/types';
 import type {
   FinalizeUploadsResponse,
   ProductDetailResponse,
@@ -24,11 +25,16 @@ export function getProduct(token: string, productId: number) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}`, { token });
 }
 
+export function getCurrentStorefront(token: string) {
+  return apiRequest<StorefrontResponse>('/storefront', { token });
+}
+
 export function updateProduct(
   token: string,
   productId: number,
   body: {
     product: Record<string, unknown>;
+    marketplace_external_urls?: Record<string, string | null>;
   },
 ) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}`, {

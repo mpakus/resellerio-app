@@ -21,3 +21,5 @@ function localApiBaseUrl() {
 export const apiBaseUrl =
   normalizeBaseUrl(process.env.EXPO_PUBLIC_API_BASE_URL) ??
   (__DEV__ ? localApiBaseUrl() : productionApiBaseUrl);
+
+export const appBaseUrl = apiBaseUrl.replace(/\/api\/v1$/, '');

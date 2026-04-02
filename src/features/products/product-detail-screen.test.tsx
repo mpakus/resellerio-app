@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Linking, Share } from 'react-native';
 
 import ProductDetailScreen from '@/app/(app)/products/[id]';
+import { useProductPublicationForm } from '@/src/features/products/use-product-publication-form';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
 import { useProductReviewForm } from '@/src/features/products/use-product-review-form';
 import { useProductTabs } from '@/src/features/products/use-product-tabs';
@@ -26,6 +28,10 @@ jest.mock('@/src/features/products/use-product-detail', () => ({
   useProductDetail: jest.fn(),
 }));
 
+jest.mock('@/src/features/products/use-product-publication-form', () => ({
+  useProductPublicationForm: jest.fn(),
+}));
+
 jest.mock('@/src/features/products/use-product-review-form', () => ({
   useProductReviewForm: jest.fn(),
 }));
@@ -38,12 +44,27 @@ jest.mock('@expo/vector-icons/Ionicons', () => {
   return 'Ionicons';
 });
 
+jest.mock('expo-image', () => ({
+  Image: 'Image',
+}));
+
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseProductDetail = jest.mocked(useProductDetail);
+const mockedUseProductPublicationForm = jest.mocked(useProductPublicationForm);
 const mockedUseProductReviewForm = jest.mocked(useProductReviewForm);
 const mockedUseProductTabs = jest.mocked(useProductTabs);
+const mockedLinkingOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+const mockedShare = jest.spyOn(Share, 'share').mockResolvedValue({
+  action: Share.sharedAction,
+  activityType: undefined,
+});
 
 describe('ProductDetailScreen panels', () => {
+  beforeEach(() => {
+    mockedLinkingOpenURL.mockClear();
+    mockedShare.mockClear();
+  });
+
   beforeEach(() => {
     mockedUseAuth.mockReturnValue({
       status: 'authenticated',
@@ -174,12 +195,17 @@ describe('ProductDetailScreen panels', () => {
             updated_at: '2026-04-02T15:40:00Z',
           },
         ],
+        image_urls: [
+          'https://cdn.example.test/users/1/products/11/original.jpg',
+          'https://cdn.example.test/users/1/products/11/lifestyle.jpg',
+        ],
         images: [
           {
             id: 101,
             kind: 'original',
             position: 1,
             storage_key: 'users/1/products/11/original.jpg',
+            url: 'https://cdn.example.test/users/1/products/11/original.jpg',
             content_type: 'image/jpeg',
             width: 1200,
             height: 1600,
@@ -204,6 +230,7 @@ describe('ProductDetailScreen panels', () => {
             kind: 'lifestyle_generated',
             position: 2,
             storage_key: 'users/1/products/11/lifestyle.jpg',
+            url: 'https://cdn.example.test/users/1/products/11/lifestyle.jpg',
             content_type: 'image/jpeg',
             width: 1200,
             height: 1600,
@@ -225,6 +252,7 @@ describe('ProductDetailScreen panels', () => {
           },
         ],
       },
+      storefrontSlug: 'my-store',
       isLoading: false,
       isLoadingLifestyleRuns: false,
       isRefreshing: false,
@@ -269,6 +297,22 @@ describe('ProductDetailScreen panels', () => {
       deleteLifestyleImage: jest.fn(),
       setImageStorefrontVisibility: jest.fn(),
       saveStorefrontImageOrder: jest.fn(),
+    });
+
+    mockedUseProductPublicationForm.mockReturnValue({
+      draft: {
+        storefrontEnabled: true,
+        marketplaceExternalUrls: {
+          ebay: 'https://www.ebay.com/itm/1234567890',
+        },
+      },
+      isDirty: false,
+      isSaving: false,
+      error: null,
+      updateStorefrontEnabled: jest.fn(),
+      updateMarketplaceUrl: jest.fn(),
+      reset: jest.fn(),
+      save: jest.fn(),
     });
 
     mockedUseProductTabs.mockReturnValue({
@@ -317,5 +361,22 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
     expect(screen.getByText('STOREFRONT GALLERY')).toBeTruthy();
     expect(screen.getByText('Add to storefront')).toBeTruthy();
+    expect(screen.getByText('ORIGINAL IMAGES')).toBeTruthy();
+    expect(screen.getAllByText('Preview full screen').length).toBeGreaterThan(0);
+  });
+
+  it('opens and shares the public storefront URL', async () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByText('Open live page'));
+    fireEvent.press(screen.getByText('Share product URL'));
+
+    expect(mockedLinkingOpenURL).toHaveBeenCalledWith(
+      'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
+    );
+    expect(mockedShare).toHaveBeenCalledWith({
+      message: 'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
+      url: 'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
+    });
   });
 });
