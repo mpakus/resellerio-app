@@ -1,4 +1,6 @@
-import type { PropsWithChildren } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Clipboard from 'expo-clipboard';
+import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -70,17 +72,87 @@ export function Button({ label, kind = 'primary', disabled = false, onPress }: B
 
 type TextFieldProps = TextInputProps & {
   label: string;
+  copyable?: boolean;
+  copyValue?: string;
 };
 
-export function TextField({ label, style, ...props }: TextFieldProps) {
+export function TextField({
+  label,
+  style,
+  copyable = false,
+  copyValue,
+  value,
+  multiline,
+  ...props
+}: TextFieldProps) {
+  const [copied, setCopied] = useState(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resolvedCopyValue = String(copyValue ?? value ?? '');
+  const canCopy = copyable && resolvedCopyValue.trim().length > 0;
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
+  async function handleCopy() {
+    if (!canCopy) {
+      return;
+    }
+
+    await Clipboard.setStringAsync(resolvedCopyValue);
+    setCopied(true);
+
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+    }
+
+    resetTimerRef.current = setTimeout(() => {
+      setCopied(false);
+    }, 1200);
+  }
+
   return (
     <View style={{ gap: 8 }}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
-        placeholderTextColor={colors.mutedText}
-        style={[styles.input, style]}
-        {...props}
-      />
+      <View style={[styles.inputShell, multiline && styles.inputShellMultiline]}>
+        <TextInput
+          placeholderTextColor={colors.mutedText}
+          style={[
+            styles.input,
+            copyable && styles.inputWithAction,
+            multiline && styles.inputMultiline,
+            style,
+          ]}
+          value={value}
+          multiline={multiline}
+          {...props}
+        />
+        {copyable ? (
+          <Pressable
+            accessibilityLabel={`Copy ${label}`}
+            accessibilityRole="button"
+            disabled={!canCopy}
+            onPress={() => {
+              void handleCopy();
+            }}
+            style={({ pressed }) => [
+              styles.inputAction,
+              multiline && styles.inputActionMultiline,
+              (!canCopy || pressed) && styles.inputActionPressed,
+            ]}
+          >
+            <Ionicons
+              color={copied ? colors.accent : canCopy ? colors.mutedText : colors.border}
+              name={copied ? 'checkmark' : 'copy-outline'}
+              size={18}
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -206,12 +278,47 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 54,
     borderRadius: 18,
-    borderColor: colors.border,
-    borderWidth: 1,
     backgroundColor: '#ffffff',
     color: colors.text,
     fontSize: 16,
     paddingHorizontal: 16,
+  },
+  inputShell: {
+    position: 'relative',
+    borderRadius: 18,
+    borderColor: colors.border,
+    borderWidth: 1,
+    backgroundColor: '#ffffff',
+  },
+  inputShellMultiline: {
+    minHeight: 110,
+  },
+  inputWithAction: {
+    paddingRight: 52,
+  },
+  inputMultiline: {
+    minHeight: 110,
+    paddingTop: 14,
+    paddingBottom: 14,
+    textAlignVertical: 'top',
+  },
+  inputAction: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    marginTop: -16,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+  },
+  inputActionMultiline: {
+    top: 11,
+    marginTop: 0,
+  },
+  inputActionPressed: {
+    opacity: 0.6,
   },
   errorWrap: {
     borderRadius: 18,

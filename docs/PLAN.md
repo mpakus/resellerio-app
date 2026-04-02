@@ -46,6 +46,7 @@ Primary seller journey:
 - [x] 2026-04-01 Step 23: Added unit tests for product-detail polling and automatic stop once the product reaches review.
 - [x] 2026-04-01 Step 24: Added the first editable mobile review form for seller-managed product fields, including status and tab updates.
 - [x] 2026-04-01 Step 25: Added unit tests for review draft building, dirty-state preservation during refresh, and `PATCH /api/v1/products/:id` save behavior.
+- [x] 2026-04-02 Step 26: Added right-side copy-to-clipboard actions to product review form inputs for faster reuse of field values on mobile.
 
 ## Current Web Functionality Analyzed
 

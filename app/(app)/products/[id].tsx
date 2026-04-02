@@ -154,6 +154,7 @@ export default function ProductDetailScreen() {
                 <>
                   <TextField
                     label="Title"
+                    copyable
                     value={draft.title}
                     onChangeText={(value) => {
                       updateField('title', value);
@@ -161,6 +162,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Brand"
+                    copyable
                     value={draft.brand}
                     onChangeText={(value) => {
                       updateField('brand', value);
@@ -168,6 +170,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Category"
+                    copyable
                     value={draft.category}
                     onChangeText={(value) => {
                       updateField('category', value);
@@ -175,6 +178,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Condition"
+                    copyable
                     value={draft.condition}
                     onChangeText={(value) => {
                       updateField('condition', value);
@@ -182,6 +186,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Color"
+                    copyable
                     value={draft.color}
                     onChangeText={(value) => {
                       updateField('color', value);
@@ -189,6 +194,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Size"
+                    copyable
                     value={draft.size}
                     onChangeText={(value) => {
                       updateField('size', value);
@@ -196,6 +202,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Material"
+                    copyable
                     value={draft.material}
                     onChangeText={(value) => {
                       updateField('material', value);
@@ -203,6 +210,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Price"
+                    copyable
                     keyboardType="decimal-pad"
                     value={draft.price}
                     onChangeText={(value) => {
@@ -211,6 +219,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Cost"
+                    copyable
                     keyboardType="decimal-pad"
                     value={draft.cost}
                     onChangeText={(value) => {
@@ -219,6 +228,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="SKU"
+                    copyable
                     value={draft.sku}
                     onChangeText={(value) => {
                       updateField('sku', value);
@@ -226,6 +236,7 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Tags (comma-separated)"
+                    copyable
                     value={draft.tagsText}
                     onChangeText={(value) => {
                       updateField('tagsText', value);
@@ -233,9 +244,9 @@ export default function ProductDetailScreen() {
                   />
                   <TextField
                     label="Notes"
+                    copyable
                     multiline
                     numberOfLines={4}
-                    style={{ minHeight: 110, paddingVertical: 14, textAlignVertical: 'top' }}
                     value={draft.notes}
                     onChangeText={(value) => {
                       updateField('notes', value);
