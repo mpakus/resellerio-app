@@ -19,6 +19,20 @@ Primary seller journey:
 - Manage inquiries
 - Manage settings, storefront, and marketplace defaults
 
+## Implementation Log
+
+- [x] 2026-04-01 Step 1: Replaced the default Expo starter routes with a real auth-first mobile shell.
+- [x] 2026-04-01 Step 2: Added API base URL config for local development and production.
+- [x] 2026-04-01 Step 3: Added a typed API client, bearer-token auth requests, and shared API error formatting.
+- [x] 2026-04-01 Step 4: Added secure session persistence with `expo-secure-store` plus web fallback storage.
+- [x] 2026-04-01 Step 5: Implemented register, sign-in, sign-out, and session restore on app launch.
+- [x] 2026-04-01 Step 6: Hydrated authenticated state with `GET /api/v1/me` and `GET /api/v1/me/usage`.
+- [x] 2026-04-01 Step 7: Added protected `Products`, `Inquiries`, and `Settings` tabs as the foundation for the next feature slices.
+- [x] 2026-04-01 Step 8: Added Jest/Expo unit test infrastructure and a `npm test` workflow.
+- [x] 2026-04-01 Step 9: Implemented the first real Products screen backed by `GET /api/v1/products`.
+- [x] 2026-04-01 Step 10: Implemented product-tab list and create flows backed by `GET /api/v1/product_tabs` and `POST /api/v1/product_tabs`.
+- [x] 2026-04-01 Step 11: Added unit tests for API error handling and products overview state logic.
+
 ## Current Web Functionality Analyzed
 
 Current web seller surfaces in `~/www/elixir/reseller`:
@@ -80,23 +94,24 @@ Without these items, mobile can still ship a strong v1, but not a full web-parit
 
 ## Phase 1: App Foundation
 
-- [ ] Replace the Expo starter screens with the real app shell
-- [ ] Add environment config for local, simulator, device, and production API hosts
-- [ ] Add typed API client and centralized error handling
-- [ ] Add secure token storage and session bootstrap
-- [ ] Add auth guard and protected-app routing
+- [x] Replace the Expo starter screens with the real app shell
+- [x] Add environment config for local, simulator, device, and production API hosts
+- [x] Add typed API client and centralized error handling
+- [x] Add secure token storage and session bootstrap
+- [x] Add auth guard and protected-app routing
+- [x] Add unit test infrastructure and `npm test`
 - [ ] Add loading, empty, error, and retry states shared across the app
 - [ ] Add analytics/event hooks only after the primary flows are stable
 
 ## Phase 2: Registration And Sign In
 
-- [ ] Registration screen using `POST /api/v1/auth/register`
-- [ ] Sign-in screen using `POST /api/v1/auth/login`
-- [ ] Persist token securely after auth
-- [ ] Restore session on launch and hydrate with `GET /api/v1/me`
-- [ ] Load `GET /api/v1/me/usage` after sign-in for plan and quota state
-- [ ] Sign-out flow that clears local session immediately
-- [ ] Friendly handling for `401`, validation errors, and expired tokens
+- [x] Registration screen using `POST /api/v1/auth/register`
+- [x] Sign-in screen using `POST /api/v1/auth/login`
+- [x] Persist token securely after auth
+- [x] Restore session on launch and hydrate with `GET /api/v1/me`
+- [x] Load `GET /api/v1/me/usage` after sign-in for plan and quota state
+- [x] Sign-out flow that clears local session immediately
+- [x] Friendly handling for `401`, validation errors, and expired tokens
 
 Acceptance:
 
@@ -109,8 +124,8 @@ Acceptance:
 
 Recommended mobile structure:
 
-- [ ] Auth stack: Register, Sign in
-- [ ] Main tabs: Products, Inquiries, Settings
+- [x] Auth stack: Register, Sign in
+- [x] Main tabs: Products, Inquiries, Settings
 - [ ] Product stack: Products list, New Product, Product Detail
 - [ ] Optional dashboard/home tab if we want a mobile summary screen similar to web
 - [ ] Modal or sheet flows for filters, product tabs, image preview, and destructive confirmations
@@ -123,15 +138,16 @@ Recommendation:
 
 ## Phase 4: Inventory List And Product Tabs
 
-- [ ] Products list using `GET /api/v1/products`
-- [ ] Status filters: `all`, `draft`, `uploading`, `processing`, `review`, `ready`, `sold`, `archived`
-- [ ] Search by query
+- [x] Products list using `GET /api/v1/products`
+- [x] Status filters: `all`, `draft`, `uploading`, `processing`, `review`, `ready`, `sold`, `archived`
+- [x] Search by query
 - [ ] Sort and pagination
 - [ ] Updated date filters
-- [ ] Product tab filter
-- [ ] Product tabs list/create/rename/delete using `/api/v1/product_tabs`
-- [ ] Pull-to-refresh and infinite pagination or explicit next-page loading
-- [ ] Empty states for no products and no search matches
+- [x] Product tab filter
+- [x] Product tabs list/create using `/api/v1/product_tabs`
+- [ ] Product tabs rename/delete using `/api/v1/product_tabs`
+- [x] Pull-to-refresh and infinite pagination or explicit next-page loading
+- [x] Empty states for no products and no search matches
 
 Acceptance:
 
