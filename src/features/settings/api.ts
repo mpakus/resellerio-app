@@ -1,6 +1,8 @@
 import { apiRequest } from '@/src/lib/api/client';
 import type { MeResponse } from '@/src/lib/api/types';
 import type {
+  StorefrontAssetKind,
+  StorefrontAssetUploadResponse,
   StorefrontPageResponse,
   StorefrontPagesResponse,
   StorefrontResponse,
@@ -99,5 +101,32 @@ export function reorderStorefrontPages(token: string, pageIds: number[]) {
     body: {
       page_ids: pageIds,
     },
+  });
+}
+
+export function prepareStorefrontAssetUpload(
+  token: string,
+  kind: StorefrontAssetKind,
+  body: {
+    asset: {
+      filename: string;
+      content_type: string;
+      byte_size: number;
+      width: number;
+      height: number;
+    };
+  },
+) {
+  return apiRequest<StorefrontAssetUploadResponse>(`/storefront/assets/${kind}/prepare_upload`, {
+    method: 'POST',
+    token,
+    body,
+  });
+}
+
+export function deleteStorefrontAsset(token: string, kind: StorefrontAssetKind) {
+  return apiRequest<{ data: { deleted: boolean } }>(`/storefront/assets/${kind}`, {
+    method: 'DELETE',
+    token,
   });
 }

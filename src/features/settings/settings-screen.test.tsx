@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import * as Linking from 'expo-linking';
 
 import SettingsScreen from '@/app/(app)/(tabs)/settings';
 import { useSettingsOverview } from '@/src/features/settings/use-settings-overview';
@@ -12,13 +13,21 @@ jest.mock('@/src/features/settings/use-settings-overview', () => ({
   useSettingsOverview: jest.fn(),
 }));
 
+jest.mock('expo-linking', () => ({
+  openURL: jest.fn(),
+}));
+
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseSettingsOverview = jest.mocked(useSettingsOverview);
+const mockedOpenURL = jest.mocked(Linking.openURL);
 const mockSaveMarketplaceDraft = jest.fn();
+const mockUploadStorefrontAsset = jest.fn();
 
 describe('SettingsScreen', () => {
   beforeEach(() => {
     mockSaveMarketplaceDraft.mockReset();
+    mockUploadStorefrontAsset.mockReset();
+    mockedOpenURL.mockReset();
 
     mockedUseAuth.mockReturnValue({
       status: 'authenticated',
@@ -98,6 +107,8 @@ describe('SettingsScreen', () => {
         inserted_at: '2026-04-01T00:00:00Z',
         updated_at: '2026-04-01T00:00:00Z',
       },
+      logoAsset: null,
+      headerAsset: null,
       storefrontPages: [
         {
           id: 7,
@@ -125,11 +136,14 @@ describe('SettingsScreen', () => {
       isSavingMarketplaces: false,
       isSavingStorefront: false,
       isSavingPage: false,
+      uploadingAssetKind: null,
+      deletingAssetKind: null,
       deletingPageId: null,
       reorderingPageId: null,
       error: null,
       marketplaceError: null,
       storefrontError: null,
+      brandingError: null,
       pageError: null,
       isMarketplacesDirty: true,
       isStorefrontDirty: false,
@@ -140,6 +154,8 @@ describe('SettingsScreen', () => {
       updateStorefrontField: jest.fn(),
       resetStorefrontDraft: jest.fn(),
       saveStorefrontDraft: jest.fn(),
+      uploadStorefrontAsset: mockUploadStorefrontAsset,
+      removeAsset: jest.fn().mockResolvedValue(true),
       createPage: jest.fn().mockResolvedValue(true),
       savePage: jest.fn().mockResolvedValue(true),
       removePage: jest.fn().mockResolvedValue(true),
@@ -170,5 +186,23 @@ describe('SettingsScreen', () => {
     fireEvent.press(screen.getByText('Create page'));
 
     expect(screen.getByText('Create storefront page')).toBeTruthy();
+  });
+
+  it('starts storefront logo upload from the branding section', () => {
+    render(<SettingsScreen />);
+
+    fireEvent.press(screen.getByText('Upload logo'));
+
+    expect(mockUploadStorefrontAsset).toHaveBeenCalledWith('logo');
+  });
+
+  it('opens pricing and billing links', () => {
+    render(<SettingsScreen />);
+
+    fireEvent.press(screen.getByText('View plans'));
+    fireEvent.press(screen.getByText('Manage billing'));
+
+    expect(mockedOpenURL).toHaveBeenCalledWith('https://resellerio.com/pricing');
+    expect(mockedOpenURL).toHaveBeenCalledWith('https://app.lemonsqueezy.com/billing');
   });
 });

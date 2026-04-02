@@ -18,6 +18,8 @@ export type StorefrontAsset = {
   updated_at: string | null;
 };
 
+export type StorefrontAssetKind = 'logo' | 'header';
+
 export type StorefrontPage = {
   id: number;
   title: string;
@@ -59,6 +61,20 @@ export type StorefrontPagesResponse = {
 export type StorefrontPageResponse = {
   data: {
     page: StorefrontPage;
+  };
+};
+
+export type StorefrontAssetUploadInstruction = {
+  method: 'PUT';
+  upload_url: string;
+  headers: Record<string, string>;
+  expires_at: string;
+};
+
+export type StorefrontAssetUploadResponse = {
+  data: {
+    asset: StorefrontAsset;
+    upload_instruction: StorefrontAssetUploadInstruction;
   };
 };
 

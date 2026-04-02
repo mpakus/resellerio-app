@@ -61,6 +61,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 38: Replaced the settings placeholder with a real account/storefront workspace backed by `GET /api/v1/me`, `GET /api/v1/me/usage`, and `GET /api/v1/storefront`.
 - [x] 2026-04-02 Step 39: Added marketplace defaults saving, storefront profile editing, and storefront page create/edit/delete/reorder flows on mobile.
 - [x] 2026-04-02 Step 40: Added unit tests for settings overview state, storefront page mutations, and settings screen rendering.
+- [x] 2026-04-02 Step 41: Added storefront branding upload and delete flows for logo and header assets using the public mobile API plus direct signed uploads.
+- [x] 2026-04-02 Step 42: Added a richer subscription/account section with pricing and billing deep links in mobile Settings.
+- [x] 2026-04-02 Step 43: Added unit tests for storefront branding helpers, branding mutations, and new Settings account actions.
 
 ## Current Web Functionality Analyzed
 
@@ -264,26 +267,21 @@ Acceptance:
 
 Mirror the important parts of web `/app/settings`.
 
-- [ ] Marketplace defaults using `GET /api/v1/me` and `PATCH /api/v1/me`
-- [ ] Storefront profile using `GET /api/v1/storefront` and `PUT /api/v1/storefront`
-- [ ] Storefront fields: enabled, slug, title, tagline, description, theme
-- [ ] Storefront pages list/create/update/delete
-- [ ] Storefront page editor for About, Shipping, Returns, and similar content
-- [ ] Usage and quota screen using `GET /api/v1/me/usage`
 - [x] Marketplace defaults using `GET /api/v1/me` and `PATCH /api/v1/me`
 - [x] Storefront profile using `GET /api/v1/storefront` and `PUT /api/v1/storefront`
 - [x] Storefront fields: enabled, slug, title, tagline, description, theme
+- [x] Storefront branding assets: logo/header upload, replace, and delete
 - [x] Storefront pages list/create/update/delete
 - [x] Storefront page editor for About, Shipping, Returns, and similar content
 - [x] Usage and quota screen using `GET /api/v1/me/usage`
-- [ ] Subscription/account section using `plan`, `plan_status`, `plan_expires_at`, `trial_ends_at`, and `addon_credits`
-- [ ] Deep link to `https://resellerio.com/pricing`
-- [ ] Deep link to billing management if required
+- [x] Subscription/account section using `plan`, `plan_status`, `plan_expires_at`, `trial_ends_at`, and `addon_credits`
+- [x] Deep link to `https://resellerio.com/pricing`
+- [x] Deep link to billing management if required
 - [x] Sign out
 
 Settings API parity note:
 
-- Storefront logo upload, header upload, and page reordering are now available in the public API and can be implemented in the mobile settings phase.
+- Storefront logo upload, header upload, and page reordering are now implemented in the mobile app against the public API.
 
 ## Phase 10: Optional Web-Parity Extensions
 
@@ -299,24 +297,24 @@ Useful after the main seller flow is stable.
 
 ## Suggested Delivery Order
 
-- [ ] Milestone 1: App foundation + auth
-- [ ] Milestone 2: Products list + tabs + basic detail
-- [ ] Milestone 3: New product intake + upload + processing poll
-- [ ] Milestone 4: Full review flow + lifecycle actions
-- [ ] Milestone 5: Lifestyle images + storefront gallery
-- [ ] Milestone 6: Inquiries
-- [ ] Milestone 7: Settings + storefront + usage/account
+- [x] Milestone 1: App foundation + auth
+- [x] Milestone 2: Products list + tabs + basic detail
+- [x] Milestone 3: New product intake + upload + processing poll
+- [x] Milestone 4: Full review flow + lifecycle actions
+- [x] Milestone 5: Lifestyle images + storefront gallery
+- [x] Milestone 6: Inquiries
+- [x] Milestone 7: Settings + storefront + usage/account
 - [ ] Milestone 8: Exports/imports, dashboard, notifications, polish
 
 ## Definition Of Done For V1
 
-- [ ] User can register and sign in from mobile
-- [ ] User session is persistent and meets the final agreed auth lifetime
-- [ ] User can create a product from photos
-- [ ] User can wait for AI processing and review results
-- [ ] User can edit product details and manage lifecycle
-- [ ] User can generate and approve lifestyle images
-- [ ] User can manage storefront-related product image selection
+- [x] User can register and sign in from mobile
+- [x] User session is persistent and meets the final agreed auth lifetime
+- [x] User can create a product from photos
+- [x] User can wait for AI processing and review results
+- [x] User can edit product details and manage lifecycle
+- [x] User can generate and approve lifestyle images
+- [x] User can manage storefront-related product image selection
 - [ ] User can publish products to storefront once required API fields exist
 - [ ] User can read and clear inquiries
 - [ ] User can update storefront settings and marketplace defaults

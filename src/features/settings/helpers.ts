@@ -1,6 +1,8 @@
 import type {
   Storefront,
   StorefrontDraft,
+  StorefrontAsset,
+  StorefrontAssetKind,
   StorefrontPage,
   StorefrontPageDraft,
 } from '@/src/features/settings/types';
@@ -78,6 +80,35 @@ export function storefrontAssetSummary(storefront: Storefront) {
   return `Logo: ${logoCount} · Header: ${headerCount}`;
 }
 
+export function getStorefrontAsset(storefront: Storefront, kind: StorefrontAssetKind) {
+  return storefront.assets.find((asset) => asset.kind === kind) ?? null;
+}
+
+export function replaceStorefrontAsset(assets: StorefrontAsset[], nextAsset: StorefrontAsset) {
+  return [...assets.filter((asset) => asset.kind !== nextAsset.kind), nextAsset].sort((left, right) =>
+    left.kind.localeCompare(right.kind),
+  );
+}
+
+export function removeStorefrontAssetByKind(
+  assets: StorefrontAsset[],
+  kind: StorefrontAssetKind,
+) {
+  return assets.filter((asset) => asset.kind !== kind);
+}
+
+export function storefrontAssetDetails(asset: StorefrontAsset | null) {
+  if (!asset) {
+    return 'No image uploaded yet.';
+  }
+
+  const dimensions =
+    asset.width && asset.height ? `${asset.width}x${asset.height}` : 'Unknown size';
+  const filename = asset.original_filename ?? 'Uploaded image';
+
+  return `${filename} · ${dimensions}`;
+}
+
 export function addonCreditsSummary(addonCredits: Record<string, number>) {
   const entries = Object.entries(addonCredits).filter(([, value]) => value > 0);
 
@@ -109,4 +140,24 @@ export function buildReorderedStorefrontPageIds(
   const [movedPageId] = reordered.splice(currentIndex, 1);
   reordered.splice(nextIndex, 0, movedPageId);
   return reordered;
+}
+
+export function subscriptionDetailsSummary(storefrontUrl: string | null, user: { plan_status: string | null; plan_period: string | null; plan_expires_at: string | null; trial_ends_at: string | null; }) {
+  const detailParts = [user.plan_status ?? 'free'];
+
+  if (user.plan_period) {
+    detailParts.push(user.plan_period);
+  }
+
+  if (user.plan_expires_at) {
+    detailParts.push(`renews ${user.plan_expires_at}`);
+  } else if (user.trial_ends_at) {
+    detailParts.push(`trial ends ${user.trial_ends_at}`);
+  }
+
+  if (storefrontUrl) {
+    detailParts.push(storefrontUrl);
+  }
+
+  return detailParts.join(' · ');
 }

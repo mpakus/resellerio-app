@@ -1,11 +1,15 @@
+import * as ImagePicker from 'expo-image-picker';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { getCurrentUsage, getCurrentUser } from '@/src/lib/api/auth';
+import { uploadStorefrontAssetWithInstruction } from '@/src/features/settings/assets';
 import {
+  deleteStorefrontAsset,
   createStorefrontPage,
   deleteStorefrontPage,
   getStorefront,
   listStorefrontPages,
+  prepareStorefrontAssetUpload,
   reorderStorefrontPages,
   updateMarketplacePreferences,
   updateStorefrontPage,
@@ -18,6 +22,24 @@ jest.mock('@/src/lib/api/auth', () => ({
   getCurrentUsage: jest.fn(),
 }));
 
+jest.mock('expo-image-picker', () => ({
+  requestMediaLibraryPermissionsAsync: jest.fn(),
+  launchImageLibraryAsync: jest.fn(),
+}));
+
+jest.mock('@/src/features/settings/assets', () => ({
+  buildStorefrontAssetPayload: jest.fn((asset) => ({
+    asset: {
+      filename: asset.fileName ?? 'storefront-image.jpg',
+      content_type: asset.mimeType ?? 'image/jpeg',
+      byte_size: asset.fileSize ?? 1,
+      width: asset.width ?? 1,
+      height: asset.height ?? 1,
+    },
+  })),
+  uploadStorefrontAssetWithInstruction: jest.fn(),
+}));
+
 jest.mock('@/src/features/settings/api', () => ({
   updateMarketplacePreferences: jest.fn(),
   getStorefront: jest.fn(),
@@ -27,10 +49,17 @@ jest.mock('@/src/features/settings/api', () => ({
   updateStorefrontPage: jest.fn(),
   deleteStorefrontPage: jest.fn(),
   reorderStorefrontPages: jest.fn(),
+  prepareStorefrontAssetUpload: jest.fn(),
+  deleteStorefrontAsset: jest.fn(),
 }));
 
+const mockedRequestMediaLibraryPermissionsAsync = jest.mocked(
+  ImagePicker.requestMediaLibraryPermissionsAsync,
+);
+const mockedLaunchImageLibraryAsync = jest.mocked(ImagePicker.launchImageLibraryAsync);
 const mockedGetCurrentUser = jest.mocked(getCurrentUser);
 const mockedGetCurrentUsage = jest.mocked(getCurrentUsage);
+const mockedUploadStorefrontAssetWithInstruction = jest.mocked(uploadStorefrontAssetWithInstruction);
 const mockedUpdateMarketplacePreferences = jest.mocked(updateMarketplacePreferences);
 const mockedGetStorefront = jest.mocked(getStorefront);
 const mockedUpsertStorefront = jest.mocked(upsertStorefront);
@@ -39,6 +68,8 @@ const mockedCreateStorefrontPage = jest.mocked(createStorefrontPage);
 const mockedUpdateStorefrontPage = jest.mocked(updateStorefrontPage);
 const mockedDeleteStorefrontPage = jest.mocked(deleteStorefrontPage);
 const mockedReorderStorefrontPages = jest.mocked(reorderStorefrontPages);
+const mockedPrepareStorefrontAssetUpload = jest.mocked(prepareStorefrontAssetUpload);
+const mockedDeleteStorefrontAsset = jest.mocked(deleteStorefrontAsset);
 
 describe('useSettingsOverview', () => {
   beforeEach(() => {
@@ -119,6 +150,54 @@ describe('useSettingsOverview', () => {
         ],
       },
     });
+
+    mockedRequestMediaLibraryPermissionsAsync.mockResolvedValue({
+      granted: true,
+      canAskAgain: true,
+      expires: 'never',
+      status: ImagePicker.PermissionStatus.GRANTED,
+    });
+
+    mockedLaunchImageLibraryAsync.mockResolvedValue({
+      canceled: false,
+      assets: [
+        {
+          uri: 'file:///logo.png',
+          fileName: 'logo.png',
+          fileSize: 4000,
+          mimeType: 'image/png',
+          width: 400,
+          height: 400,
+        },
+      ],
+    });
+
+    mockedPrepareStorefrontAssetUpload.mockResolvedValue({
+      data: {
+        asset: {
+          id: 9,
+          kind: 'logo',
+          storage_key: 'users/1/storefronts/3/logo/logo.png',
+          content_type: 'image/png',
+          original_filename: 'logo.png',
+          width: 400,
+          height: 400,
+          byte_size: 4000,
+          inserted_at: '2026-04-02T00:00:00Z',
+          updated_at: '2026-04-02T00:00:00Z',
+        },
+        upload_instruction: {
+          method: 'PUT',
+          upload_url: 'https://bucket.example/logo.png',
+          headers: {
+            'content-type': 'image/png',
+          },
+          expires_at: '2026-04-02T01:00:00Z',
+        },
+      },
+    });
+
+    mockedUploadStorefrontAssetWithInstruction.mockResolvedValue(undefined);
   });
 
   it('loads account, usage, storefront, and pages on mount', async () => {
@@ -287,5 +366,41 @@ describe('useSettingsOverview', () => {
     });
 
     expect(result.current.storefrontPages).toHaveLength(1);
+  });
+
+  it('uploads and deletes storefront branding assets', async () => {
+    const { result } = renderHook(() => useSettingsOverview('token-123'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.uploadStorefrontAsset('logo');
+    });
+
+    expect(mockedPrepareStorefrontAssetUpload).toHaveBeenCalledWith(
+      'token-123',
+      'logo',
+      expect.objectContaining({
+        asset: expect.objectContaining({
+          filename: 'logo.png',
+        }),
+      }),
+    );
+    expect(result.current.logoAsset?.original_filename).toBe('logo.png');
+
+    mockedDeleteStorefrontAsset.mockResolvedValue({
+      data: {
+        deleted: true,
+      },
+    });
+
+    await act(async () => {
+      await result.current.removeAsset('logo');
+    });
+
+    expect(mockedDeleteStorefrontAsset).toHaveBeenCalledWith('token-123', 'logo');
+    expect(result.current.logoAsset).toBeNull();
   });
 });

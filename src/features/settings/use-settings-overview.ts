@@ -1,13 +1,20 @@
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from 'react';
 
 import { getCurrentUsage, getCurrentUser } from '@/src/lib/api/auth';
 import { formatApiError } from '@/src/lib/api/client';
 import { emptySession } from '@/src/lib/auth/session';
 import {
+  buildStorefrontAssetPayload,
+  uploadStorefrontAssetWithInstruction,
+} from '@/src/features/settings/assets';
+import {
   createStorefrontPage,
+  deleteStorefrontAsset,
   deleteStorefrontPage,
   getStorefront,
   listStorefrontPages,
+  prepareStorefrontAssetUpload,
   reorderStorefrontPages,
   updateMarketplacePreferences,
   updateStorefrontPage,
@@ -17,12 +24,16 @@ import {
   buildStorefrontPagePayload,
   buildStorefrontPayload,
   createStorefrontDraft,
+  getStorefrontAsset,
+  removeStorefrontAssetByKind,
+  replaceStorefrontAsset,
   storefrontDraftEquals,
 } from '@/src/features/settings/helpers';
 import type {
   SettingsOverview,
   Storefront,
   StorefrontDraft,
+  StorefrontAssetKind,
   StorefrontPage,
   StorefrontPageDraft,
 } from '@/src/features/settings/types';
@@ -60,12 +71,15 @@ export function useSettingsOverview(token: string) {
   const [isSavingMarketplaces, setIsSavingMarketplaces] = useState(false);
   const [isSavingStorefront, setIsSavingStorefront] = useState(false);
   const [isSavingPage, setIsSavingPage] = useState(false);
+  const [uploadingAssetKind, setUploadingAssetKind] = useState<StorefrontAssetKind | null>(null);
+  const [deletingAssetKind, setDeletingAssetKind] = useState<StorefrontAssetKind | null>(null);
   const [deletingPageId, setDeletingPageId] = useState<number | null>(null);
   const [reorderingPageId, setReorderingPageId] = useState<number | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [marketplaceError, setMarketplaceError] = useState<string | null>(null);
   const [storefrontError, setStorefrontError] = useState<string | null>(null);
+  const [brandingError, setBrandingError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -210,6 +224,78 @@ export function useSettingsOverview(token: string) {
     }
   }
 
+  async function uploadStorefrontAsset(kind: StorefrontAssetKind) {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      setBrandingError('Photo library permission is required to upload storefront branding.');
+      return false;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: false,
+      quality: 1,
+    });
+
+    if (result.canceled || result.assets.length === 0) {
+      return false;
+    }
+
+    setUploadingAssetKind(kind);
+    setBrandingError(null);
+
+    try {
+      const selectedAsset = result.assets[0];
+      const response = await prepareStorefrontAssetUpload(
+        token,
+        kind,
+        buildStorefrontAssetPayload(selectedAsset),
+      );
+
+      await uploadStorefrontAssetWithInstruction(
+        response.data.upload_instruction,
+        selectedAsset,
+      );
+
+      setOverview((current) => ({
+        ...current,
+        storefront: {
+          ...current.storefront,
+          assets: replaceStorefrontAsset(current.storefront.assets, response.data.asset),
+        },
+      }));
+      return true;
+    } catch (uploadError) {
+      setBrandingError(formatApiError(uploadError));
+      return false;
+    } finally {
+      setUploadingAssetKind(null);
+    }
+  }
+
+  async function removeAsset(kind: StorefrontAssetKind) {
+    setDeletingAssetKind(kind);
+    setBrandingError(null);
+
+    try {
+      await deleteStorefrontAsset(token, kind);
+      setOverview((current) => ({
+        ...current,
+        storefront: {
+          ...current.storefront,
+          assets: removeStorefrontAssetByKind(current.storefront.assets, kind),
+        },
+      }));
+      return true;
+    } catch (deleteError) {
+      setBrandingError(formatApiError(deleteError));
+      return false;
+    } finally {
+      setDeletingAssetKind(null);
+    }
+  }
+
   async function createPage(draft: StorefrontPageDraft) {
     setIsSavingPage(true);
     setPageError(null);
@@ -326,12 +412,17 @@ export function useSettingsOverview(token: string) {
     isSavingMarketplaces,
     isSavingStorefront,
     isSavingPage,
+    uploadingAssetKind,
+    deletingAssetKind,
     deletingPageId,
     reorderingPageId,
     error,
     marketplaceError,
     storefrontError,
+    brandingError,
     pageError,
+    logoAsset: getStorefrontAsset(overview.storefront, 'logo'),
+    headerAsset: getStorefrontAsset(overview.storefront, 'header'),
     isMarketplacesDirty:
       selectedMarketplacesDraft.join('|') !== overview.user.selected_marketplaces.join('|'),
     isStorefrontDirty: !storefrontDraftEquals(
@@ -345,6 +436,8 @@ export function useSettingsOverview(token: string) {
     updateStorefrontField,
     resetStorefrontDraft,
     saveStorefrontDraft,
+    uploadStorefrontAsset,
+    removeAsset,
     createPage,
     savePage,
     removePage,

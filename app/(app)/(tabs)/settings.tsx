@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as Linking from 'expo-linking';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import {
@@ -14,11 +15,16 @@ import {
   addonCreditsSummary,
   buildReorderedStorefrontPageIds,
   createStorefrontPageDraft,
+  storefrontAssetDetails,
   storefrontAssetSummary,
+  subscriptionDetailsSummary,
 } from '@/src/features/settings/helpers';
 import type { StorefrontPage } from '@/src/features/settings/types';
 import { useSettingsOverview } from '@/src/features/settings/use-settings-overview';
 import { colors } from '@/src/theme/colors';
+
+const PRICING_URL = 'https://resellerio.com/pricing';
+const BILLING_URL = 'https://app.lemonsqueezy.com/billing';
 
 export default function SettingsScreen() {
   const { session, signOut } = useAuth();
@@ -39,12 +45,17 @@ export default function SettingsScreen() {
     isSavingMarketplaces,
     isSavingStorefront,
     isSavingPage,
+    uploadingAssetKind,
+    deletingAssetKind,
     deletingPageId,
     reorderingPageId,
     error,
     marketplaceError,
     storefrontError,
+    brandingError,
     pageError,
+    logoAsset,
+    headerAsset,
     isMarketplacesDirty,
     isStorefrontDirty,
     refresh,
@@ -54,6 +65,8 @@ export default function SettingsScreen() {
     updateStorefrontField,
     resetStorefrontDraft,
     saveStorefrontDraft,
+    uploadStorefrontAsset,
+    removeAsset,
     createPage,
     savePage,
     removePage,
@@ -68,6 +81,10 @@ export default function SettingsScreen() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function openExternalUrl(url: string) {
+    void Linking.openURL(url);
   }
 
   return (
@@ -92,8 +109,32 @@ export default function SettingsScreen() {
         <SectionCard
           eyebrow="Account"
           title={user.email}
-          description={`Plan ${user.plan ?? 'free'} · ${user.plan_status ?? 'free'}${user.plan_expires_at ? ` · expires ${user.plan_expires_at}` : ''}`}
+          description={`Plan ${user.plan ?? 'free'} · ${subscriptionDetailsSummary(
+            storefront.slug ? `https://resellerio.com/store/${storefront.slug}` : null,
+            user,
+          )}`}
         />
+
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="View plans"
+              kind="secondary"
+              onPress={() => {
+                openExternalUrl(PRICING_URL);
+              }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="Manage billing"
+              kind="secondary"
+              onPress={() => {
+                openExternalUrl(BILLING_URL);
+              }}
+            />
+          </View>
+        </View>
 
         <SectionCard
           eyebrow="Marketplaces"
@@ -262,8 +303,64 @@ export default function SettingsScreen() {
           <SectionCard
             eyebrow="Branding"
             title={storefrontAssetSummary(storefront)}
-            description="Logo/header upload API is now available and can be connected in the next settings pass."
+            description="Upload one logo and one storefront header image, or replace either asset at any time."
           />
+
+          {brandingError ? <InlineError message={brandingError} /> : null}
+
+          {[
+            { kind: 'logo' as const, title: 'Logo', asset: logoAsset },
+            { kind: 'header' as const, title: 'Header', asset: headerAsset },
+          ].map((item) => (
+            <View
+              key={item.kind}
+              style={{
+                gap: 10,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.background,
+                padding: 14,
+              }}
+            >
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{item.title}</Text>
+              <Text style={{ color: colors.mutedText, fontSize: 14 }}>
+                {storefrontAssetDetails(item.asset)}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={
+                      uploadingAssetKind === item.kind
+                        ? `Uploading ${item.title.toLowerCase()}...`
+                        : item.asset
+                          ? `Replace ${item.title.toLowerCase()}`
+                          : `Upload ${item.title.toLowerCase()}`
+                    }
+                    kind="secondary"
+                    disabled={uploadingAssetKind !== null}
+                    onPress={() => {
+                      void uploadStorefrontAsset(item.kind);
+                    }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={
+                      deletingAssetKind === item.kind
+                        ? `Removing ${item.title.toLowerCase()}...`
+                        : `Remove ${item.title.toLowerCase()}`
+                    }
+                    kind="secondary"
+                    disabled={!item.asset || deletingAssetKind !== null}
+                    onPress={() => {
+                      void removeAsset(item.kind);
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          ))}
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
