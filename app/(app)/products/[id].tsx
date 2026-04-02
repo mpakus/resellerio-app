@@ -9,12 +9,14 @@ import { manualProductStatusOptions } from '@/src/features/products/review-form'
 import {
   buildStorefrontProductUrl,
   buildReorderedStorefrontImageIds,
+  collectLifestyleSceneKeys,
   filterRenderableImages,
   formatImageKindLabel,
   formatConfidenceScore,
   formatCurrencyAmount,
   formatMarketplaceName,
   formatProductDetailTimestamp,
+  humanizeSceneKey,
   imageKindCounts,
   marketplaceListingHeadline,
   processingBannerDescription,
@@ -256,6 +258,7 @@ export default function ProductDetailScreen() {
   const storefrontImages = sortStorefrontImages(product?.images ?? []);
   const availableStorefrontImages = readyImages.filter((image) => !image.storefront_visible);
   const lifestyleImages = readyImages.filter((image) => image.kind === 'lifestyle_generated');
+  const lifestyleSceneKeys = collectLifestyleSceneKeys(lifestyleImages);
   const originalImages = filterRenderableImages(product?.images ?? [], 'original');
   const backgroundRemovedImages = filterRenderableImages(product?.images ?? [], 'background_removed');
   const publicProductUrl = product ? buildStorefrontProductUrl(storefrontSlug, product) : null;
@@ -1062,7 +1065,13 @@ export default function ProductDetailScreen() {
               description="Generate seller-reviewed lifestyle imagery, track run history, and approve the best variants for storefront fallback priority."
             >
               <Button
-                label={isGeneratingLifestyle ? 'Generating lifestyle images...' : 'Generate lifestyle images'}
+                label={
+                  isGeneratingLifestyle
+                    ? 'Generating lifestyle images...'
+                    : lifestyleImages.length > 0
+                      ? 'Regenerate all scenes'
+                      : 'Generate lifestyle images'
+                }
                 disabled={isGeneratingLifestyle || isUpdatingMedia}
                 onPress={() => {
                   void generateLifestyle();
@@ -1090,6 +1099,27 @@ export default function ProductDetailScreen() {
                       : 'No run history yet'
                 }
               />
+
+              {lifestyleSceneKeys.length > 0 ? (
+                <View style={{ gap: 10 }}>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+                    Scene shortcuts
+                  </Text>
+                  <View style={{ gap: 10 }}>
+                    {lifestyleSceneKeys.map((sceneKey) => (
+                      <Button
+                        key={sceneKey}
+                        label={`Regenerate ${humanizeSceneKey(sceneKey)}`}
+                        kind="secondary"
+                        disabled={isGeneratingLifestyle || isUpdatingMedia}
+                        onPress={() => {
+                          void generateLifestyle(sceneKey);
+                        }}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ) : null}
 
               {lifestyleRuns.map((run) => (
                 <View
@@ -1148,9 +1178,21 @@ export default function ProductDetailScreen() {
                         onPress={() => {
                           setSelectedImage(image);
                         }}
-                      />
+                        />
                     ) : null}
                     <View style={{ flexDirection: 'row', gap: 10 }}>
+                      {image.scene_key ? (
+                        <View style={{ flex: 1 }}>
+                          <Button
+                            label="Regenerate scene"
+                            kind="secondary"
+                            disabled={isGeneratingLifestyle || isUpdatingMedia}
+                            onPress={() => {
+                              void generateLifestyle(image.scene_key ?? undefined);
+                            }}
+                          />
+                        </View>
+                      ) : null}
                       {!image.seller_approved ? (
                         <View style={{ flex: 1 }}>
                           <Button

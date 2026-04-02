@@ -87,6 +87,25 @@ export function formatImageKindLabel(kind: ProductImage['kind']) {
   return labels[kind] ?? kind.replace(/_/g, ' ');
 }
 
+export function humanizeSceneKey(sceneKey: string | null | undefined) {
+  if (!sceneKey) {
+    return 'Lifestyle scene';
+  }
+
+  return sceneKey
+    .replace(/-/g, ' ')
+    .replace(/_/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+export function collectLifestyleSceneKeys(images: ProductDetail['images']) {
+  return [...new Set(images.map((image) => image.scene_key).filter((value): value is string => Boolean(value)))]
+    .sort((left, right) => left.localeCompare(right));
+}
+
 export function sortDisplayImages(images: ProductDetail['images']) {
   return [...images].sort((left, right) => {
     return (

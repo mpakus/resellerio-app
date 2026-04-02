@@ -255,12 +255,12 @@ export function useProductDetail(token: string, productId: number) {
     }
   }
 
-  async function generateLifestyle() {
+  async function generateLifestyle(sceneKey?: string) {
     setIsGeneratingLifestyle(true);
     setError(null);
 
     try {
-      const response = await generateLifestyleImages(token, productId);
+      const response = await generateLifestyleImages(token, productId, sceneKey);
       setProduct(response.data.product);
       refreshLifestyleRuns();
       return response.data.product;

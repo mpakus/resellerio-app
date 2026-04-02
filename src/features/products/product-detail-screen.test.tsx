@@ -58,11 +58,13 @@ const mockedShare = jest.spyOn(Share, 'share').mockResolvedValue({
   action: Share.sharedAction,
   activityType: undefined,
 });
+const mockGenerateLifestyle = jest.fn();
 
 describe('ProductDetailScreen panels', () => {
   beforeEach(() => {
     mockedLinkingOpenURL.mockClear();
     mockedShare.mockClear();
+    mockGenerateLifestyle.mockReset();
   });
 
   beforeEach(() => {
@@ -292,7 +294,7 @@ describe('ProductDetailScreen panels', () => {
       archive: jest.fn(),
       unarchive: jest.fn(),
       removeProduct: jest.fn().mockResolvedValue(true),
-      generateLifestyle: jest.fn(),
+      generateLifestyle: mockGenerateLifestyle,
       approveLifestyleImage: jest.fn(),
       deleteLifestyleImage: jest.fn(),
       setImageStorefrontVisibility: jest.fn(),
@@ -357,8 +359,9 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('$84.00 target')).toBeTruthy();
     expect(screen.getByText('eBay · generated')).toBeTruthy();
     expect(screen.getByText('https://www.ebay.com/itm/1234567890')).toBeTruthy();
-    expect(screen.getByText('Generate lifestyle images')).toBeTruthy();
+    expect(screen.getByText('Regenerate all scenes')).toBeTruthy();
     expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
+    expect(screen.getByText('Regenerate Casual Lifestyle')).toBeTruthy();
     expect(screen.getByText('STOREFRONT GALLERY')).toBeTruthy();
     expect(screen.getByText('Add to storefront')).toBeTruthy();
     expect(screen.getByText('ORIGINAL IMAGES')).toBeTruthy();
@@ -378,5 +381,13 @@ describe('ProductDetailScreen panels', () => {
       message: 'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
       url: 'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
     });
+  });
+
+  it('starts scene-specific lifestyle regeneration from the shortcut button', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByText('Regenerate Casual Lifestyle'));
+
+    expect(mockGenerateLifestyle).toHaveBeenCalledWith('casual_lifestyle');
   });
 });

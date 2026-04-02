@@ -67,6 +67,8 @@ Primary seller journey:
 - [x] 2026-04-02 Step 44: Replaced the old image-count-only detail view with real original and background-removed image preview panels backed by the new public image URLs.
 - [x] 2026-04-02 Step 45: Added full-screen image preview, storefront publication controls, marketplace live URL editing, and public product share actions on product detail.
 - [x] 2026-04-02 Step 46: Added unit tests for new image preview helpers, publication draft state, storefront slug loading, and public URL actions.
+- [x] 2026-04-02 Step 47: Added lifestyle-scene regeneration controls so mobile can rerun the default set or a single `scene_key` directly from product detail.
+- [x] 2026-04-02 Step 48: Added unit tests for scene-key helper formatting, scene-specific generation calls, and the new lifestyle shortcut UI.
 
 ## Current Web Functionality Analyzed
 
@@ -242,7 +244,7 @@ Acceptance:
 - [x] Poll lifestyle runs and show run history
 - [x] Approve a lifestyle image
 - [x] Delete a lifestyle image
-- [ ] Regenerate all or regenerate by scene when backend supports the UI cleanly
+- [x] Regenerate all or regenerate by scene when backend supports the UI cleanly
 - [x] Choose which images belong in the storefront gallery
 - [x] Reorder storefront gallery images
 - [x] Publish product to storefront

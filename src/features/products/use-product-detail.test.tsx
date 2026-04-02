@@ -690,10 +690,37 @@ describe('useProductDetail', () => {
       await result.current.generateLifestyle();
     });
 
-    expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith('token-123', 11, undefined);
     await waitFor(() => {
       expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('passes a scene key when regenerating one lifestyle scene', async () => {
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    mockedGenerateLifestyleImages.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+        } as never,
+        lifestyle_generation_run: null,
+      },
+    });
+
+    await act(async () => {
+      await result.current.generateLifestyle('casual_lifestyle');
+    });
+
+    expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith(
+      'token-123',
+      11,
+      'casual_lifestyle',
+    );
   });
 
   it('approves and deletes generated lifestyle images', async () => {

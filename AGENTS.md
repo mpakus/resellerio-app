@@ -120,7 +120,7 @@ The web workspace already supports some behaviors that mobile still needs to cat
 
 Known gaps from backend analysis:
 
-- Scene-specific lifestyle regeneration UI is still narrower than web.
+- Exports/imports, dashboard, and a few polish flows still trail the web workspace.
 
 Do not paper over these gaps with fragile client-only state. If mobile parity depends on them, extend the backend contract first.
 
@@ -133,13 +133,12 @@ Completed in the app:
 - Upload-first product intake with signed uploads and finalize
 - Product review editing and lifecycle actions
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions
-- Lifestyle generation controls, approval/delete actions, storefront image selection/order, and storefront publish/share flows
+- Lifestyle generation controls, regenerate-all and regenerate-by-scene actions, approval/delete actions, storefront image selection/order, and storefront publish/share flows
 - Inquiries inbox with search, pagination, delete, and open-product action
 - Settings workspace with marketplace defaults, storefront profile, branding assets, storefront pages, usage/account, billing links, and sign out
 
 Still in progress:
 
-- Scene-specific lifestyle regeneration controls
 - Exports/imports, dashboard, and production polish
 
 ## Testing

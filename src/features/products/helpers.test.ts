@@ -1,11 +1,13 @@
 import {
   buildStorefrontProductUrl,
   buildReorderedStorefrontImageIds,
+  collectLifestyleSceneKeys,
   filterRenderableImages,
   formatConfidenceScore,
   formatCurrencyAmount,
   formatMarketplaceName,
   formatProductDetailTimestamp,
+  humanizeSceneKey,
   marketplaceListingHeadline,
   sortStorefrontImages,
   storefrontPublicationSummary,
@@ -111,5 +113,17 @@ describe('product detail presentation helpers', () => {
         { id: 3, kind: 'background_removed', url: 'https://cdn.example/processed.png', position: 1, storefront_position: null },
       ] as never, 'original'),
     ).toEqual([expect.objectContaining({ id: 2 })]);
+  });
+
+  it('humanizes and collects lifestyle scene keys', () => {
+    expect(humanizeSceneKey('casual_lifestyle')).toBe('Casual Lifestyle');
+    expect(
+      collectLifestyleSceneKeys([
+        { scene_key: 'casual_lifestyle' },
+        { scene_key: 'model_studio' },
+        { scene_key: 'casual_lifestyle' },
+        { scene_key: null },
+      ] as never),
+    ).toEqual(['casual_lifestyle', 'model_studio']);
   });
 });
