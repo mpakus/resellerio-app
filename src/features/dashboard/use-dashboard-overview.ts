@@ -5,6 +5,7 @@ import { listInquiries } from '@/src/features/inquiries/api';
 import { listProducts } from '@/src/features/products/api';
 import { loadRecentExportIds, loadRecentImportIds } from '@/src/features/transfers/storage';
 import type { DashboardOverview } from '@/src/features/dashboard/types';
+import type { ProductsFilters } from '@/src/features/products/types';
 
 const emptyOverview: DashboardOverview = {
   totalProducts: 0,
@@ -14,6 +15,16 @@ const emptyOverview: DashboardOverview = {
   trackedExports: 0,
   trackedImports: 0,
   recentProducts: [],
+};
+
+const defaultProductFilters: Omit<ProductsFilters, 'status'> = {
+  query: '',
+  productTabId: null,
+  updatedFrom: '',
+  updatedTo: '',
+  sort: 'updated_at',
+  dir: 'desc',
+  page: 1,
 };
 
 export function useDashboardOverview(token: string) {
@@ -45,9 +56,9 @@ export function useDashboardOverview(token: string) {
           recentExportIds,
           recentImportIds,
         ] = await Promise.all([
-          listProducts(token, { status: 'all', query: '', productTabId: null, page: 1 }),
-          listProducts(token, { status: 'ready', query: '', productTabId: null, page: 1 }),
-          listProducts(token, { status: 'processing', query: '', productTabId: null, page: 1 }),
+          listProducts(token, { status: 'all', ...defaultProductFilters }),
+          listProducts(token, { status: 'ready', ...defaultProductFilters }),
+          listProducts(token, { status: 'processing', ...defaultProductFilters }),
           listInquiries(token, { query: '', page: 1 }),
           loadRecentExportIds(),
           loadRecentImportIds(),

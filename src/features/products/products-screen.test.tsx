@@ -70,7 +70,16 @@ describe('ProductsScreen tab dialogs', () => {
           updated_at: '2026-04-01T00:00:00Z',
         },
       ],
-      filters: { status: 'all', query: '', productTabId: 7, page: 1 },
+      filters: {
+        status: 'all',
+        query: '',
+        productTabId: 7,
+        updatedFrom: '',
+        updatedTo: '',
+        sort: 'updated_at',
+        dir: 'desc',
+        page: 1,
+      },
       searchDraft: '',
       setSearchDraft: jest.fn(),
       pagination: { page: 1, page_size: 15, total_count: 0, total_pages: 1 },
@@ -83,9 +92,20 @@ describe('ProductsScreen tab dialogs', () => {
       submitSearch: jest.fn(),
       clearSearch: jest.fn(),
       loadNextPage: jest.fn(),
+      filtersDraft: {
+        sort: 'updated_at',
+        dir: 'desc',
+        updatedFrom: '',
+        updatedTo: '',
+      },
       tabName: '',
       setTabName: jest.fn(),
       tabError: null,
+      filtersError: null,
+      updateFiltersDraft: jest.fn(),
+      resetFiltersDraft: jest.fn(),
+      applyFilters: jest.fn(() => true),
+      clearAdvancedFilters: jest.fn(),
       isCreatingTab: false,
       addProductTab: jest.fn().mockResolvedValue(undefined),
       editingTabId: null,
@@ -97,6 +117,7 @@ describe('ProductsScreen tab dialogs', () => {
       saveEditingTab: jest.fn().mockResolvedValue(undefined),
       deletingTabId: null,
       removeProductTab: jest.fn().mockResolvedValue(undefined),
+      hasActiveAdvancedFilters: false,
     });
   });
 
@@ -113,5 +134,15 @@ describe('ProductsScreen tab dialogs', () => {
 
     fireEvent.press(screen.getByLabelText('Manage Shoes'));
     expect(screen.getByText('Manage Shoes')).toBeTruthy();
+  });
+
+  it('opens the filters modal on demand', () => {
+    render(<ProductsScreen />);
+
+    expect(screen.queryByText('More filters')).toBeNull();
+
+    fireEvent.press(screen.getByText('Filters'));
+
+    expect(screen.getByText('More filters')).toBeTruthy();
   });
 });

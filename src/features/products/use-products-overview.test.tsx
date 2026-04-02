@@ -117,6 +117,57 @@ describe('useProductsOverview', () => {
     });
   });
 
+  it('applies advanced sort and updated date filters', async () => {
+    const { result } = renderHook(() => useProductsOverview('token-123'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.updateFiltersDraft('sort', 'price');
+      result.current.updateFiltersDraft('dir', 'asc');
+      result.current.updateFiltersDraft('updatedFrom', '2026-03-01');
+      result.current.updateFiltersDraft('updatedTo', '2026-03-31');
+    });
+
+    act(() => {
+      result.current.applyFilters();
+    });
+
+    await waitFor(() => {
+      expect(mockedListProducts).toHaveBeenLastCalledWith(
+        'token-123',
+        expect.objectContaining({
+          sort: 'price',
+          dir: 'asc',
+          updatedFrom: '2026-03-01',
+          updatedTo: '2026-03-31',
+          page: 1,
+        }),
+      );
+    });
+  });
+
+  it('rejects invalid advanced date filters before reloading products', async () => {
+    const { result } = renderHook(() => useProductsOverview('token-123'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.updateFiltersDraft('updatedFrom', '03/01/2026');
+    });
+
+    act(() => {
+      expect(result.current.applyFilters()).toBe(false);
+    });
+
+    expect(result.current.filtersError).toBe('Use YYYY-MM-DD for updated date filters.');
+    expect(mockedListProducts).toHaveBeenCalledTimes(1);
+  });
+
   it('creates a tab and selects it for filtering', async () => {
     mockedListProductTabs
       .mockResolvedValueOnce({

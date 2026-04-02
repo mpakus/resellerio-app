@@ -50,6 +50,7 @@ Keep environment and API base URL logic in one place. Do not scatter host detect
 
 - Auth: register, sign in, sign out, restore session
 - Inventory: products list, filters, search, tabs, product detail
+- Inventory filters: status, product tab, sort, and updated-date filtering
 - Home: mobile dashboard summary, recent activity, and quick actions
 - Intake: create product, upload photos, finalize uploads
 - Review: AI summary, description draft, price research, marketplace listings
@@ -147,6 +148,7 @@ Completed in the app:
 - Home dashboard tab with account summary, product and inquiry metrics, tracked transfer counts, quota visibility, quick actions, and recent products
 - Auth with secure persistence and bearer token restore
 - Products list, tabs, search, pagination, and detail
+- Products advanced sorting and updated-date filters via modal controls
 - Upload-first product intake with signed uploads and finalize
 - Product review editing and lifecycle actions
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions

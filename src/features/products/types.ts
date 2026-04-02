@@ -8,6 +8,8 @@ export type ProductStatus =
   | 'archived';
 
 export type ProductStatusFilter = 'all' | ProductStatus;
+export type ProductSort = 'title' | 'status' | 'price' | 'updated_at' | 'inserted_at';
+export type ProductSortDirection = 'asc' | 'desc';
 
 export type ManualProductStatus = 'draft' | 'review' | 'ready' | 'sold' | 'archived';
 
@@ -45,6 +47,10 @@ export type ProductsFilters = {
   status: ProductStatusFilter;
   query: string;
   productTabId: number | null;
+  updatedFrom: string;
+  updatedTo: string;
+  sort: ProductSort;
+  dir: ProductSortDirection;
   page: number;
 };
 

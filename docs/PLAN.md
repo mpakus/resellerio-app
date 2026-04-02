@@ -78,6 +78,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 55: Added storefront open/share actions in mobile Settings so sellers can launch or share their public storefront URL directly from the app.
 - [x] 2026-04-02 Step 56: Added environment-aware storefront URL helpers and unit tests for the new storefront sharing actions.
 - [x] 2026-04-02 Step 57: Audited the current backend and mobile notification surface and extracted the deferred push-notifications work into `docs/PLAN-PUSH-NOTIFICATIONS.md`.
+- [x] 2026-04-02 Step 58: Added advanced product sorting and updated-date filters backed by the existing `GET /api/v1/products` query contract.
+- [x] 2026-04-02 Step 59: Added a dedicated Products filters modal so advanced sort and date controls do not clutter the main inventory workspace.
+- [x] 2026-04-02 Step 60: Added unit tests for product query building, advanced filter hook behavior, and the Products filters modal.
 
 ## Current Web Functionality Analyzed
 
@@ -172,7 +175,7 @@ Recommended mobile structure:
 - [x] Auth stack: Register, Sign in
 - [x] Main tabs: Products, Inquiries, Settings
 - [x] Product stack: Products list, New Product, Product Detail
-- [ ] Optional dashboard/home tab if we want a mobile summary screen similar to web
+- [x] Optional dashboard/home tab if we want a mobile summary screen similar to web
 - [ ] Modal or sheet flows for filters, product tabs, image preview, and destructive confirmations
 
 Recommendation:
@@ -186,9 +189,9 @@ Recommendation:
 - [x] Products list using `GET /api/v1/products`
 - [x] Status filters: `all`, `draft`, `uploading`, `processing`, `review`, `ready`, `sold`, `archived`
 - [x] Search by query
-- [ ] Sort
+- [x] Sort
 - [x] Pagination
-- [ ] Updated date filters
+- [x] Updated date filters
 - [x] Product tab filter
 - [x] Product tabs list/create using `/api/v1/product_tabs`
 - [x] Product tabs rename/delete using `/api/v1/product_tabs`

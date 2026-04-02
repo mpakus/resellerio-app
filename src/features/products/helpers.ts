@@ -5,6 +5,8 @@ import type {
   ProductImage,
   ProductStatus,
   ProductStatusFilter,
+  ProductSort,
+  ProductSortDirection,
   ProductsFilters,
 } from '@/src/features/products/types';
 import { appBaseUrl } from '@/src/lib/config/env';
@@ -20,11 +22,26 @@ export const productStatusOptions: { label: string; value: ProductStatusFilter }
   { label: 'Archived', value: 'archived' },
 ];
 
+export const productSortOptions: { label: string; value: ProductSort }[] = [
+  { label: 'Updated', value: 'updated_at' },
+  { label: 'Created', value: 'inserted_at' },
+  { label: 'Title', value: 'title' },
+  { label: 'Status', value: 'status' },
+  { label: 'Price', value: 'price' },
+];
+
+export const productSortDirectionOptions: { label: string; value: ProductSortDirection }[] = [
+  { label: 'Descending', value: 'desc' },
+  { label: 'Ascending', value: 'asc' },
+];
+
 export function buildProductsQuery(filters: ProductsFilters) {
   const params = new URLSearchParams();
 
   params.set('status', filters.status);
   params.set('page', String(filters.page));
+  params.set('sort', filters.sort);
+  params.set('dir', filters.dir);
 
   const trimmedQuery = filters.query.trim();
 
@@ -36,7 +53,45 @@ export function buildProductsQuery(filters: ProductsFilters) {
     params.set('product_tab_id', String(filters.productTabId));
   }
 
+  if (filters.updatedFrom.trim()) {
+    params.set('updated_from', filters.updatedFrom.trim());
+  }
+
+  if (filters.updatedTo.trim()) {
+    params.set('updated_to', filters.updatedTo.trim());
+  }
+
   return params.toString();
+}
+
+export function isIsoDateInput(value: string) {
+  if (!value.trim()) {
+    return true;
+  }
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+}
+
+export function productSortLabel(value: ProductSort) {
+  return productSortOptions.find((option) => option.value === value)?.label ?? value;
+}
+
+export function productSortDirectionLabel(value: ProductSortDirection) {
+  return productSortDirectionOptions.find((option) => option.value === value)?.label ?? value;
+}
+
+export function advancedProductFiltersSummary(filters: Pick<ProductsFilters, 'sort' | 'dir' | 'updatedFrom' | 'updatedTo'>) {
+  const detailParts = [`Sort ${productSortLabel(filters.sort)}`, productSortDirectionLabel(filters.dir)];
+
+  if (filters.updatedFrom.trim()) {
+    detailParts.push(`from ${filters.updatedFrom.trim()}`);
+  }
+
+  if (filters.updatedTo.trim()) {
+    detailParts.push(`to ${filters.updatedTo.trim()}`);
+  }
+
+  return detailParts.join(' · ');
 }
 
 export function productSubtitle(product: {

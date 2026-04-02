@@ -8,6 +8,7 @@ import {
   listProducts,
   updateProductTab,
 } from '@/src/features/products/api';
+import { isIsoDateInput } from '@/src/features/products/helpers';
 import type {
   ProductSummary,
   ProductTab,
@@ -25,13 +26,24 @@ const defaultPagination: ProductsPagination = {
 
 export function useProductsOverview(token: string) {
   const refreshRequestedRef = useRef(false);
-  const [products, setProducts] = useState<ProductSummary[]>([]);
-  const [productTabs, setProductTabs] = useState<ProductTab[]>([]);
-  const [filters, setFilters] = useState<ProductsFilters>({
+  const defaultFilters: ProductsFilters = {
     status: 'all',
     query: '',
     productTabId: null,
+    updatedFrom: '',
+    updatedTo: '',
+    sort: 'updated_at',
+    dir: 'desc',
     page: 1,
+  };
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+  const [productTabs, setProductTabs] = useState<ProductTab[]>([]);
+  const [filters, setFilters] = useState<ProductsFilters>(defaultFilters);
+  const [filtersDraft, setFiltersDraft] = useState({
+    sort: defaultFilters.sort,
+    dir: defaultFilters.dir,
+    updatedFrom: defaultFilters.updatedFrom,
+    updatedTo: defaultFilters.updatedTo,
   });
   const [searchDraft, setSearchDraft] = useState('');
   const [pagination, setPagination] = useState<ProductsPagination>(defaultPagination);
@@ -41,6 +53,7 @@ export function useProductsOverview(token: string) {
   const [error, setError] = useState<string | null>(null);
   const [tabName, setTabName] = useState('');
   const [tabError, setTabError] = useState<string | null>(null);
+  const [filtersError, setFiltersError] = useState<string | null>(null);
   const [isCreatingTab, setIsCreatingTab] = useState(false);
   const [editingTabId, setEditingTabId] = useState<number | null>(null);
   const [editingTabName, setEditingTabName] = useState('');
@@ -115,6 +128,65 @@ export function useProductsOverview(token: string) {
   function clearSearch() {
     setSearchDraft('');
     setFilters((current) => ({ ...current, query: '', page: 1 }));
+  }
+
+  function updateFiltersDraft<Key extends keyof typeof filtersDraft>(
+    key: Key,
+    value: (typeof filtersDraft)[Key],
+  ) {
+    setFiltersDraft((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
+
+  function resetFiltersDraft() {
+    setFiltersDraft({
+      sort: filters.sort,
+      dir: filters.dir,
+      updatedFrom: filters.updatedFrom,
+      updatedTo: filters.updatedTo,
+    });
+    setFiltersError(null);
+  }
+
+  function applyFilters() {
+    const nextUpdatedFrom = filtersDraft.updatedFrom.trim();
+    const nextUpdatedTo = filtersDraft.updatedTo.trim();
+
+    if (!isIsoDateInput(nextUpdatedFrom) || !isIsoDateInput(nextUpdatedTo)) {
+      setFiltersError('Use YYYY-MM-DD for updated date filters.');
+      return false;
+    }
+
+    setFiltersError(null);
+    setFilters((current) => ({
+      ...current,
+      sort: filtersDraft.sort,
+      dir: filtersDraft.dir,
+      updatedFrom: nextUpdatedFrom,
+      updatedTo: nextUpdatedTo,
+      page: 1,
+    }));
+    return true;
+  }
+
+  function clearAdvancedFilters() {
+    setFiltersDraft({
+      sort: defaultFilters.sort,
+      dir: defaultFilters.dir,
+      updatedFrom: '',
+      updatedTo: '',
+    });
+    setFiltersError(null);
+    setFilters((current) => ({
+      ...current,
+      sort: defaultFilters.sort,
+      dir: defaultFilters.dir,
+      updatedFrom: '',
+      updatedTo: '',
+      page: 1,
+    }));
   }
 
   function refresh() {
@@ -255,6 +327,12 @@ export function useProductsOverview(token: string) {
     tabName,
     setTabName,
     tabError,
+    filtersDraft,
+    filtersError,
+    updateFiltersDraft,
+    resetFiltersDraft,
+    applyFilters,
+    clearAdvancedFilters,
     isCreatingTab,
     addProductTab,
     editingTabId,
@@ -266,5 +344,10 @@ export function useProductsOverview(token: string) {
     saveEditingTab,
     deletingTabId,
     removeProductTab,
+    hasActiveAdvancedFilters:
+      filters.sort !== defaultFilters.sort ||
+      filters.dir !== defaultFilters.dir ||
+      filters.updatedFrom.trim().length > 0 ||
+      filters.updatedTo.trim().length > 0,
   };
 }

@@ -1,4 +1,6 @@
 import {
+  advancedProductFiltersSummary,
+  buildProductsQuery,
   buildStorefrontProductUrl,
   buildReorderedStorefrontImageIds,
   collectLifestyleSceneKeys,
@@ -125,5 +127,31 @@ describe('product detail presentation helpers', () => {
         { scene_key: null },
       ] as never),
     ).toEqual(['casual_lifestyle', 'model_studio']);
+  });
+
+  it('builds product query strings with advanced filters', () => {
+    expect(
+      buildProductsQuery({
+        status: 'ready',
+        query: 'nike',
+        productTabId: 7,
+        updatedFrom: '2026-03-01',
+        updatedTo: '2026-03-31',
+        sort: 'price',
+        dir: 'asc',
+        page: 2,
+      }),
+    ).toBe(
+      'status=ready&page=2&sort=price&dir=asc&query=nike&product_tab_id=7&updated_from=2026-03-01&updated_to=2026-03-31',
+    );
+
+    expect(
+      advancedProductFiltersSummary({
+        sort: 'updated_at',
+        dir: 'desc',
+        updatedFrom: '',
+        updatedTo: '',
+      }),
+    ).toBe('Sort Updated · Descending');
   });
 });

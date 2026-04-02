@@ -5,7 +5,10 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Button, DialogModal, InlineError, Screen, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import {
+  advancedProductFiltersSummary,
   productPriceLabel,
+  productSortDirectionOptions,
+  productSortOptions,
   productStatusLabel,
   productStatusOptions,
   productSubtitle,
@@ -16,6 +19,7 @@ import { colors } from '@/src/theme/colors';
 export default function ProductsScreen() {
   const [createTabModalVisible, setCreateTabModalVisible] = useState(false);
   const [manageTabsModalVisible, setManageTabsModalVisible] = useState(false);
+  const [filtersModalVisible, setFiltersModalVisible] = useState(false);
   const { session } = useAuth();
   const {
     products,
@@ -32,9 +36,15 @@ export default function ProductsScreen() {
     submitSearch,
     clearSearch,
     loadNextPage,
+    filtersDraft,
     tabName,
     setTabName,
     tabError,
+    filtersError,
+    updateFiltersDraft,
+    resetFiltersDraft,
+    applyFilters,
+    clearAdvancedFilters,
     isCreatingTab,
     addProductTab,
     editingTabId,
@@ -46,12 +56,23 @@ export default function ProductsScreen() {
     saveEditingTab,
     deletingTabId,
     removeProductTab,
+    hasActiveAdvancedFilters,
   } = useProductsOverview(session.token);
   const activeCustomTab = productTabs.find((tab) => tab.id === filters.productTabId) ?? null;
 
   function closeManageTabsModal() {
     cancelEditingTab();
     setManageTabsModalVisible(false);
+  }
+
+  function openFiltersModal() {
+    resetFiltersDraft();
+    setFiltersModalVisible(true);
+  }
+
+  function closeFiltersModal() {
+    resetFiltersDraft();
+    setFiltersModalVisible(false);
   }
 
   return (
@@ -117,7 +138,10 @@ export default function ProductsScreen() {
                 Find products fast
               </Text>
             </View>
-            <Button label="Refresh" kind="secondary" onPress={refresh} />
+            <View style={{ minWidth: 120, gap: 8 }}>
+              <Button label="Filters" kind="secondary" onPress={openFiltersModal} />
+              <Button label="Refresh" kind="secondary" onPress={refresh} />
+            </View>
           </View>
 
           <TextField
@@ -280,6 +304,10 @@ export default function ProductsScreen() {
             {pagination.total_count} total product{pagination.total_count === 1 ? '' : 's'} · page{' '}
             {pagination.page} of {pagination.total_pages}
           </Text>
+          <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+            {advancedProductFiltersSummary(filters)}
+            {hasActiveAdvancedFilters ? ' · advanced filters active' : ''}
+          </Text>
 
           {isLoading ? (
             <Text style={{ color: colors.mutedText, fontSize: 15 }}>Loading products...</Text>
@@ -367,6 +395,121 @@ export default function ProductsScreen() {
           ) : null}
         </View>
       </View>
+
+      <DialogModal
+        visible={filtersModalVisible}
+        title="More filters"
+        description="Adjust sorting and updated-date filters for the product list."
+        onClose={closeFiltersModal}
+      >
+        <View style={{ gap: 12 }}>
+          {filtersError ? <InlineError message={filtersError} /> : null}
+
+          <View style={{ gap: 10 }}>
+            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Sort by</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {productSortOptions.map((option) => {
+                const isActive = filtersDraft.sort === option.value;
+
+                return (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => {
+                      updateFiltersDraft('sort', option.value);
+                    }}
+                    style={{
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: isActive ? colors.accent : colors.border,
+                      backgroundColor: isActive ? colors.accentSoft : colors.card,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Direction</Text>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {productSortDirectionOptions.map((option) => {
+                const isActive = filtersDraft.dir === option.value;
+
+                return (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => {
+                      updateFiltersDraft('dir', option.value);
+                    }}
+                    style={{
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: isActive ? colors.accent : colors.border,
+                      backgroundColor: isActive ? colors.accentSoft : colors.card,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <TextField
+            label="Updated from"
+            placeholder="YYYY-MM-DD"
+            autoCapitalize="none"
+            value={filtersDraft.updatedFrom}
+            onChangeText={(value) => {
+              updateFiltersDraft('updatedFrom', value);
+            }}
+          />
+          <TextField
+            label="Updated to"
+            placeholder="YYYY-MM-DD"
+            autoCapitalize="none"
+            value={filtersDraft.updatedTo}
+            onChangeText={(value) => {
+              updateFiltersDraft('updatedTo', value);
+            }}
+          />
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Apply filters"
+                onPress={() => {
+                  if (applyFilters()) {
+                    setFiltersModalVisible(false);
+                  }
+                }}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Clear advanced"
+                kind="secondary"
+                onPress={() => {
+                  clearAdvancedFilters();
+                  setFiltersModalVisible(false);
+                }}
+              />
+            </View>
+          </View>
+
+          <Button label="Cancel" kind="secondary" onPress={closeFiltersModal} />
+        </View>
+      </DialogModal>
 
       <DialogModal
         visible={createTabModalVisible}
