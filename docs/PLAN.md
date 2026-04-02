@@ -32,6 +32,16 @@ Primary seller journey:
 - [x] 2026-04-01 Step 9: Implemented the first real Products screen backed by `GET /api/v1/products`.
 - [x] 2026-04-01 Step 10: Implemented product-tab list and create flows backed by `GET /api/v1/product_tabs` and `POST /api/v1/product_tabs`.
 - [x] 2026-04-01 Step 11: Added unit tests for API error handling and products overview state logic.
+- [x] 2026-04-01 Step 12: Implemented product-tab rename and delete flows backed by `PATCH /api/v1/product_tabs/:id` and `DELETE /api/v1/product_tabs/:id`.
+- [x] 2026-04-01 Step 13: Added unit tests for product-tab rename and delete behavior, including active-filter reset after deletion.
+- [x] 2026-04-01 Step 14: Refactored protected routing to use tabs plus stack detail screens without turning product detail into another tab.
+- [x] 2026-04-01 Step 15: Implemented the first product detail screen backed by `GET /api/v1/products/:id`.
+- [x] 2026-04-01 Step 16: Added unit tests for product detail loading and refresh behavior.
+- [x] 2026-04-01 Step 17: Moved Create Tab and Manage Tabs behind on-demand modal dialogs so the Products screen stays focused by default.
+- [x] 2026-04-01 Step 18: Moved `+ Create Tab` into the horizontal tab list and changed active custom tabs to open their manage modal from a small `...` action.
+- [x] 2026-04-01 Step 19: Added the mobile upload-first New Product screen, optional tab selection, signed upload preparation, and redirect into product detail after finalization.
+- [x] 2026-04-01 Step 20: Added a local intake queue with queued/uploading/uploaded/failed per-image states plus retry and start-over actions for failed uploads.
+- [x] 2026-04-01 Step 21: Added unit tests for intake payload/orchestration helpers and the mobile intake hook.
 
 ## Current Web Functionality Analyzed
 
@@ -126,7 +136,7 @@ Recommended mobile structure:
 
 - [x] Auth stack: Register, Sign in
 - [x] Main tabs: Products, Inquiries, Settings
-- [ ] Product stack: Products list, New Product, Product Detail
+- [x] Product stack: Products list, New Product, Product Detail
 - [ ] Optional dashboard/home tab if we want a mobile summary screen similar to web
 - [ ] Modal or sheet flows for filters, product tabs, image preview, and destructive confirmations
 
@@ -141,13 +151,15 @@ Recommendation:
 - [x] Products list using `GET /api/v1/products`
 - [x] Status filters: `all`, `draft`, `uploading`, `processing`, `review`, `ready`, `sold`, `archived`
 - [x] Search by query
-- [ ] Sort and pagination
+- [ ] Sort
+- [x] Pagination
 - [ ] Updated date filters
 - [x] Product tab filter
 - [x] Product tabs list/create using `/api/v1/product_tabs`
-- [ ] Product tabs rename/delete using `/api/v1/product_tabs`
+- [x] Product tabs rename/delete using `/api/v1/product_tabs`
 - [x] Pull-to-refresh and infinite pagination or explicit next-page loading
 - [x] Empty states for no products and no search matches
+- [x] Product detail navigation and `GET /api/v1/products/:id`
 
 Acceptance:
 
@@ -159,14 +171,14 @@ Acceptance:
 
 Mirror the current web `/app/products/new` flow.
 
-- [ ] New Product screen with optional tab selection
-- [ ] Camera and photo library multi-select
-- [ ] Local upload queue with filename, size, and preview
-- [ ] `POST /api/v1/products` with `uploads`
-- [ ] Direct `PUT` upload to each signed storage URL
-- [ ] `POST /api/v1/products/:id/finalize_uploads`
-- [ ] Redirect user into Product Detail after finalize
-- [ ] Show upload progress and actionable failure states per file
+- [x] New Product screen with optional tab selection
+- [x] Camera and photo library multi-select
+- [x] Local upload queue with filename, size, and preview
+- [x] `POST /api/v1/products` with `uploads`
+- [x] Direct `PUT` upload to each signed storage URL
+- [x] `POST /api/v1/products/:id/finalize_uploads`
+- [x] Redirect user into Product Detail after finalize
+- [x] Show upload progress and actionable failure states per file
 
 Acceptance:
 
@@ -178,7 +190,7 @@ Acceptance:
 
 Mirror the current web `/app/products/:id` review experience.
 
-- [ ] Product detail screen using `GET /api/v1/products/:id`
+- [x] Product detail screen using `GET /api/v1/products/:id`
 - [ ] Processing banner and poll loop while AI is running
 - [ ] Review/edit fields: title, brand, category, condition, color, size, material, SKU, tags, price, cost, notes, status, tab
 - [ ] AI summary panel

@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
-import { createProductTab, listProductTabs, listProducts } from '@/src/features/products/api';
+import {
+  createProductTab,
+  deleteProductTab,
+  listProductTabs,
+  listProducts,
+  updateProductTab,
+} from '@/src/features/products/api';
 import type {
   ProductSummary,
   ProductTab,
@@ -36,6 +42,10 @@ export function useProductsOverview(token: string) {
   const [tabName, setTabName] = useState('');
   const [tabError, setTabError] = useState<string | null>(null);
   const [isCreatingTab, setIsCreatingTab] = useState(false);
+  const [editingTabId, setEditingTabId] = useState<number | null>(null);
+  const [editingTabName, setEditingTabName] = useState('');
+  const [isUpdatingTab, setIsUpdatingTab] = useState(false);
+  const [deletingTabId, setDeletingTabId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +136,7 @@ export function useProductsOverview(token: string) {
 
     if (!trimmed) {
       setTabError('Enter a tab name first.');
-      return;
+      return false;
     }
 
     setIsCreatingTab(true);
@@ -145,10 +155,84 @@ export function useProductsOverview(token: string) {
         productTabId: newTab.id,
         page: 1,
       }));
+      return true;
     } catch (createError) {
       setTabError(formatApiError(createError));
+      return false;
     } finally {
       setIsCreatingTab(false);
+    }
+  }
+
+  function startEditingTab(tab: ProductTab) {
+    setTabError(null);
+    setEditingTabId(tab.id);
+    setEditingTabName(tab.name);
+  }
+
+  function cancelEditingTab() {
+    setEditingTabId(null);
+    setEditingTabName('');
+    setTabError(null);
+  }
+
+  async function saveEditingTab() {
+    const trimmed = editingTabName.trim();
+
+    if (editingTabId === null) {
+      return false;
+    }
+
+    if (!trimmed) {
+      setTabError('Enter a tab name first.');
+      return false;
+    }
+
+    setIsUpdatingTab(true);
+    setTabError(null);
+
+    try {
+      const response = await updateProductTab(token, editingTabId, trimmed);
+      const updatedTab = response.data.product_tab;
+
+      setProductTabs((current) =>
+        current
+          .map((tab) => (tab.id === updatedTab.id ? updatedTab : tab))
+          .sort((left, right) => left.position - right.position),
+      );
+      setEditingTabId(null);
+      setEditingTabName('');
+      return true;
+    } catch (updateError) {
+      setTabError(formatApiError(updateError));
+      return false;
+    } finally {
+      setIsUpdatingTab(false);
+    }
+  }
+
+  async function removeProductTab(tabId: number) {
+    setDeletingTabId(tabId);
+    setTabError(null);
+
+    try {
+      await deleteProductTab(token, tabId);
+
+      setProductTabs((current) => current.filter((tab) => tab.id !== tabId));
+      setFilters((current) => ({
+        ...current,
+        productTabId: current.productTabId === tabId ? null : current.productTabId,
+        page: 1,
+      }));
+
+      if (editingTabId === tabId) {
+        setEditingTabId(null);
+        setEditingTabName('');
+      }
+    } catch (deleteError) {
+      setTabError(formatApiError(deleteError));
+    } finally {
+      setDeletingTabId(null);
     }
   }
 
@@ -173,5 +257,14 @@ export function useProductsOverview(token: string) {
     tabError,
     isCreatingTab,
     addProductTab,
+    editingTabId,
+    editingTabName,
+    setEditingTabName,
+    startEditingTab,
+    cancelEditingTab,
+    isUpdatingTab,
+    saveEditingTab,
+    deletingTabId,
+    removeProductTab,
   };
 }

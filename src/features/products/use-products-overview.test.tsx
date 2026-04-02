@@ -1,17 +1,27 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { createProductTab, listProductTabs, listProducts } from '@/src/features/products/api';
+import {
+  createProductTab,
+  deleteProductTab,
+  listProductTabs,
+  listProducts,
+  updateProductTab,
+} from '@/src/features/products/api';
 import { useProductsOverview } from '@/src/features/products/use-products-overview';
 
 jest.mock('@/src/features/products/api', () => ({
   listProducts: jest.fn(),
   listProductTabs: jest.fn(),
   createProductTab: jest.fn(),
+  updateProductTab: jest.fn(),
+  deleteProductTab: jest.fn(),
 }));
 
 const mockedListProducts = jest.mocked(listProducts);
 const mockedListProductTabs = jest.mocked(listProductTabs);
 const mockedCreateProductTab = jest.mocked(createProductTab);
+const mockedUpdateProductTab = jest.mocked(updateProductTab);
+const mockedDeleteProductTab = jest.mocked(deleteProductTab);
 
 describe('useProductsOverview', () => {
   beforeEach(() => {
@@ -174,6 +184,85 @@ describe('useProductsOverview', () => {
       expect(result.current.productTabs.map((tab) => tab.name)).toEqual(['Shoes', 'Outerwear']);
       expect(result.current.filters.productTabId).toBe(9);
       expect(result.current.tabName).toBe('');
+    });
+  });
+
+  it('renames a tab in place', async () => {
+    mockedUpdateProductTab.mockResolvedValue({
+      data: {
+        product_tab: {
+          id: 7,
+          name: 'Sneakers',
+          position: 1,
+          inserted_at: '2026-04-01T00:00:00Z',
+          updated_at: '2026-04-01T00:00:00Z',
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useProductsOverview('token-123'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.startEditingTab(result.current.productTabs[0]);
+      result.current.setEditingTabName('Sneakers');
+    });
+
+    await act(async () => {
+      await result.current.saveEditingTab();
+    });
+
+    expect(mockedUpdateProductTab).toHaveBeenCalledWith('token-123', 7, 'Sneakers');
+    expect(result.current.productTabs[0]?.name).toBe('Sneakers');
+    expect(result.current.editingTabId).toBeNull();
+  });
+
+  it('deletes a selected tab and clears the active tab filter', async () => {
+    mockedListProductTabs
+      .mockResolvedValueOnce({
+        data: {
+          product_tabs: [
+            {
+              id: 7,
+              name: 'Shoes',
+              position: 1,
+              inserted_at: '2026-04-01T00:00:00Z',
+              updated_at: '2026-04-01T00:00:00Z',
+            },
+          ],
+        },
+      })
+      .mockResolvedValue({
+        data: {
+          product_tabs: [],
+        },
+      });
+
+    mockedDeleteProductTab.mockResolvedValue({
+      data: { deleted: true },
+    });
+
+    const { result } = renderHook(() => useProductsOverview('token-123'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.selectProductTab(7);
+    });
+
+    await act(async () => {
+      await result.current.removeProductTab(7);
+    });
+
+    expect(mockedDeleteProductTab).toHaveBeenCalledWith('token-123', 7);
+    await waitFor(() => {
+      expect(result.current.productTabs).toEqual([]);
+      expect(result.current.filters.productTabId).toBeNull();
     });
   });
 });

@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -119,6 +120,41 @@ export function LoadingScreen({ label }: { label: string }) {
   );
 }
 
+type DialogModalProps = PropsWithChildren<{
+  visible: boolean;
+  title: string;
+  description?: string;
+  onClose: () => void;
+}>;
+
+export function DialogModal({
+  visible,
+  title,
+  description,
+  onClose,
+  children,
+}: DialogModalProps) {
+  return (
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+        <Pressable
+          accessibilityViewIsModal
+          style={styles.modalCard}
+          onPress={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          <View style={{ gap: 8 }}>
+            <Text style={styles.modalTitle}>{title}</Text>
+            {description ? <Text style={styles.modalDescription}>{description}</Text> : null}
+          </View>
+          {children}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -209,6 +245,31 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   sectionDescription: {
+    color: colors.mutedText,
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(33, 24, 17, 0.42)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    gap: 18,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    padding: 20,
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+  },
+  modalDescription: {
     color: colors.mutedText,
     fontSize: 15,
     lineHeight: 23,

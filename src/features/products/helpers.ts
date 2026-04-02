@@ -1,4 +1,9 @@
-import type { ProductStatus, ProductStatusFilter, ProductsFilters } from '@/src/features/products/types';
+import type {
+  ProductDetail,
+  ProductStatus,
+  ProductStatusFilter,
+  ProductsFilters,
+} from '@/src/features/products/types';
 
 export const productStatusOptions: { label: string; value: ProductStatusFilter }[] = [
   { label: 'All', value: 'all' },
@@ -48,4 +53,22 @@ export function productPriceLabel(price: string | null) {
   }
 
   return `$${price}`;
+}
+
+export function processingHeadline(product: ProductDetail) {
+  const run = product.latest_processing_run;
+
+  if (!run) {
+    return 'No processing run yet';
+  }
+
+  const step = run.step ? ` · ${run.step}` : '';
+  return `${productStatusLabel(product.status)}${step}`;
+}
+
+export function imageKindCounts(images: ProductDetail['images']) {
+  return images.reduce<Record<string, number>>((accumulator, image) => {
+    accumulator[image.kind] = (accumulator[image.kind] ?? 0) + 1;
+    return accumulator;
+  }, {});
 }
