@@ -1,4 +1,5 @@
 import {
+  buildStorefrontUrl,
   storefrontAssetDetails,
   subscriptionDetailsSummary,
 } from '@/src/features/settings/helpers';
@@ -30,5 +31,12 @@ describe('settings helpers', () => {
         trial_ends_at: null,
       }),
     ).toBe('active · monthly · renews 2026-05-01T00:00:00Z · https://resellerio.com/store/my-store');
+  });
+
+  it('builds a storefront URL when a slug is available', () => {
+    expect(buildStorefrontUrl('my-store', 'https://resellerio.com')).toBe(
+      'https://resellerio.com/store/my-store',
+    );
+    expect(buildStorefrontUrl(null, 'https://resellerio.com')).toBeNull();
   });
 });

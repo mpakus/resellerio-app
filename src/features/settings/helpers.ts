@@ -6,6 +6,7 @@ import type {
   StorefrontPage,
   StorefrontPageDraft,
 } from '@/src/features/settings/types';
+import { appBaseUrl } from '@/src/lib/config/env';
 
 export function createStorefrontDraft(storefront: Storefront): StorefrontDraft {
   return {
@@ -107,6 +108,16 @@ export function storefrontAssetDetails(asset: StorefrontAsset | null) {
   const filename = asset.original_filename ?? 'Uploaded image';
 
   return `${filename} · ${dimensions}`;
+}
+
+export function buildStorefrontUrl(storefrontSlug: string | null, baseUrl: string = appBaseUrl) {
+  const normalizedSlug = storefrontSlug?.trim();
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
+  return `${baseUrl}/store/${normalizedSlug}`;
 }
 
 export function addonCreditsSummary(addonCredits: Record<string, number>) {

@@ -25,6 +25,7 @@ This repo is the mobile client. The Phoenix backend in `~/www/elixir/reseller` i
 - API docs: `~/www/elixir/reseller/docs/API.md`
 - Mobile API guide: `~/www/elixir/reseller/docs/MOBILE_API_GUIDE.md`
 - Architecture docs: `~/www/elixir/reseller/docs/ARCHITECTURE.md`
+- Push notifications plan: `~/www/elixir/resellerio-app/docs/PLAN-PUSH-NOTIFICATIONS.md`
 - Web functionality reference: `~/www/elixir/reseller/lib/reseller_web/live/*`
 - Interactive API docs: `http://localhost:4000/docs/api`
 - OpenAPI: `http://localhost:4000/api/v1/openapi.json`
@@ -54,6 +55,7 @@ Keep environment and API base URL logic in one place. Do not scatter host detect
 - Review: AI summary, description draft, price research, marketplace listings
 - Media: originals, background-removed images, lifestyle generation, storefront selection
 - Storefront: publish product, storefront settings, theme, pages, branding assets
+- Share: public storefront URL open/share and public product URL open/share
 - Inquiries: searchable inbox for storefront leads
 - Account: marketplace defaults, plan usage, billing links
 - Transfers: catalog export download and ZIP import status
@@ -150,7 +152,7 @@ Completed in the app:
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions
 - Lifestyle generation controls, regenerate-all and regenerate-by-scene actions, approval/delete actions, storefront image selection/order, and storefront publish/share flows
 - Inquiries inbox with search, pagination, delete, and open-product action
-- Settings workspace with marketplace defaults, storefront profile, branding assets, storefront pages, usage/account, billing links, and sign out
+- Settings workspace with marketplace defaults, storefront profile, branding assets, storefront pages, usage/account, storefront open/share, billing links, and sign out
 - Transfers workspace in Settings with catalog export creation, finished-download open action, ZIP import, and recent transfer polling
 
 Still in progress:

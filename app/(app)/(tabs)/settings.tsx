@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as Linking from 'expo-linking';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 
 import {
   Button,
@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import {
   addonCreditsSummary,
+  buildStorefrontUrl,
   buildReorderedStorefrontPageIds,
   createStorefrontPageDraft,
   storefrontAssetDetails,
@@ -110,6 +111,15 @@ export default function SettingsScreen() {
     void Linking.openURL(url);
   }
 
+  const storefrontUrl = buildStorefrontUrl(storefront.slug);
+
+  async function shareExternalUrl(url: string) {
+    await Share.share({
+      message: url,
+      url,
+    });
+  }
+
   return (
     <Screen scrollable>
       <View style={{ gap: 18 }}>
@@ -141,10 +151,37 @@ export default function SettingsScreen() {
           eyebrow="Account"
           title={user.email}
           description={`Plan ${user.plan ?? 'free'} · ${subscriptionDetailsSummary(
-            storefront.slug ? `https://resellerio.com/store/${storefront.slug}` : null,
+            storefrontUrl,
             user,
           )}`}
         />
+
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="Open storefront"
+              kind="secondary"
+              disabled={!storefrontUrl}
+              onPress={() => {
+                if (storefrontUrl) {
+                  openExternalUrl(storefrontUrl);
+                }
+              }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="Share storefront"
+              kind="secondary"
+              disabled={!storefrontUrl}
+              onPress={() => {
+                if (storefrontUrl) {
+                  void shareExternalUrl(storefrontUrl);
+                }
+              }}
+            />
+          </View>
+        </View>
 
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
@@ -399,6 +436,16 @@ export default function SettingsScreen() {
               Save slug, title, tagline, description, theme, and enabled state with the mobile storefront API.
             </Text>
           </View>
+
+          <SectionCard
+            eyebrow="Public URL"
+            title={storefrontUrl ?? 'Storefront URL unavailable'}
+            description={
+              storefrontUrl
+                ? 'Open or share the public storefront directly from mobile.'
+                : 'Save a storefront slug first to enable public storefront links.'
+            }
+          />
 
           {storefrontError ? <InlineError message={storefrontError} /> : null}
 

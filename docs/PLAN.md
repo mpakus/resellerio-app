@@ -75,6 +75,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 52: Added a new mobile Home dashboard tab with account summary, quick actions, recent products, and quota visibility.
 - [x] 2026-04-02 Step 53: Added dashboard stats backed by existing APIs for total products, ready products, processing products, inquiries, and locally tracked transfer counts.
 - [x] 2026-04-02 Step 54: Added unit tests for dashboard state loading, refresh behavior, and Home screen rendering.
+- [x] 2026-04-02 Step 55: Added storefront open/share actions in mobile Settings so sellers can launch or share their public storefront URL directly from the app.
+- [x] 2026-04-02 Step 56: Added environment-aware storefront URL helpers and unit tests for the new storefront sharing actions.
+- [x] 2026-04-02 Step 57: Audited the current backend and mobile notification surface and extracted the deferred push-notifications work into `docs/PLAN-PUSH-NOTIFICATIONS.md`.
 
 ## Current Web Functionality Analyzed
 
@@ -300,8 +303,9 @@ Useful after the main seller flow is stable.
 - [x] Dashboard summary screen similar to `/app`
 - [x] Exports flow using `POST /api/v1/exports` and `GET /api/v1/exports/:id`
 - [x] Imports flow using `POST /api/v1/imports` and `GET /api/v1/imports/:id`
-- [ ] Better sharing actions for storefront and product URLs
+- [x] Better sharing actions for storefront and product URLs
 - [ ] Push notifications for processing complete, lifestyle generation complete, and new inquiries
+  Deferred to `docs/PLAN-PUSH-NOTIFICATIONS.md`
 - [ ] Offline draft capture before upload
 - [ ] Crash reporting and production analytics
 

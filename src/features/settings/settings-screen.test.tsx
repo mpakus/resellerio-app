@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as Linking from 'expo-linking';
+import { Share } from 'react-native';
 
 import SettingsScreen from '@/app/(app)/(tabs)/settings';
 import { useSettingsOverview } from '@/src/features/settings/use-settings-overview';
@@ -26,6 +27,10 @@ const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseSettingsOverview = jest.mocked(useSettingsOverview);
 const mockedUseTransfersOverview = jest.mocked(useTransfersOverview);
 const mockedOpenURL = jest.mocked(Linking.openURL);
+const mockedShare = jest.spyOn(Share, 'share').mockResolvedValue({
+  action: Share.sharedAction,
+  activityType: undefined,
+});
 const mockSaveMarketplaceDraft = jest.fn();
 const mockUploadStorefrontAsset = jest.fn();
 const mockStartExport = jest.fn();
@@ -38,6 +43,7 @@ describe('SettingsScreen', () => {
     mockStartExport.mockReset();
     mockStartImport.mockReset();
     mockedOpenURL.mockReset();
+    mockedShare.mockClear();
 
     mockedUseAuth.mockReturnValue({
       status: 'authenticated',
@@ -269,6 +275,19 @@ describe('SettingsScreen', () => {
 
     expect(mockedOpenURL).toHaveBeenCalledWith('https://resellerio.com/pricing');
     expect(mockedOpenURL).toHaveBeenCalledWith('https://app.lemonsqueezy.com/billing');
+  });
+
+  it('opens and shares the public storefront URL', () => {
+    render(<SettingsScreen />);
+
+    fireEvent.press(screen.getByText('Open storefront'));
+    fireEvent.press(screen.getByText('Share storefront'));
+
+    expect(mockedOpenURL).toHaveBeenCalledWith('http://localhost:4000/store/my-store');
+    expect(mockedShare).toHaveBeenCalledWith({
+      message: 'http://localhost:4000/store/my-store',
+      url: 'http://localhost:4000/store/my-store',
+    });
   });
 
   it('starts exports and opens finished export downloads', () => {
