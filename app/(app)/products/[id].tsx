@@ -8,6 +8,7 @@ import {
   manualProductStatusOptions,
 } from '@/src/features/products/review-form';
 import {
+  buildReorderedStorefrontImageIds,
   formatConfidenceScore,
   formatCurrencyAmount,
   formatProductDetailTimestamp,
@@ -18,6 +19,7 @@ import {
   productPriceLabel,
   productStatusLabel,
   productSubtitle,
+  sortStorefrontImages,
   storefrontPublicationSummary,
   storefrontSelectionCount,
   shouldPollProductDetail,
@@ -80,18 +82,28 @@ export default function ProductDetailScreen() {
   const {
     product,
     isLoading,
+    isLoadingLifestyleRuns,
     isPolling,
     error,
+    lifestyleRuns,
+    lifestyleRunsError,
     refresh,
+    generateLifestyle,
     saveProduct,
     isReprocessing,
     isUpdatingLifecycle,
+    isGeneratingLifestyle,
+    isUpdatingMedia,
     isDeleting,
     retryProcessing,
     markSold,
     archive,
     unarchive,
     removeProduct,
+    approveLifestyleImage,
+    deleteLifestyleImage,
+    setImageStorefrontVisibility,
+    saveStorefrontImageOrder,
   } = useProductDetail(
     session.token,
     Number.isFinite(productId) ? productId : 0,
@@ -124,6 +136,10 @@ export default function ProductDetailScreen() {
 
   const imageCounts = imageKindCounts(product?.images ?? []);
   const isLifecycleBusy = isReprocessing || isUpdatingLifecycle || isDeleting || isReviewSaving;
+  const readyImages = (product?.images ?? []).filter((image) => image.processing_status === 'ready');
+  const storefrontImages = sortStorefrontImages(product?.images ?? []);
+  const availableStorefrontImages = readyImages.filter((image) => !image.storefront_visible);
+  const lifestyleImages = readyImages.filter((image) => image.kind === 'lifestyle_generated');
 
   async function handleDelete() {
     const deleted = await removeProduct();
@@ -134,6 +150,16 @@ export default function ProductDetailScreen() {
 
     setDeleteModalVisible(false);
     router.replace('/products');
+  }
+
+  async function handleMoveStorefrontImage(imageId: number, direction: 'earlier' | 'later') {
+    const reorderedIds = buildReorderedStorefrontImageIds(
+      storefrontImages.map((image) => image.id),
+      imageId,
+      direction,
+    );
+
+    await saveStorefrontImageOrder(reorderedIds);
   }
 
   return (
@@ -713,6 +739,250 @@ export default function ProductDetailScreen() {
                     />
                   </View>
                 ))
+              )}
+            </DetailPanel>
+
+            <DetailPanel
+              eyebrow="Lifestyle Studio"
+              title={
+                product.latest_lifestyle_generation_run
+                  ? `Latest run · ${product.latest_lifestyle_generation_run.status}`
+                  : 'No lifestyle generation yet'
+              }
+              description="Generate seller-reviewed lifestyle imagery, track run history, and approve the best variants for storefront fallback priority."
+            >
+              <Button
+                label={isGeneratingLifestyle ? 'Generating lifestyle images...' : 'Generate lifestyle images'}
+                disabled={isGeneratingLifestyle || isUpdatingMedia}
+                onPress={() => {
+                  void generateLifestyle();
+                }}
+              />
+
+              {lifestyleRunsError ? <InlineError message={lifestyleRunsError} /> : null}
+
+              <DetailMetaRow
+                label="Latest run"
+                value={
+                  product.latest_lifestyle_generation_run
+                    ? `${product.latest_lifestyle_generation_run.status} · ${product.latest_lifestyle_generation_run.completed_count ?? 0}/${product.latest_lifestyle_generation_run.requested_count ?? 0} complete`
+                    : 'No lifestyle runs yet'
+                }
+              />
+
+              <DetailMetaRow
+                label="Run history"
+                value={
+                  isLoadingLifestyleRuns
+                    ? 'Loading run history...'
+                    : lifestyleRuns.length > 0
+                      ? `${lifestyleRuns.length} run${lifestyleRuns.length === 1 ? '' : 's'} available`
+                      : 'No run history yet'
+                }
+              />
+
+              {lifestyleRuns.map((run) => (
+                <View
+                  key={run.id}
+                  style={{
+                    gap: 8,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                    padding: 14,
+                  }}
+                >
+                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                    Run #{run.id} · {run.status}
+                  </Text>
+                  <DetailMetaRow label="Step" value={run.step ?? 'Not available'} />
+                  <DetailMetaRow label="Scene family" value={run.scene_family ?? 'Default set'} />
+                  <DetailMetaRow
+                    label="Counts"
+                    value={`${run.completed_count ?? 0}/${run.requested_count ?? 0} complete`}
+                  />
+                </View>
+              ))}
+
+              {lifestyleImages.length > 0 ? (
+                lifestyleImages.map((image) => (
+                  <View
+                    key={image.id}
+                    style={{
+                      gap: 10,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      padding: 14,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                      Lifestyle image #{image.id}
+                    </Text>
+                    <DetailMetaRow label="Scene" value={image.scene_key ?? 'Default scene'} />
+                    <DetailMetaRow
+                      label="Approved"
+                      value={image.seller_approved ? `Yes · ${formatProductDetailTimestamp(image.approved_at)}` : 'No'}
+                    />
+                    <DetailMetaRow
+                      label="Source images"
+                      value={image.source_image_ids.length > 0 ? image.source_image_ids.join(', ') : 'Not available'}
+                    />
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      {!image.seller_approved ? (
+                        <View style={{ flex: 1 }}>
+                          <Button
+                            label="Approve"
+                            kind="secondary"
+                            disabled={isUpdatingMedia}
+                            onPress={() => {
+                              void approveLifestyleImage(image.id);
+                            }}
+                          />
+                        </View>
+                      ) : null}
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label="Delete"
+                          kind="secondary"
+                          disabled={isUpdatingMedia}
+                          onPress={() => {
+                            void deleteLifestyleImage(image.id);
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  No lifestyle-generated images yet. Generate a run after AI review is ready.
+                </Text>
+              )}
+            </DetailPanel>
+
+            <DetailPanel
+              eyebrow="Storefront Gallery"
+              title={`${storefrontImages.length} selected image${storefrontImages.length === 1 ? '' : 's'}`}
+              description="Choose which ready images should appear in the storefront gallery and reorder the selected set."
+            >
+              <DetailMetaRow
+                label="Selected"
+                value={
+                  storefrontImages.length > 0
+                    ? storefrontImages.map((image) => `#${image.id}`).join(', ')
+                    : 'No images explicitly selected'
+                }
+              />
+              <DetailMetaRow
+                label="Fallback"
+                value="When no image is selected, the storefront falls back to approved lifestyle, then background-removed, then original images."
+              />
+
+              {storefrontImages.length > 0 ? (
+                storefrontImages.map((image, index) => (
+                  <View
+                    key={image.id}
+                    style={{
+                      gap: 10,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      padding: 14,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                      {image.kind} · #{image.id}
+                    </Text>
+                    <DetailMetaRow
+                      label="Position"
+                      value={`Storefront ${image.storefront_position ?? index + 1} · Upload ${image.position ?? 'n/a'}`}
+                    />
+                    <DetailMetaRow
+                      label="Filename"
+                      value={image.original_filename ?? image.storage_key}
+                    />
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label="Move earlier"
+                          kind="secondary"
+                          disabled={isUpdatingMedia || index === 0}
+                          onPress={() => {
+                            void handleMoveStorefrontImage(image.id, 'earlier');
+                          }}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label="Move later"
+                          kind="secondary"
+                          disabled={isUpdatingMedia || index === storefrontImages.length - 1}
+                          onPress={() => {
+                            void handleMoveStorefrontImage(image.id, 'later');
+                          }}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label="Hide"
+                          kind="secondary"
+                          disabled={isUpdatingMedia}
+                          onPress={() => {
+                            void setImageStorefrontVisibility(image.id, false, null);
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                ))
+              ) : null}
+
+              {availableStorefrontImages.length > 0 ? (
+                availableStorefrontImages.map((image) => (
+                  <View
+                    key={image.id}
+                    style={{
+                      gap: 10,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      padding: 14,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                      {image.kind} · #{image.id}
+                    </Text>
+                    <DetailMetaRow
+                      label="Filename"
+                      value={image.original_filename ?? image.storage_key}
+                    />
+                    <DetailMetaRow
+                      label="Ready for storefront"
+                      value={image.processing_status === 'ready' ? 'Yes' : 'No'}
+                    />
+                    <Button
+                      label="Add to storefront"
+                      kind="secondary"
+                      disabled={isUpdatingMedia}
+                      onPress={() => {
+                        void setImageStorefrontVisibility(
+                          image.id,
+                          true,
+                          storefrontImages.length + 1,
+                        );
+                      }}
+                    />
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  All ready images are already selected for storefront, or the product has no ready images yet.
+                </Text>
               )}
             </DetailPanel>
 

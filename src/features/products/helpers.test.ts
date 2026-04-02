@@ -1,9 +1,11 @@
 import {
+  buildReorderedStorefrontImageIds,
   formatConfidenceScore,
   formatCurrencyAmount,
   formatMarketplaceName,
   formatProductDetailTimestamp,
   marketplaceListingHeadline,
+  sortStorefrontImages,
   storefrontPublicationSummary,
   storefrontSelectionCount,
 } from '@/src/features/products/helpers';
@@ -17,6 +19,43 @@ describe('product detail presentation helpers', () => {
         { storefront_visible: true },
       ]),
     ).toBe(2);
+  });
+
+  it('sorts storefront images by storefront position then upload position', () => {
+    expect(
+      sortStorefrontImages([
+        {
+          id: 3,
+          processing_status: 'ready',
+          storefront_visible: true,
+          storefront_position: 2,
+          position: 3,
+        },
+        {
+          id: 2,
+          processing_status: 'ready',
+          storefront_visible: true,
+          storefront_position: 1,
+          position: 2,
+        },
+        {
+          id: 1,
+          processing_status: 'processing',
+          storefront_visible: true,
+          storefront_position: 3,
+          position: 1,
+        },
+      ] as never),
+    ).toEqual([
+      expect.objectContaining({ id: 2 }),
+      expect.objectContaining({ id: 3 }),
+    ]);
+  });
+
+  it('moves storefront image ids earlier or later', () => {
+    expect(buildReorderedStorefrontImageIds([10, 20, 30], 20, 'earlier')).toEqual([20, 10, 30]);
+    expect(buildReorderedStorefrontImageIds([10, 20, 30], 20, 'later')).toEqual([10, 30, 20]);
+    expect(buildReorderedStorefrontImageIds([10, 20, 30], 10, 'earlier')).toEqual([10, 20, 30]);
   });
 
   it('formats timestamps, confidence, and currency for detail panels', () => {

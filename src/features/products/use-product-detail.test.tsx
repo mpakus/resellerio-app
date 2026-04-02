@@ -1,12 +1,18 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import {
+  approveGeneratedImage,
   archiveProduct,
   deleteProduct,
+  deleteGeneratedImage,
+  generateLifestyleImages,
   getProduct,
+  listLifestyleGenerationRuns,
   markProductSold,
   reprocessProduct,
+  reorderStorefrontImages,
   unarchiveProduct,
+  updateImageStorefront,
   updateProduct,
 } from '@/src/features/products/api';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
@@ -19,6 +25,12 @@ jest.mock('@/src/features/products/api', () => ({
   archiveProduct: jest.fn(),
   unarchiveProduct: jest.fn(),
   deleteProduct: jest.fn(),
+  generateLifestyleImages: jest.fn(),
+  listLifestyleGenerationRuns: jest.fn(),
+  approveGeneratedImage: jest.fn(),
+  deleteGeneratedImage: jest.fn(),
+  updateImageStorefront: jest.fn(),
+  reorderStorefrontImages: jest.fn(),
   listProducts: jest.fn(),
   listProductTabs: jest.fn(),
   createProductTab: jest.fn(),
@@ -33,6 +45,12 @@ const mockedMarkProductSold = jest.mocked(markProductSold);
 const mockedArchiveProduct = jest.mocked(archiveProduct);
 const mockedUnarchiveProduct = jest.mocked(unarchiveProduct);
 const mockedDeleteProduct = jest.mocked(deleteProduct);
+const mockedGenerateLifestyleImages = jest.mocked(generateLifestyleImages);
+const mockedListLifestyleGenerationRuns = jest.mocked(listLifestyleGenerationRuns);
+const mockedApproveGeneratedImage = jest.mocked(approveGeneratedImage);
+const mockedDeleteGeneratedImage = jest.mocked(deleteGeneratedImage);
+const mockedUpdateImageStorefront = jest.mocked(updateImageStorefront);
+const mockedReorderStorefrontImages = jest.mocked(reorderStorefrontImages);
 
 describe('useProductDetail', () => {
   beforeAll(() => {
@@ -45,6 +63,11 @@ describe('useProductDetail', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedListLifestyleGenerationRuns.mockResolvedValue({
+      data: {
+        runs: [],
+      },
+    });
 
     mockedGetProduct.mockResolvedValue({
       data: {
@@ -189,6 +212,30 @@ describe('useProductDetail', () => {
               inserted_at: '2026-04-01T00:00:00Z',
               updated_at: '2026-04-01T00:00:00Z',
             },
+            {
+              id: 103,
+              kind: 'lifestyle_generated',
+              position: 2,
+              storage_key: 'users/1/products/11/lifestyle.jpg',
+              content_type: 'image/jpeg',
+              width: 1200,
+              height: 1600,
+              byte_size: 140000,
+              checksum: 'ghi',
+              background_style: null,
+              processing_status: 'ready',
+              original_filename: 'shoe-lifestyle.jpg',
+              storefront_visible: false,
+              storefront_position: null,
+              lifestyle_generation_run_id: 9,
+              scene_key: 'casual_lifestyle',
+              variant_index: 1,
+              source_image_ids: [101],
+              seller_approved: false,
+              approved_at: null,
+              inserted_at: '2026-04-01T00:00:00Z',
+              updated_at: '2026-04-01T00:00:00Z',
+            },
           ],
         },
       },
@@ -203,8 +250,9 @@ describe('useProductDetail', () => {
     });
 
     expect(mockedGetProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledWith('token-123', 11);
     expect(result.current.product?.title).toBe('Nike Air Max 90');
-    expect(result.current.product?.images).toHaveLength(2);
+    expect(result.current.product?.images).toHaveLength(3);
   });
 
   it('refreshes product detail on demand', async () => {
@@ -553,5 +601,167 @@ describe('useProductDetail', () => {
     expect(mockedDeleteProduct).toHaveBeenCalledWith('token-123', 11);
     expect(deleted).toBe(true);
     expect(result.current.isDeleting).toBe(false);
+  });
+
+  it('loads lifestyle run history and generates a new lifestyle run', async () => {
+    const queuedRun = {
+      id: 10,
+      status: 'queued',
+      step: 'queued',
+      scene_family: 'apparel',
+      model: 'model-1',
+      prompt_version: 'v1',
+      requested_count: 3,
+      completed_count: 0,
+      started_at: '2026-04-01T00:12:00Z',
+      finished_at: null,
+      error_code: null,
+      error_message: null,
+      inserted_at: '2026-04-01T00:12:00Z',
+      updated_at: '2026-04-01T00:12:00Z',
+      payload: {},
+    };
+
+    mockedListLifestyleGenerationRuns
+      .mockResolvedValueOnce({
+        data: {
+          runs: [
+            {
+              id: 9,
+              status: 'completed',
+              step: 'lifestyle_generated',
+              scene_family: 'apparel',
+              model: 'model-1',
+              prompt_version: 'v1',
+              requested_count: 2,
+              completed_count: 2,
+              started_at: '2026-04-01T00:10:00Z',
+              finished_at: '2026-04-01T00:11:00Z',
+              error_code: null,
+              error_message: null,
+              inserted_at: '2026-04-01T00:10:00Z',
+              updated_at: '2026-04-01T00:11:00Z',
+              payload: {},
+            },
+          ],
+        },
+      })
+      .mockResolvedValue({
+        data: {
+          runs: [queuedRun],
+        },
+      });
+
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoadingLifestyleRuns).toBe(false);
+    });
+
+    expect(result.current.lifestyleRuns).toHaveLength(1);
+
+    mockedGenerateLifestyleImages.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          latest_lifestyle_generation_run: queuedRun,
+        } as never,
+        lifestyle_generation_run: queuedRun,
+      },
+    });
+
+    await act(async () => {
+      await result.current.generateLifestyle();
+    });
+
+    expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith('token-123', 11);
+    await waitFor(() => {
+      expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('approves and deletes generated lifestyle images', async () => {
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    mockedApproveGeneratedImage.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          images: result.current.product?.images.map((image) =>
+            image.id === 103
+              ? { ...image, seller_approved: true, approved_at: '2026-04-01T00:12:00Z' }
+              : image,
+          ),
+        } as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.approveLifestyleImage(103);
+    });
+
+    expect(mockedApproveGeneratedImage).toHaveBeenCalledWith('token-123', 11, 103);
+
+    mockedDeleteGeneratedImage.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          images: result.current.product?.images.filter((image) => image.id !== 103),
+        } as never,
+        deleted: true,
+      },
+    });
+
+    await act(async () => {
+      await result.current.deleteLifestyleImage(103);
+    });
+
+    expect(mockedDeleteGeneratedImage).toHaveBeenCalledWith('token-123', 11, 103);
+  });
+
+  it('updates storefront visibility and reorders storefront images', async () => {
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    mockedUpdateImageStorefront.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          images: result.current.product?.images.map((image) =>
+            image.id === 102
+              ? { ...image, storefront_visible: true, storefront_position: 2 }
+              : image,
+          ),
+        } as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.setImageStorefrontVisibility(102, true, 2);
+    });
+
+    expect(mockedUpdateImageStorefront).toHaveBeenCalledWith('token-123', 11, 102, {
+      storefront_visible: true,
+      storefront_position: 2,
+    });
+
+    mockedReorderStorefrontImages.mockResolvedValue({
+      data: {
+        product: result.current.product as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.saveStorefrontImageOrder([102, 101]);
+    });
+
+    expect(mockedReorderStorefrontImages).toHaveBeenCalledWith('token-123', 11, [102, 101]);
   });
 });

@@ -4,11 +4,14 @@ import type {
   FinalizeUploadsResponse,
   ProductDetailResponse,
   ProductCreateResponse,
+  ProductMutationResponse,
   ProductReprocessResponse,
   ProductTabResponse,
   ProductTabsResponse,
   ProductsFilters,
   ProductsResponse,
+  LifestyleGenerationResponse,
+  LifestyleGenerationRunsResponse,
 } from '@/src/features/products/types';
 
 export function listProducts(token: string, filters: ProductsFilters) {
@@ -71,6 +74,61 @@ export function deleteProduct(token: string, productId: number) {
   return apiRequest<{ data: { deleted: boolean } }>(`/products/${productId}`, {
     method: 'DELETE',
     token,
+  });
+}
+
+export function generateLifestyleImages(token: string, productId: number, sceneKey?: string) {
+  return apiRequest<LifestyleGenerationResponse>(`/products/${productId}/generate_lifestyle_images`, {
+    method: 'POST',
+    token,
+    body: sceneKey ? { scene_key: sceneKey } : {},
+  });
+}
+
+export function listLifestyleGenerationRuns(token: string, productId: number) {
+  return apiRequest<LifestyleGenerationRunsResponse>(`/products/${productId}/lifestyle_generation_runs`, {
+    token,
+  });
+}
+
+export function approveGeneratedImage(token: string, productId: number, imageId: number) {
+  return apiRequest<ProductMutationResponse>(`/products/${productId}/generated_images/${imageId}/approve`, {
+    method: 'POST',
+    token,
+    body: {},
+  });
+}
+
+export function deleteGeneratedImage(token: string, productId: number, imageId: number) {
+  return apiRequest<ProductMutationResponse>(`/products/${productId}/generated_images/${imageId}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export function updateImageStorefront(
+  token: string,
+  productId: number,
+  imageId: number,
+  body: {
+    storefront_visible?: boolean;
+    storefront_position?: number | null;
+  },
+) {
+  return apiRequest<ProductMutationResponse>(`/products/${productId}/images/${imageId}/storefront`, {
+    method: 'PATCH',
+    token,
+    body,
+  });
+}
+
+export function reorderStorefrontImages(token: string, productId: number, imageIds: number[]) {
+  return apiRequest<ProductMutationResponse>(`/products/${productId}/images/storefront_order`, {
+    method: 'PUT',
+    token,
+    body: {
+      image_ids: imageIds,
+    },
   });
 }
 

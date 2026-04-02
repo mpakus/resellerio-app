@@ -2,31 +2,48 @@ import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
 import {
+  approveGeneratedImage,
   archiveProduct,
   deleteProduct,
+  deleteGeneratedImage,
+  generateLifestyleImages,
   getProduct,
+  listLifestyleGenerationRuns,
   markProductSold,
   reprocessProduct,
+  reorderStorefrontImages,
   unarchiveProduct,
+  updateImageStorefront,
   updateProduct,
 } from '@/src/features/products/api';
-import { shouldPollProductDetail } from '@/src/features/products/helpers';
-import type { ProductDetail } from '@/src/features/products/types';
+import {
+  shouldPollLifestyleGeneration,
+  shouldPollProductDetail,
+} from '@/src/features/products/helpers';
+import type { LifestyleGenerationRun, ProductDetail } from '@/src/features/products/types';
 
 const PRODUCT_DETAIL_POLL_INTERVAL_MS = 5000;
 
 export function useProductDetail(token: string, productId: number) {
   const refreshRequestedRef = useRef(false);
   const pollRequestedRef = useRef(false);
+  const lifestyleRunsRefreshRequestedRef = useRef(false);
+  const lifestyleRunsPollRequestedRef = useRef(false);
   const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [lifestyleRuns, setLifestyleRuns] = useState<LifestyleGenerationRun[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingLifestyleRuns, setIsLoadingLifestyleRuns] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
   const [isUpdatingLifecycle, setIsUpdatingLifecycle] = useState(false);
+  const [isGeneratingLifestyle, setIsGeneratingLifestyle] = useState(false);
+  const [isUpdatingMedia, setIsUpdatingMedia] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [lifestyleRunsReloadKey, setLifestyleRunsReloadKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [lifestyleRunsError, setLifestyleRunsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +92,52 @@ export function useProductDetail(token: string, productId: number) {
   }, [productId, reloadKey, token]);
 
   useEffect(() => {
-    if (!shouldPollProductDetail(product) || error) {
+    let cancelled = false;
+
+    async function loadLifestyleRuns() {
+      const isManualRefresh = lifestyleRunsRefreshRequestedRef.current;
+      const isPollRefresh = lifestyleRunsPollRequestedRef.current;
+
+      setLifestyleRunsError(null);
+
+      if (!isManualRefresh && !isPollRefresh) {
+        setIsLoadingLifestyleRuns(true);
+      }
+
+      try {
+        const response = await listLifestyleGenerationRuns(token, productId);
+
+        if (cancelled) {
+          return;
+        }
+
+        setLifestyleRuns(response.data.runs);
+      } catch (loadError) {
+        if (cancelled) {
+          return;
+        }
+
+        setLifestyleRunsError(formatApiError(loadError));
+      } finally {
+        if (cancelled) {
+          return;
+        }
+
+        lifestyleRunsRefreshRequestedRef.current = false;
+        lifestyleRunsPollRequestedRef.current = false;
+        setIsLoadingLifestyleRuns(false);
+      }
+    }
+
+    void loadLifestyleRuns();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lifestyleRunsReloadKey, productId, token]);
+
+  useEffect(() => {
+    if ((!shouldPollProductDetail(product) && !shouldPollLifestyleGeneration(product)) || error) {
       return;
     }
 
@@ -89,10 +151,30 @@ export function useProductDetail(token: string, productId: number) {
     };
   }, [error, product]);
 
+  useEffect(() => {
+    if (!shouldPollLifestyleGeneration(product) || lifestyleRunsError) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      lifestyleRunsPollRequestedRef.current = true;
+      setLifestyleRunsReloadKey((current) => current + 1);
+    }, PRODUCT_DETAIL_POLL_INTERVAL_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [lifestyleRunsError, product]);
+
   function refresh() {
     refreshRequestedRef.current = true;
     setIsRefreshing(true);
     setReloadKey((current) => current + 1);
+  }
+
+  function refreshLifestyleRuns() {
+    lifestyleRunsRefreshRequestedRef.current = true;
+    setLifestyleRunsReloadKey((current) => current + 1);
   }
 
   async function saveProduct(body: { product: Record<string, unknown> }) {
@@ -159,6 +241,58 @@ export function useProductDetail(token: string, productId: number) {
     }
   }
 
+  async function generateLifestyle() {
+    setIsGeneratingLifestyle(true);
+    setError(null);
+
+    try {
+      const response = await generateLifestyleImages(token, productId);
+      setProduct(response.data.product);
+      refreshLifestyleRuns();
+      return response.data.product;
+    } catch (mutationError) {
+      setError(formatApiError(mutationError));
+      return null;
+    } finally {
+      setIsGeneratingLifestyle(false);
+    }
+  }
+
+  async function approveLifestyleImage(imageId: number) {
+    return mutateMedia(async () => {
+      const response = await approveGeneratedImage(token, productId, imageId);
+      return response.data.product;
+    });
+  }
+
+  async function deleteLifestyleImage(imageId: number) {
+    return mutateMedia(async () => {
+      const response = await deleteGeneratedImage(token, productId, imageId);
+      return response.data.product;
+    });
+  }
+
+  async function setImageStorefrontVisibility(
+    imageId: number,
+    storefrontVisible: boolean,
+    storefrontPosition?: number | null,
+  ) {
+    return mutateMedia(async () => {
+      const response = await updateImageStorefront(token, productId, imageId, {
+        storefront_visible: storefrontVisible,
+        storefront_position: storefrontPosition,
+      });
+      return response.data.product;
+    });
+  }
+
+  async function saveStorefrontImageOrder(imageIds: number[]) {
+    return mutateMedia(async () => {
+      const response = await reorderStorefrontImages(token, productId, imageIds);
+      return response.data.product;
+    });
+  }
+
   async function mutateLifecycle(runMutation: () => Promise<ProductDetail>) {
     setIsUpdatingLifecycle(true);
     setError(null);
@@ -175,22 +309,50 @@ export function useProductDetail(token: string, productId: number) {
     }
   }
 
+  async function mutateMedia(runMutation: () => Promise<ProductDetail>) {
+    setIsUpdatingMedia(true);
+    setError(null);
+
+    try {
+      const nextProduct = await runMutation();
+      setProduct(nextProduct);
+      refreshLifestyleRuns();
+      return nextProduct;
+    } catch (mutationError) {
+      setError(formatApiError(mutationError));
+      return null;
+    } finally {
+      setIsUpdatingMedia(false);
+    }
+  }
+
   return {
     product,
+    lifestyleRuns,
     isLoading,
+    isLoadingLifestyleRuns,
     isRefreshing,
     isSaving,
     isReprocessing,
     isUpdatingLifecycle,
+    isGeneratingLifestyle,
+    isUpdatingMedia,
     isDeleting,
     isPolling: shouldPollProductDetail(product),
     error,
+    lifestyleRunsError,
     refresh,
+    refreshLifestyleRuns,
     saveProduct,
     retryProcessing,
     markSold,
     archive,
     unarchive,
     removeProduct,
+    generateLifestyle,
+    approveLifestyleImage,
+    deleteLifestyleImage,
+    setImageStorefrontVisibility,
+    saveStorefrontImageOrder,
   };
 }

@@ -204,10 +204,30 @@ export type ProductDetailResponse = {
   };
 };
 
+export type ProductMutationResponse = {
+  data: {
+    product: ProductDetail;
+    deleted?: boolean;
+  };
+};
+
 export type ProductReprocessResponse = {
   data: {
     product: ProductDetail;
     processing_run: ProductRun | null;
+  };
+};
+
+export type LifestyleGenerationResponse = {
+  data: {
+    product: ProductDetail;
+    lifestyle_generation_run: LifestyleGenerationRun | null;
+  };
+};
+
+export type LifestyleGenerationRunsResponse = {
+  data: {
+    runs: LifestyleGenerationRun[];
   };
 };
 

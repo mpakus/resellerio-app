@@ -199,23 +199,76 @@ describe('ProductDetailScreen panels', () => {
             inserted_at: '2026-04-02T15:10:00Z',
             updated_at: '2026-04-02T15:10:00Z',
           },
+          {
+            id: 201,
+            kind: 'lifestyle_generated',
+            position: 2,
+            storage_key: 'users/1/products/11/lifestyle.jpg',
+            content_type: 'image/jpeg',
+            width: 1200,
+            height: 1600,
+            byte_size: 140000,
+            checksum: 'ghi',
+            background_style: null,
+            processing_status: 'ready',
+            original_filename: 'lifestyle.jpg',
+            storefront_visible: false,
+            storefront_position: null,
+            lifestyle_generation_run_id: 19,
+            scene_key: 'casual_lifestyle',
+            variant_index: 1,
+            source_image_ids: [101],
+            seller_approved: false,
+            approved_at: null,
+            inserted_at: '2026-04-02T15:15:00Z',
+            updated_at: '2026-04-02T15:15:00Z',
+          },
         ],
       },
       isLoading: false,
+      isLoadingLifestyleRuns: false,
       isRefreshing: false,
       isSaving: false,
       isPolling: false,
       error: null,
+      lifestyleRuns: [
+        {
+          id: 19,
+          status: 'completed',
+          step: 'lifestyle_generated',
+          scene_family: 'apparel',
+          model: 'gemini-2.5-flash-image',
+          prompt_version: 'v1',
+          requested_count: 2,
+          completed_count: 2,
+          started_at: '2026-04-02T15:12:00Z',
+          finished_at: '2026-04-02T15:15:00Z',
+          error_code: null,
+          error_message: null,
+          inserted_at: '2026-04-02T15:12:00Z',
+          updated_at: '2026-04-02T15:15:00Z',
+          payload: {},
+        },
+      ],
+      lifestyleRunsError: null,
       refresh: jest.fn(),
+      refreshLifestyleRuns: jest.fn(),
       saveProduct: jest.fn(),
       isReprocessing: false,
       isUpdatingLifecycle: false,
+      isGeneratingLifestyle: false,
+      isUpdatingMedia: false,
       isDeleting: false,
       retryProcessing: jest.fn(),
       markSold: jest.fn(),
       archive: jest.fn(),
       unarchive: jest.fn(),
       removeProduct: jest.fn().mockResolvedValue(true),
+      generateLifestyle: jest.fn(),
+      approveLifestyleImage: jest.fn(),
+      deleteLifestyleImage: jest.fn(),
+      setImageStorefrontVisibility: jest.fn(),
+      saveStorefrontImageOrder: jest.fn(),
     });
 
     mockedUseProductTabs.mockReturnValue({
@@ -260,5 +313,9 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('$84.00 target')).toBeTruthy();
     expect(screen.getByText('eBay · generated')).toBeTruthy();
     expect(screen.getByText('https://www.ebay.com/itm/1234567890')).toBeTruthy();
+    expect(screen.getByText('Generate lifestyle images')).toBeTruthy();
+    expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
+    expect(screen.getByText('STOREFRONT GALLERY')).toBeTruthy();
+    expect(screen.getByText('Add to storefront')).toBeTruthy();
   });
 });

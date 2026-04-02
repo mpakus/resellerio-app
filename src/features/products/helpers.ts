@@ -76,6 +76,41 @@ export function imageKindCounts(images: ProductDetail['images']) {
   }, {});
 }
 
+export function sortStorefrontImages(images: ProductDetail['images']) {
+  return [...images]
+    .filter((image) => image.processing_status === 'ready' && image.storefront_visible)
+    .sort((left, right) => {
+      return (
+        (left.storefront_position ?? 99_999) - (right.storefront_position ?? 99_999) ||
+        (left.position ?? 99_999) - (right.position ?? 99_999) ||
+        left.id - right.id
+      );
+    });
+}
+
+export function buildReorderedStorefrontImageIds(
+  imageIds: number[],
+  imageId: number,
+  direction: 'earlier' | 'later',
+) {
+  const currentIndex = imageIds.indexOf(imageId);
+
+  if (currentIndex === -1) {
+    return imageIds;
+  }
+
+  const nextIndex = direction === 'earlier' ? currentIndex - 1 : currentIndex + 1;
+
+  if (nextIndex < 0 || nextIndex >= imageIds.length) {
+    return imageIds;
+  }
+
+  const reordered = [...imageIds];
+  const [movedImageId] = reordered.splice(currentIndex, 1);
+  reordered.splice(nextIndex, 0, movedImageId);
+  return reordered;
+}
+
 export function storefrontSelectionCount(images: Pick<ProductImage, 'storefront_visible'>[]) {
   return images.filter((image) => image.storefront_visible).length;
 }
@@ -155,6 +190,14 @@ export function marketplaceListingHeadline(listing: Pick<MarketplaceListing, 'ma
   return `${formatMarketplaceName(listing.marketplace)} · ${listing.status}`;
 }
 
+export function shouldPollLifestyleGeneration(product: ProductDetail | null) {
+  if (!product) {
+    return false;
+  }
+
+  return isActiveAsyncRun(product.latest_lifestyle_generation_run);
+}
+
 export function shouldPollProductDetail(product: ProductDetail | null) {
   if (!product) {
     return false;
@@ -187,6 +230,10 @@ export function processingBannerDescription(product: ProductDetail) {
 }
 
 function isActiveProcessingRun(run: ProductRun | null) {
+  return isActiveAsyncRun(run);
+}
+
+function isActiveAsyncRun(run: ProductRun | null) {
   if (!run) {
     return false;
   }

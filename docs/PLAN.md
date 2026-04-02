@@ -52,6 +52,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 29: Audited the local Phoenix backend and marked Phase 0 backend parity prerequisites complete for the public mobile API.
 - [x] 2026-04-02 Step 30: Expanded product detail with richer storefront, AI summary, description draft, price research, and marketplace listing panels backed by the new API fields.
 - [x] 2026-04-02 Step 31: Added unit tests for the new product-detail presentation helpers and detail screen rendering.
+- [x] 2026-04-02 Step 32: Added product-detail lifestyle generation controls, run history, and seller approval or delete actions backed by the public mobile API.
+- [x] 2026-04-02 Step 33: Added storefront gallery selection and reordering controls for ready product images on mobile.
+- [x] 2026-04-02 Step 34: Added unit tests for the new media helpers plus product-detail media and storefront mutations.
 
 ## Current Web Functionality Analyzed
 
@@ -223,19 +226,20 @@ Acceptance:
 - [ ] Display original images
 - [ ] Display background-removed images when ready
 - [ ] Full-screen image preview
-- [ ] Generate lifestyle images with `POST /api/v1/products/:id/generate_lifestyle_images`
-- [ ] Poll lifestyle runs and show run history
-- [ ] Approve a lifestyle image
-- [ ] Delete a lifestyle image
+- [x] Generate lifestyle images with `POST /api/v1/products/:id/generate_lifestyle_images`
+- [x] Poll lifestyle runs and show run history
+- [x] Approve a lifestyle image
+- [x] Delete a lifestyle image
 - [ ] Regenerate all or regenerate by scene when backend supports the UI cleanly
-- [ ] Choose which images belong in the storefront gallery
-- [ ] Reorder storefront gallery images
+- [x] Choose which images belong in the storefront gallery
+- [x] Reorder storefront gallery images
 - [ ] Publish product to storefront
 - [ ] Share public product URL once publication fields are exposed in the API
 
 Dependency note:
 
 - Backend storefront image and publication fields are now available in the mobile API, so Phase 7 can build directly on the public contract.
+- Actual mobile image rendering still needs a public image URL or signed download URL in the product payload; current API returns `storage_key` metadata only.
 
 ## Phase 8: Inquiries
 
@@ -265,11 +269,9 @@ Mirror the important parts of web `/app/settings`.
 - [ ] Deep link to billing management if required
 - [ ] Sign out
 
-Settings items blocked by current API gaps:
+Settings API parity note:
 
-- [ ] Storefront logo upload
-- [ ] Storefront header upload
-- [ ] Storefront page reordering
+- Storefront logo upload, header upload, and page reordering are now available in the public API and can be implemented in the mobile settings phase.
 
 ## Phase 10: Optional Web-Parity Extensions
 
