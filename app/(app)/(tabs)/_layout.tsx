@@ -23,6 +23,13 @@ export default function AppTabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="grid-outline" size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="products"
         options={{
           title: 'Products',

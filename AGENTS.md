@@ -49,6 +49,7 @@ Keep environment and API base URL logic in one place. Do not scatter host detect
 
 - Auth: register, sign in, sign out, restore session
 - Inventory: products list, filters, search, tabs, product detail
+- Home: mobile dashboard summary, recent activity, and quick actions
 - Intake: create product, upload photos, finalize uploads
 - Review: AI summary, description draft, price research, marketplace listings
 - Media: originals, background-removed images, lifestyle generation, storefront selection
@@ -141,6 +142,7 @@ Do not paper over these gaps with fragile client-only state. If mobile parity de
 
 Completed in the app:
 
+- Home dashboard tab with account summary, product and inquiry metrics, tracked transfer counts, quota visibility, quick actions, and recent products
 - Auth with secure persistence and bearer token restore
 - Products list, tabs, search, pagination, and detail
 - Upload-first product intake with signed uploads and finalize
@@ -153,7 +155,7 @@ Completed in the app:
 
 Still in progress:
 
-- Dashboard and production polish
+- Better share refinements, notifications, and production polish
 
 ## Testing
 

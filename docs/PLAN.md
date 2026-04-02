@@ -72,6 +72,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 49: Added a dedicated mobile transfers feature with recent export and import history persisted locally because the public API exposes create and status endpoints, not list endpoints.
 - [x] 2026-04-02 Step 50: Added a new Settings transfers section for catalog export creation, ZIP import, active-job polling, and finished export download actions.
 - [x] 2026-04-02 Step 51: Added unit tests for transfers helpers, transfers state, and the new Settings transfers actions.
+- [x] 2026-04-02 Step 52: Added a new mobile Home dashboard tab with account summary, quick actions, recent products, and quota visibility.
+- [x] 2026-04-02 Step 53: Added dashboard stats backed by existing APIs for total products, ready products, processing products, inquiries, and locally tracked transfer counts.
+- [x] 2026-04-02 Step 54: Added unit tests for dashboard state loading, refresh behavior, and Home screen rendering.
 
 ## Current Web Functionality Analyzed
 
@@ -294,7 +297,7 @@ Settings API parity note:
 
 Useful after the main seller flow is stable.
 
-- [ ] Dashboard summary screen similar to `/app`
+- [x] Dashboard summary screen similar to `/app`
 - [x] Exports flow using `POST /api/v1/exports` and `GET /api/v1/exports/:id`
 - [x] Imports flow using `POST /api/v1/imports` and `GET /api/v1/imports/:id`
 - [ ] Better sharing actions for storefront and product URLs
@@ -305,6 +308,7 @@ Useful after the main seller flow is stable.
 Phase 10 note:
 
 - Mobile stores recent export and import IDs locally and re-fetches them on refresh because the public API does not expose list endpoints for transfers yet.
+- Mobile dashboard uses current public API counts for products and inquiries, then combines those with device-tracked transfer counts for a practical `/app`-style home tab.
 
 ## Suggested Delivery Order
 
