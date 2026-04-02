@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 
-import { Button, InlineError, Screen } from '@/src/components/ui';
+import { BrandedTitle, Button, InlineError, Screen } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { useProductsOverview } from '@/src/features/products/use-products-overview';
 import { useProductIntake } from '@/src/features/products/use-product-intake';
@@ -45,9 +45,7 @@ export default function NewProductScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             NEW PRODUCT
           </Text>
-          <Text style={{ color: colors.text, fontSize: 31, fontWeight: '800', letterSpacing: -0.8 }}>
-            Start with photos
-          </Text>
+          <BrandedTitle title="Start with photos" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             This mobile flow mirrors the web intake pattern: select product images first, upload
             them with signed URLs, finalize, then land in product detail while AI processing starts.

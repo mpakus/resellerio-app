@@ -83,6 +83,7 @@ Primary seller journey:
 - [x] 2026-04-02 Step 60: Added unit tests for product query building, advanced filter hook behavior, and the Products filters modal.
 - [x] 2026-04-02 Step 61: Replaced the default Expo splash asset with the backend `logo.png` and added a branded animated intro splash overlay on app launch.
 - [x] 2026-04-02 Step 62: Added unit tests for the intro splash timing and finish callback behavior.
+- [x] 2026-04-02 Step 63: Reworked page headers so the ResellerIO logo sits inline with each main screen title instead of consuming a separate top band, and updated shared UI tests for the new branded title pattern.
 
 ## Current Web Functionality Analyzed
 

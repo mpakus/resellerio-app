@@ -2,7 +2,14 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { Button, DialogModal, InlineError, Screen, TextField } from '@/src/components/ui';
+import {
+  BrandedTitle,
+  Button,
+  DialogModal,
+  InlineError,
+  Screen,
+  TextField,
+} from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import {
   advancedProductFiltersSummary,
@@ -79,37 +86,20 @@ export default function ProductsScreen() {
     <Screen scrollable>
       <View style={{ gap: 18 }}>
         <View style={{ gap: 8 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 12,
+          <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
+            INVENTORY
+          </Text>
+          <BrandedTitle title="Products" />
+          <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
+            Search inventory, filter by lifecycle status, organize products with tabs, and now open
+            individual product detail screens.
+          </Text>
+          <Button
+            label="+ Add Product"
+            onPress={() => {
+              router.push('/products/new');
             }}
-          >
-            <View style={{ flex: 1, gap: 8 }}>
-              <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
-                INVENTORY
-              </Text>
-              <Text
-                style={{ color: colors.text, fontSize: 31, fontWeight: '800', letterSpacing: -0.8 }}
-              >
-                Products workspace
-              </Text>
-              <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
-                Search inventory, filter by lifecycle status, organize products with tabs, and now open
-                individual product detail screens.
-              </Text>
-            </View>
-            <View style={{ minWidth: 120 }}>
-              <Button
-                label="+ Add Product"
-                onPress={() => {
-                  router.push('/products/new');
-                }}
-              />
-            </View>
-          </View>
+          />
         </View>
 
         <View

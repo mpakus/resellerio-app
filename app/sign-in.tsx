@@ -2,7 +2,7 @@ import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, InlineError, Screen, TextField } from '@/src/components/ui';
+import { BrandedTitle, Button, InlineError, Screen, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { formatApiError } from '@/src/lib/api/client';
 import { colors } from '@/src/theme/colors';
@@ -38,16 +38,7 @@ export default function SignInScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             RESELLERIO
           </Text>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 34,
-              fontWeight: '800',
-              letterSpacing: -0.8,
-            }}
-          >
-            Sign in to your seller workspace
-          </Text>
+          <BrandedTitle size="hero" title="Sign in to your seller workspace" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             Start with the same mobile-first flow as the web app: upload photos, review AI
             suggestions, and publish to your storefront.

@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 
 import {
+  BrandedTitle,
   Button,
   DialogModal,
   InlineError,
@@ -127,9 +128,7 @@ export default function SettingsScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             SETTINGS
           </Text>
-          <Text style={{ color: colors.text, fontSize: 31, fontWeight: '800', letterSpacing: -0.8 }}>
-            Account and storefront
-          </Text>
+          <BrandedTitle title="Account and storefront" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             Manage marketplace defaults, storefront profile settings, informational pages, and account usage from the mobile workspace.
           </Text>

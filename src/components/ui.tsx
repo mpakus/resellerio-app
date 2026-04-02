@@ -3,6 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -18,6 +19,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/src/theme/colors';
 
+const BRAND_LOGO_SOURCE = require('../../assets/images/resellerio-logo.png');
+
 type ScreenProps = PropsWithChildren<{
   scrollable?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
@@ -30,6 +33,7 @@ export function Screen({ children, scrollable = false, contentContainerStyle }: 
         <ScrollView
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           keyboardShouldPersistTaps="handled"
+          style={styles.screenBody}
         >
           {children}
         </ScrollView>
@@ -41,6 +45,36 @@ export function Screen({ children, scrollable = false, contentContainerStyle }: 
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.content, contentContainerStyle]}>{children}</View>
     </SafeAreaView>
+  );
+}
+
+type BrandedTitleProps = {
+  title: string;
+  size?: 'page' | 'hero';
+};
+
+export function BrandedTitle({ title, size = 'page' }: BrandedTitleProps) {
+  return (
+    <View style={styles.brandedTitleRow}>
+      <View style={styles.brandedTitleLogoWrap}>
+        <Image
+          accessibilityLabel="ResellerIO logo"
+          source={BRAND_LOGO_SOURCE}
+          style={[
+            styles.brandedTitleLogo,
+            size === 'hero' ? styles.brandedTitleLogoHero : styles.brandedTitleLogoPage,
+          ]}
+        />
+      </View>
+      <Text
+        style={[
+          styles.brandedTitleText,
+          size === 'hero' ? styles.brandedTitleTextHero : styles.brandedTitleTextPage,
+        ]}
+      >
+        {title}
+      </Text>
+    </View>
   );
 }
 
@@ -232,14 +266,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  brandedTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  brandedTitleLogoWrap: {
+    marginTop: 2,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    padding: 4,
+  },
+  brandedTitleLogo: {
+    borderRadius: 12,
+  },
+  brandedTitleLogoPage: {
+    width: 30,
+    height: 30,
+  },
+  brandedTitleLogoHero: {
+    width: 34,
+    height: 34,
+  },
+  brandedTitleText: {
+    flex: 1,
+    color: colors.text,
+    fontWeight: '800',
+    letterSpacing: -0.8,
+  },
+  brandedTitleTextPage: {
+    fontSize: 31,
+  },
+  brandedTitleTextHero: {
+    fontSize: 34,
+  },
+  screenBody: {
+    flex: 1,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingTop: 8,
+    paddingBottom: 18,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingTop: 8,
+    paddingBottom: 18,
     gap: 20,
   },
   button: {

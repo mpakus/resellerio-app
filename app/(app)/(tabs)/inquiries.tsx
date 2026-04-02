@@ -1,7 +1,14 @@
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { Button, InlineError, Screen, SectionCard, TextField } from '@/src/components/ui';
+import {
+  BrandedTitle,
+  Button,
+  InlineError,
+  Screen,
+  SectionCard,
+  TextField,
+} from '@/src/components/ui';
 import {
   formatInquiryTimestamp,
   inquiryDisplayName,
@@ -37,9 +44,7 @@ export default function InquiriesScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             STOREFRONT
           </Text>
-          <Text style={{ color: colors.text, fontSize: 31, fontWeight: '800', letterSpacing: -0.8 }}>
-            Inquiry inbox
-          </Text>
+          <BrandedTitle title="Inquiry inbox" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             Review storefront leads, search by buyer/contact/message, and jump into the linked product when available.
           </Text>

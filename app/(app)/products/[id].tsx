@@ -3,7 +3,15 @@ import { Image } from 'expo-image';
 import { useState, type PropsWithChildren } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Share, Text, View } from 'react-native';
 
-import { Button, DialogModal, InlineError, Screen, SectionCard, TextField } from '@/src/components/ui';
+import {
+  BrandedTitle,
+  Button,
+  DialogModal,
+  InlineError,
+  Screen,
+  SectionCard,
+  TextField,
+} from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { manualProductStatusOptions } from '@/src/features/products/review-form';
 import {
@@ -301,9 +309,7 @@ export default function ProductDetailScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             PRODUCT DETAIL
           </Text>
-          <Text style={{ color: colors.text, fontSize: 31, fontWeight: '800', letterSpacing: -0.8 }}>
-            {product?.title ?? 'Loading product'}
-          </Text>
+          <BrandedTitle title={product?.title ?? 'Loading product'} />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             Review product data, monitor AI processing, and manage the seller workflow from the same
             live mobile API payload the web workspace uses.

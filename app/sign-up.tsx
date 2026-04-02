@@ -2,7 +2,7 @@ import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, InlineError, Screen, TextField } from '@/src/components/ui';
+import { BrandedTitle, Button, InlineError, Screen, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { formatApiError } from '@/src/lib/api/client';
 import { colors } from '@/src/theme/colors';
@@ -35,16 +35,7 @@ export default function SignUpScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             CREATE ACCOUNT
           </Text>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 34,
-              fontWeight: '800',
-              letterSpacing: -0.8,
-            }}
-          >
-            Set up your mobile seller account
-          </Text>
+          <BrandedTitle size="hero" title="Set up your mobile seller account" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             Registration uses the same API as the web product. After sign-up we hydrate the session
             with your profile, supported marketplaces, and current usage limits.

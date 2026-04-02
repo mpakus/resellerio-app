@@ -88,7 +88,7 @@ describe('HomeScreen', () => {
   it('renders dashboard stats and recent activity', () => {
     render(<HomeScreen />);
 
-    expect(screen.getByText('Seller workspace')).toBeTruthy();
+    expect(screen.getByText('DASHBOARD')).toBeTruthy();
     expect(screen.getByText('seller@reseller.local')).toBeTruthy();
     expect(screen.getByText('14')).toBeTruthy();
     expect(screen.getByText('Nike Air Max 90')).toBeTruthy();

@@ -1,7 +1,14 @@
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import { Button, InlineError, LoadingScreen, Screen, SectionCard } from '@/src/components/ui';
+import {
+  BrandedTitle,
+  Button,
+  InlineError,
+  LoadingScreen,
+  Screen,
+  SectionCard,
+} from '@/src/components/ui';
 import { useDashboardOverview } from '@/src/features/dashboard/use-dashboard-overview';
 import { productStatusLabel, productSubtitle } from '@/src/features/products/helpers';
 import { useAuth } from '@/src/lib/auth/auth-provider';
@@ -33,9 +40,7 @@ export default function HomeScreen() {
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             DASHBOARD
           </Text>
-          <Text style={{ color: colors.text, fontSize: 31, fontWeight: '800', letterSpacing: -0.8 }}>
-            Seller workspace
-          </Text>
+          <BrandedTitle title="Seller workspace" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
             Track inventory health, jump into intake, and keep an eye on recent catalog activity from one mobile home base.
           </Text>
