@@ -20,6 +20,20 @@ export function getProduct(token: string, productId: number) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}`, { token });
 }
 
+export function updateProduct(
+  token: string,
+  productId: number,
+  body: {
+    product: Record<string, unknown>;
+  },
+) {
+  return apiRequest<ProductDetailResponse>(`/products/${productId}`, {
+    method: 'PATCH',
+    token,
+    body,
+  });
+}
+
 export function createProduct(
   token: string,
   body: {

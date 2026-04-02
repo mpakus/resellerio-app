@@ -1,4 +1,5 @@
 import type {
+  ProductRun,
   ProductDetail,
   ProductStatus,
   ProductStatusFilter,
@@ -71,4 +72,47 @@ export function imageKindCounts(images: ProductDetail['images']) {
     accumulator[image.kind] = (accumulator[image.kind] ?? 0) + 1;
     return accumulator;
   }, {});
+}
+
+export function shouldPollProductDetail(product: ProductDetail | null) {
+  if (!product) {
+    return false;
+  }
+
+  if (product.status === 'uploading' || product.status === 'processing') {
+    return true;
+  }
+
+  return isActiveProcessingRun(product.latest_processing_run);
+}
+
+export function processingBannerDescription(product: ProductDetail) {
+  const run = product.latest_processing_run;
+  const stepLabel = run?.step ? `Current step: ${run.step}. ` : '';
+
+  if (product.status === 'uploading') {
+    return `${stepLabel}We will keep refreshing this product automatically while uploads are still being finalized.`;
+  }
+
+  if (product.status === 'processing') {
+    return `${stepLabel}AI processing is still running, so this detail screen will refresh automatically until review data is ready.`;
+  }
+
+  if (isActiveProcessingRun(run)) {
+    return `${stepLabel}The latest processing run is still active, and this screen will keep polling for updates.`;
+  }
+
+  return 'Processing is not currently active.';
+}
+
+function isActiveProcessingRun(run: ProductRun | null) {
+  if (!run) {
+    return false;
+  }
+
+  if (!run.finished_at && run.status !== 'completed' && run.status !== 'failed') {
+    return true;
+  }
+
+  return ['queued', 'running', 'processing', 'started', 'pending'].includes(run.status);
 }

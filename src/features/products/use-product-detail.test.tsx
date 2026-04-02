@@ -1,10 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { getProduct } from '@/src/features/products/api';
+import { getProduct, updateProduct } from '@/src/features/products/api';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
 
 jest.mock('@/src/features/products/api', () => ({
   getProduct: jest.fn(),
+  updateProduct: jest.fn(),
   listProducts: jest.fn(),
   listProductTabs: jest.fn(),
   createProductTab: jest.fn(),
@@ -13,8 +14,17 @@ jest.mock('@/src/features/products/api', () => ({
 }));
 
 const mockedGetProduct = jest.mocked(getProduct);
+const mockedUpdateProduct = jest.mocked(updateProduct);
 
 describe('useProductDetail', () => {
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -185,5 +195,173 @@ describe('useProductDetail', () => {
     await waitFor(() => {
       expect(mockedGetProduct).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('saves product edits and updates local detail state', async () => {
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    mockedUpdateProduct.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          title: 'Updated title',
+          tags: ['shell', 'winter'],
+        } as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.saveProduct({
+        product: {
+          title: 'Updated title',
+          tags: ['shell', 'winter'],
+        },
+      });
+    });
+
+    expect(mockedUpdateProduct).toHaveBeenCalledWith('token-123', 11, {
+      product: {
+        title: 'Updated title',
+        tags: ['shell', 'winter'],
+      },
+    });
+    expect(result.current.product?.title).toBe('Updated title');
+    expect(result.current.isSaving).toBe(false);
+  });
+
+  it('polls automatically while processing is active and stops once the product is ready', async () => {
+    mockedGetProduct
+      .mockResolvedValueOnce({
+        data: {
+          product: {
+            id: 11,
+            status: 'processing',
+            source: 'manual',
+            title: 'Nike Air Max 90',
+            brand: 'Nike',
+            category: 'Sneakers',
+            condition: 'Good',
+            color: 'White',
+            size: '10',
+            material: 'Leather',
+            price: '84.00',
+            cost: '30.00',
+            product_tab_id: 7,
+            product_tab: {
+              id: 7,
+              name: 'Shoes',
+              position: 1,
+            },
+            sku: 'NK-90',
+            tags: ['air-max', 'vintage'],
+            notes: 'Minor wear on heel',
+            ai_summary: null,
+            ai_confidence: null,
+            sold_at: null,
+            archived_at: null,
+            inserted_at: '2026-04-01T00:00:00Z',
+            updated_at: '2026-04-01T00:00:00Z',
+            latest_processing_run: {
+              id: 41,
+              status: 'processing',
+              step: 'background_removal',
+              started_at: '2026-04-01T00:00:00Z',
+              finished_at: null,
+              error_code: null,
+              error_message: null,
+              inserted_at: '2026-04-01T00:00:00Z',
+              updated_at: '2026-04-01T00:00:30Z',
+              payload: {},
+            },
+            latest_lifestyle_generation_run: null,
+            description_draft: null,
+            price_research: null,
+            marketplace_listings: [],
+            images: [],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          product: {
+            id: 11,
+            status: 'review',
+            source: 'manual',
+            title: 'Nike Air Max 90',
+            brand: 'Nike',
+            category: 'Sneakers',
+            condition: 'Good',
+            color: 'White',
+            size: '10',
+            material: 'Leather',
+            price: '84.00',
+            cost: '30.00',
+            product_tab_id: 7,
+            product_tab: {
+              id: 7,
+              name: 'Shoes',
+              position: 1,
+            },
+            sku: 'NK-90',
+            tags: ['air-max', 'vintage'],
+            notes: 'Minor wear on heel',
+            ai_summary: 'Ready for review.',
+            ai_confidence: 0.9,
+            sold_at: null,
+            archived_at: null,
+            inserted_at: '2026-04-01T00:00:00Z',
+            updated_at: '2026-04-01T00:01:00Z',
+            latest_processing_run: {
+              id: 41,
+              status: 'completed',
+              step: 'variants_generated',
+              started_at: '2026-04-01T00:00:00Z',
+              finished_at: '2026-04-01T00:01:00Z',
+              error_code: null,
+              error_message: null,
+              inserted_at: '2026-04-01T00:00:00Z',
+              updated_at: '2026-04-01T00:01:00Z',
+              payload: {},
+            },
+            latest_lifestyle_generation_run: null,
+            description_draft: null,
+            price_research: null,
+            marketplace_listings: [],
+            images: [],
+          },
+        },
+      });
+
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.isPolling).toBe(true);
+
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    await waitFor(() => {
+      expect(mockedGetProduct).toHaveBeenCalledTimes(2);
+    });
+
+    await waitFor(() => {
+      expect(result.current.product?.status).toBe('review');
+    });
+
+    expect(result.current.isPolling).toBe(false);
+
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    expect(mockedGetProduct).toHaveBeenCalledTimes(2);
   });
 });

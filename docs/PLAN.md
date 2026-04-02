@@ -42,6 +42,10 @@ Primary seller journey:
 - [x] 2026-04-01 Step 19: Added the mobile upload-first New Product screen, optional tab selection, signed upload preparation, and redirect into product detail after finalization.
 - [x] 2026-04-01 Step 20: Added a local intake queue with queued/uploading/uploaded/failed per-image states plus retry and start-over actions for failed uploads.
 - [x] 2026-04-01 Step 21: Added unit tests for intake payload/orchestration helpers and the mobile intake hook.
+- [x] 2026-04-01 Step 22: Added a product-detail processing banner plus background polling while uploads or AI processing are still active.
+- [x] 2026-04-01 Step 23: Added unit tests for product-detail polling and automatic stop once the product reaches review.
+- [x] 2026-04-01 Step 24: Added the first editable mobile review form for seller-managed product fields, including status and tab updates.
+- [x] 2026-04-01 Step 25: Added unit tests for review draft building, dirty-state preservation during refresh, and `PATCH /api/v1/products/:id` save behavior.
 
 ## Current Web Functionality Analyzed
 
@@ -191,13 +195,13 @@ Acceptance:
 Mirror the current web `/app/products/:id` review experience.
 
 - [x] Product detail screen using `GET /api/v1/products/:id`
-- [ ] Processing banner and poll loop while AI is running
-- [ ] Review/edit fields: title, brand, category, condition, color, size, material, SKU, tags, price, cost, notes, status, tab
+- [x] Processing banner and poll loop while AI is running
+- [x] Review/edit fields: title, brand, category, condition, color, size, material, SKU, tags, price, cost, notes, status, tab
 - [ ] AI summary panel
 - [ ] Description draft panel
 - [ ] Price research panel
 - [ ] Marketplace listings panel
-- [ ] Save product changes with `PATCH /api/v1/products/:id`
+- [x] Save product changes with `PATCH /api/v1/products/:id`
 - [ ] Reprocess with `POST /api/v1/products/:id/reprocess`
 - [ ] Mark sold
 - [ ] Archive / unarchive

@@ -9,6 +9,8 @@ export type ProductStatus =
 
 export type ProductStatusFilter = 'all' | ProductStatus;
 
+export type ManualProductStatus = 'draft' | 'review' | 'ready' | 'sold' | 'archived';
+
 export type ProductTab = {
   id: number;
   name: string;

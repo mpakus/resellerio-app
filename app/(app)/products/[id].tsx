@@ -1,16 +1,23 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { Button, InlineError, Screen, SectionCard } from '@/src/components/ui';
+import { Button, InlineError, Screen, SectionCard, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import {
+  manualProductStatusOptions,
+} from '@/src/features/products/review-form';
+import {
   imageKindCounts,
+  processingBannerDescription,
   processingHeadline,
   productPriceLabel,
   productStatusLabel,
   productSubtitle,
+  shouldPollProductDetail,
 } from '@/src/features/products/helpers';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
+import { useProductReviewForm } from '@/src/features/products/use-product-review-form';
+import { useProductTabs } from '@/src/features/products/use-product-tabs';
 import { colors } from '@/src/theme/colors';
 
 export default function ProductDetailScreen() {
@@ -19,10 +26,27 @@ export default function ProductDetailScreen() {
 
   const productId = Number(id);
 
-  const { product, isLoading, error, refresh } = useProductDetail(
+  const { product, isLoading, isPolling, error, refresh, saveProduct } = useProductDetail(
     session.token,
     Number.isFinite(productId) ? productId : 0,
   );
+  const {
+    productTabs,
+    isLoading: isLoadingProductTabs,
+    error: productTabsError,
+  } = useProductTabs(session.token);
+  const {
+    draft,
+    isDirty,
+    isSaving,
+    error: reviewError,
+    updateField,
+    reset,
+    save,
+  } = useProductReviewForm({
+    product,
+    onSave: saveProduct,
+  });
 
   if (!Number.isFinite(productId) || productId <= 0) {
     return (
@@ -63,6 +87,29 @@ export default function ProductDetailScreen() {
 
         {product ? (
           <>
+            {shouldPollProductDetail(product) ? (
+              <View
+                style={{
+                  gap: 8,
+                  borderRadius: 24,
+                  borderWidth: 1,
+                  borderColor: colors.accent,
+                  backgroundColor: colors.accentSoft,
+                  padding: 18,
+                }}
+              >
+                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+                  PROCESSING ACTIVE
+                </Text>
+                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                  {isPolling ? 'Auto-refreshing while AI work finishes' : 'Processing update pending'}
+                </Text>
+                <Text style={{ color: colors.mutedText, fontSize: 15, lineHeight: 23 }}>
+                  {processingBannerDescription(product)}
+                </Text>
+              </View>
+            ) : null}
+
             <SectionCard
               eyebrow="Status"
               title={`${productStatusLabel(product.status)} · ${productPriceLabel(product.price)}`}
@@ -77,6 +124,231 @@ export default function ProductDetailScreen() {
                 'The latest processing run state is shown here while we build the richer review UI.'
               }
             />
+
+            <View
+              style={{
+                gap: 16,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+                padding: 18,
+              }}
+            >
+              <View style={{ gap: 6 }}>
+                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+                  REVIEW EDITOR
+                </Text>
+                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                  Seller-managed product fields
+                </Text>
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  Edit the same core review fields the web workspace saves through `PATCH /api/v1/products/:id`.
+                </Text>
+              </View>
+
+              {reviewError ? <InlineError message={reviewError} /> : null}
+              {productTabsError ? <InlineError message={productTabsError} /> : null}
+
+              {draft ? (
+                <>
+                  <TextField
+                    label="Title"
+                    value={draft.title}
+                    onChangeText={(value) => {
+                      updateField('title', value);
+                    }}
+                  />
+                  <TextField
+                    label="Brand"
+                    value={draft.brand}
+                    onChangeText={(value) => {
+                      updateField('brand', value);
+                    }}
+                  />
+                  <TextField
+                    label="Category"
+                    value={draft.category}
+                    onChangeText={(value) => {
+                      updateField('category', value);
+                    }}
+                  />
+                  <TextField
+                    label="Condition"
+                    value={draft.condition}
+                    onChangeText={(value) => {
+                      updateField('condition', value);
+                    }}
+                  />
+                  <TextField
+                    label="Color"
+                    value={draft.color}
+                    onChangeText={(value) => {
+                      updateField('color', value);
+                    }}
+                  />
+                  <TextField
+                    label="Size"
+                    value={draft.size}
+                    onChangeText={(value) => {
+                      updateField('size', value);
+                    }}
+                  />
+                  <TextField
+                    label="Material"
+                    value={draft.material}
+                    onChangeText={(value) => {
+                      updateField('material', value);
+                    }}
+                  />
+                  <TextField
+                    label="Price"
+                    keyboardType="decimal-pad"
+                    value={draft.price}
+                    onChangeText={(value) => {
+                      updateField('price', value);
+                    }}
+                  />
+                  <TextField
+                    label="Cost"
+                    keyboardType="decimal-pad"
+                    value={draft.cost}
+                    onChangeText={(value) => {
+                      updateField('cost', value);
+                    }}
+                  />
+                  <TextField
+                    label="SKU"
+                    value={draft.sku}
+                    onChangeText={(value) => {
+                      updateField('sku', value);
+                    }}
+                  />
+                  <TextField
+                    label="Tags (comma-separated)"
+                    value={draft.tagsText}
+                    onChangeText={(value) => {
+                      updateField('tagsText', value);
+                    }}
+                  />
+                  <TextField
+                    label="Notes"
+                    multiline
+                    numberOfLines={4}
+                    style={{ minHeight: 110, paddingVertical: 14, textAlignVertical: 'top' }}
+                    value={draft.notes}
+                    onChangeText={(value) => {
+                      updateField('notes', value);
+                    }}
+                  />
+
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Status</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={{ flexDirection: 'row', gap: 10 }}>
+                        {manualProductStatusOptions.map((option) => {
+                          const isActive = draft.status === option.value;
+
+                          return (
+                            <Pressable
+                              key={option.value}
+                              onPress={() => {
+                                updateField('status', option.value);
+                              }}
+                              style={{
+                                borderRadius: 999,
+                                borderWidth: 1,
+                                borderColor: isActive ? colors.accent : colors.border,
+                                backgroundColor: isActive ? colors.accentSoft : colors.background,
+                                paddingHorizontal: 14,
+                                paddingVertical: 10,
+                              }}
+                            >
+                              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                                {option.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </ScrollView>
+                  </View>
+
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Product tab</Text>
+                    {isLoadingProductTabs ? (
+                      <Text style={{ color: colors.mutedText, fontSize: 14 }}>Loading tabs...</Text>
+                    ) : (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                          <Pressable
+                            onPress={() => {
+                              updateField('productTabId', null);
+                            }}
+                            style={{
+                              borderRadius: 999,
+                              borderWidth: 1,
+                              borderColor: draft.productTabId === null ? colors.accent : colors.border,
+                              backgroundColor: draft.productTabId === null ? colors.accentSoft : colors.background,
+                              paddingHorizontal: 14,
+                              paddingVertical: 10,
+                            }}
+                          >
+                            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>No tab</Text>
+                          </Pressable>
+                          {productTabs.map((tab) => {
+                            const isActive = draft.productTabId === tab.id;
+
+                            return (
+                              <Pressable
+                                key={tab.id}
+                                onPress={() => {
+                                  updateField('productTabId', tab.id);
+                                }}
+                                style={{
+                                  borderRadius: 999,
+                                  borderWidth: 1,
+                                  borderColor: isActive ? colors.accent : colors.border,
+                                  backgroundColor: isActive ? colors.accentSoft : colors.background,
+                                  paddingHorizontal: 14,
+                                  paddingVertical: 10,
+                                }}
+                              >
+                                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                                  {tab.name}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label={isSaving ? 'Saving changes...' : 'Save changes'}
+                        disabled={!isDirty || isSaving}
+                        onPress={() => {
+                          void save();
+                        }}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label="Reset"
+                        kind="secondary"
+                        disabled={!isDirty || isSaving}
+                        onPress={reset}
+                      />
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <Text style={{ color: colors.mutedText, fontSize: 14 }}>Preparing review fields...</Text>
+              )}
+            </View>
 
             <SectionCard
               eyebrow="AI Summary"
