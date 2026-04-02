@@ -145,6 +145,7 @@ Do not paper over these gaps with fragile client-only state. If mobile parity de
 
 Completed in the app:
 
+- Native splash and animated intro splash branded with the current ResellerIO backend logo
 - Home dashboard tab with account summary, product and inquiry metrics, tracked transfer counts, quota visibility, quick actions, and recent products
 - Auth with secure persistence and bearer token restore
 - Products list, tabs, search, pagination, and detail

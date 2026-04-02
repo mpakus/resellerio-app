@@ -81,6 +81,8 @@ Primary seller journey:
 - [x] 2026-04-02 Step 58: Added advanced product sorting and updated-date filters backed by the existing `GET /api/v1/products` query contract.
 - [x] 2026-04-02 Step 59: Added a dedicated Products filters modal so advanced sort and date controls do not clutter the main inventory workspace.
 - [x] 2026-04-02 Step 60: Added unit tests for product query building, advanced filter hook behavior, and the Products filters modal.
+- [x] 2026-04-02 Step 61: Replaced the default Expo splash asset with the backend `logo.png` and added a branded animated intro splash overlay on app launch.
+- [x] 2026-04-02 Step 62: Added unit tests for the intro splash timing and finish callback behavior.
 
 ## Current Web Functionality Analyzed
 
