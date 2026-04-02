@@ -4,6 +4,7 @@ import type {
   FinalizeUploadsResponse,
   ProductDetailResponse,
   ProductCreateResponse,
+  ProductReprocessResponse,
   ProductTabResponse,
   ProductTabsResponse,
   ProductsFilters,
@@ -31,6 +32,45 @@ export function updateProduct(
     method: 'PATCH',
     token,
     body,
+  });
+}
+
+export function reprocessProduct(token: string, productId: number) {
+  return apiRequest<ProductReprocessResponse>(`/products/${productId}/reprocess`, {
+    method: 'POST',
+    token,
+    body: {},
+  });
+}
+
+export function markProductSold(token: string, productId: number) {
+  return apiRequest<ProductDetailResponse>(`/products/${productId}/mark_sold`, {
+    method: 'POST',
+    token,
+    body: {},
+  });
+}
+
+export function archiveProduct(token: string, productId: number) {
+  return apiRequest<ProductDetailResponse>(`/products/${productId}/archive`, {
+    method: 'POST',
+    token,
+    body: {},
+  });
+}
+
+export function unarchiveProduct(token: string, productId: number) {
+  return apiRequest<ProductDetailResponse>(`/products/${productId}/unarchive`, {
+    method: 'POST',
+    token,
+    body: {},
+  });
+}
+
+export function deleteProduct(token: string, productId: number) {
+  return apiRequest<{ data: { deleted: boolean } }>(`/products/${productId}`, {
+    method: 'DELETE',
+    token,
   });
 }
 

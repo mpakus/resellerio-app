@@ -1,6 +1,8 @@
 import type {
+  MarketplaceListing,
   ProductRun,
   ProductDetail,
+  ProductImage,
   ProductStatus,
   ProductStatusFilter,
   ProductsFilters,
@@ -72,6 +74,85 @@ export function imageKindCounts(images: ProductDetail['images']) {
     accumulator[image.kind] = (accumulator[image.kind] ?? 0) + 1;
     return accumulator;
   }, {});
+}
+
+export function storefrontSelectionCount(images: Pick<ProductImage, 'storefront_visible'>[]) {
+  return images.filter((image) => image.storefront_visible).length;
+}
+
+export function formatProductDetailTimestamp(value: string | null) {
+  if (!value) {
+    return 'Not available';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+export function formatConfidenceScore(value: number | null) {
+  if (value === null || Number.isNaN(value)) {
+    return 'Not available';
+  }
+
+  return `${Math.round(value * 100)}%`;
+}
+
+export function formatCurrencyAmount(value: string | null, currency: string | null = 'USD') {
+  if (!value) {
+    return 'Not available';
+  }
+
+  if (!currency || currency === 'USD') {
+    return `$${value}`;
+  }
+
+  return `${currency} ${value}`;
+}
+
+export function storefrontPublicationSummary(product: Pick<ProductDetail, 'storefront_enabled' | 'storefront_published_at'>) {
+  if (!product.storefront_enabled) {
+    return 'Storefront publishing is currently disabled for this product.';
+  }
+
+  if (product.storefront_published_at) {
+    return `Published on ${formatProductDetailTimestamp(product.storefront_published_at)}.`;
+  }
+
+  return 'Storefront publishing is enabled, but this product has not been published yet.';
+}
+
+export function formatMarketplaceName(value: string) {
+  const knownLabels: Record<string, string> = {
+    ebay: 'eBay',
+    poshmark: 'Poshmark',
+    mercari: 'Mercari',
+    depop: 'Depop',
+    facebook_marketplace: 'Facebook Marketplace',
+  };
+
+  if (knownLabels[value]) {
+    return knownLabels[value];
+  }
+
+  return value
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+export function marketplaceListingHeadline(listing: Pick<MarketplaceListing, 'marketplace' | 'status'>) {
+  return `${formatMarketplaceName(listing.marketplace)} · ${listing.status}`;
 }
 
 export function shouldPollProductDetail(product: ProductDetail | null) {

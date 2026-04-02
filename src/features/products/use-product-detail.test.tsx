@@ -1,11 +1,24 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { getProduct, updateProduct } from '@/src/features/products/api';
+import {
+  archiveProduct,
+  deleteProduct,
+  getProduct,
+  markProductSold,
+  reprocessProduct,
+  unarchiveProduct,
+  updateProduct,
+} from '@/src/features/products/api';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
 
 jest.mock('@/src/features/products/api', () => ({
   getProduct: jest.fn(),
   updateProduct: jest.fn(),
+  reprocessProduct: jest.fn(),
+  markProductSold: jest.fn(),
+  archiveProduct: jest.fn(),
+  unarchiveProduct: jest.fn(),
+  deleteProduct: jest.fn(),
   listProducts: jest.fn(),
   listProductTabs: jest.fn(),
   createProductTab: jest.fn(),
@@ -15,6 +28,11 @@ jest.mock('@/src/features/products/api', () => ({
 
 const mockedGetProduct = jest.mocked(getProduct);
 const mockedUpdateProduct = jest.mocked(updateProduct);
+const mockedReprocessProduct = jest.mocked(reprocessProduct);
+const mockedMarkProductSold = jest.mocked(markProductSold);
+const mockedArchiveProduct = jest.mocked(archiveProduct);
+const mockedUnarchiveProduct = jest.mocked(unarchiveProduct);
+const mockedDeleteProduct = jest.mocked(deleteProduct);
 
 describe('useProductDetail', () => {
   beforeAll(() => {
@@ -49,6 +67,8 @@ describe('useProductDetail', () => {
             name: 'Shoes',
             position: 1,
           },
+          storefront_enabled: true,
+          storefront_published_at: '2026-04-01T00:00:00Z',
           sku: 'NK-90',
           tags: ['air-max', 'vintage'],
           notes: 'Minor wear on heel',
@@ -113,6 +133,8 @@ describe('useProductDetail', () => {
               generated_price_suggestion: '84.00',
               generation_version: 'v1',
               compliance_warnings: [],
+              external_url: 'https://www.ebay.com/itm/1234567890',
+              external_url_added_at: '2026-04-01T00:10:00Z',
               last_generated_at: '2026-04-01T00:00:00Z',
               inserted_at: '2026-04-01T00:00:00Z',
               updated_at: '2026-04-01T00:00:00Z',
@@ -132,6 +154,8 @@ describe('useProductDetail', () => {
               background_style: null,
               processing_status: 'ready',
               original_filename: 'shoe.jpg',
+              storefront_visible: true,
+              storefront_position: 1,
               lifestyle_generation_run_id: null,
               scene_key: null,
               variant_index: null,
@@ -154,6 +178,8 @@ describe('useProductDetail', () => {
               background_style: null,
               processing_status: 'ready',
               original_filename: 'shoe-bg.png',
+              storefront_visible: false,
+              storefront_position: null,
               lifestyle_generation_run_id: null,
               scene_key: null,
               variant_index: null,
@@ -256,6 +282,8 @@ describe('useProductDetail', () => {
               name: 'Shoes',
               position: 1,
             },
+            storefront_enabled: false,
+            storefront_published_at: null,
             sku: 'NK-90',
             tags: ['air-max', 'vintage'],
             notes: 'Minor wear on heel',
@@ -306,6 +334,8 @@ describe('useProductDetail', () => {
               name: 'Shoes',
               position: 1,
             },
+            storefront_enabled: false,
+            storefront_published_at: null,
             sku: 'NK-90',
             tags: ['air-max', 'vintage'],
             notes: 'Minor wear on heel',
@@ -363,5 +393,165 @@ describe('useProductDetail', () => {
     });
 
     expect(mockedGetProduct).toHaveBeenCalledTimes(2);
+  });
+
+  it('restarts processing and updates the product state', async () => {
+    mockedReprocessProduct.mockResolvedValue({
+      data: {
+        product: {
+          id: 11,
+          status: 'processing',
+          source: 'manual',
+          title: 'Nike Air Max 90',
+          brand: 'Nike',
+          category: 'Sneakers',
+          condition: 'Good',
+          color: 'White',
+          size: '10',
+          material: 'Leather',
+          price: '84.00',
+          cost: '30.00',
+          product_tab_id: 7,
+          product_tab: { id: 7, name: 'Shoes', position: 1 },
+          storefront_enabled: false,
+          storefront_published_at: null,
+          sku: 'NK-90',
+          tags: ['air-max', 'vintage'],
+          notes: 'Minor wear on heel',
+          ai_summary: null,
+          ai_confidence: null,
+          sold_at: null,
+          archived_at: null,
+          inserted_at: '2026-04-01T00:00:00Z',
+          updated_at: '2026-04-01T00:00:00Z',
+          latest_processing_run: {
+            id: 99,
+            status: 'queued',
+            step: 'queued',
+            started_at: '2026-04-01T00:02:00Z',
+            finished_at: null,
+            error_code: null,
+            error_message: null,
+            inserted_at: '2026-04-01T00:02:00Z',
+            updated_at: '2026-04-01T00:02:00Z',
+            payload: {},
+          },
+          latest_lifestyle_generation_run: null,
+          description_draft: null,
+          price_research: null,
+          marketplace_listings: [],
+          images: [],
+        } as never,
+        processing_run: {
+          id: 99,
+          status: 'queued',
+          step: 'queued',
+          started_at: '2026-04-01T00:02:00Z',
+          finished_at: null,
+          error_code: null,
+          error_message: null,
+          inserted_at: '2026-04-01T00:02:00Z',
+          updated_at: '2026-04-01T00:02:00Z',
+          payload: {},
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.retryProcessing();
+    });
+
+    expect(mockedReprocessProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(result.current.product?.status).toBe('processing');
+    expect(result.current.isReprocessing).toBe(false);
+  });
+
+  it('runs sold/archive/restore lifecycle mutations through the dedicated endpoints', async () => {
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    mockedMarkProductSold.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          status: 'sold',
+          sold_at: '2026-04-01T00:02:00Z',
+        } as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.markSold();
+    });
+
+    expect(result.current.product?.status).toBe('sold');
+
+    mockedArchiveProduct.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          status: 'archived',
+          archived_at: '2026-04-01T00:03:00Z',
+        } as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.archive();
+    });
+
+    expect(result.current.product?.status).toBe('archived');
+
+    mockedUnarchiveProduct.mockResolvedValue({
+      data: {
+        product: {
+          ...result.current.product,
+          status: 'sold',
+          archived_at: null,
+        } as never,
+      },
+    });
+
+    await act(async () => {
+      await result.current.unarchive();
+    });
+
+    expect(mockedMarkProductSold).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedArchiveProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedUnarchiveProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(result.current.product?.status).toBe('sold');
+  });
+
+  it('deletes the product through the delete endpoint', async () => {
+    mockedDeleteProduct.mockResolvedValue({
+      data: {
+        deleted: true,
+      },
+    });
+
+    const { result } = renderHook(() => useProductDetail('token-123', 11));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    let deleted = false;
+
+    await act(async () => {
+      deleted = await result.current.removeProduct();
+    });
+
+    expect(mockedDeleteProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(deleted).toBe(true);
+    expect(result.current.isDeleting).toBe(false);
   });
 });

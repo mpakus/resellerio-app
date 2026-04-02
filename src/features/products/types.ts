@@ -77,6 +77,8 @@ export type ProductImage = {
   background_style: string | null;
   processing_status: string;
   original_filename: string | null;
+  storefront_visible: boolean;
+  storefront_position: number | null;
   lifestyle_generation_run_id: number | null;
   scene_key: string | null;
   variant_index: number | null;
@@ -151,6 +153,8 @@ export type MarketplaceListing = {
   generated_price_suggestion: string | null;
   generation_version: string | null;
   compliance_warnings: string[];
+  external_url: string | null;
+  external_url_added_at: string | null;
   last_generated_at: string | null;
   inserted_at: string | null;
   updated_at: string | null;
@@ -167,6 +171,8 @@ export type ProductDetail = ProductSummary & {
   sku: string | null;
   tags: string[];
   notes: string | null;
+  storefront_enabled: boolean;
+  storefront_published_at: string | null;
   ai_summary: string | null;
   ai_confidence: number | null;
   sold_at: string | null;
@@ -195,6 +201,13 @@ export type ProductTabResponse = {
 export type ProductDetailResponse = {
   data: {
     product: ProductDetail;
+  };
+};
+
+export type ProductReprocessResponse = {
+  data: {
+    product: ProductDetail;
+    processing_run: ProductRun | null;
   };
 };
 

@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
-import { getProduct, updateProduct } from '@/src/features/products/api';
+import {
+  archiveProduct,
+  deleteProduct,
+  getProduct,
+  markProductSold,
+  reprocessProduct,
+  unarchiveProduct,
+  updateProduct,
+} from '@/src/features/products/api';
 import { shouldPollProductDetail } from '@/src/features/products/helpers';
 import type { ProductDetail } from '@/src/features/products/types';
 
@@ -14,6 +22,9 @@ export function useProductDetail(token: string, productId: number) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isReprocessing, setIsReprocessing] = useState(false);
+  const [isUpdatingLifecycle, setIsUpdatingLifecycle] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,14 +107,90 @@ export function useProductDetail(token: string, productId: number) {
     }
   }
 
+  async function retryProcessing() {
+    setIsReprocessing(true);
+    setError(null);
+
+    try {
+      const response = await reprocessProduct(token, productId);
+      setProduct(response.data.product);
+      return response.data.product;
+    } catch (mutationError) {
+      setError(formatApiError(mutationError));
+      return null;
+    } finally {
+      setIsReprocessing(false);
+    }
+  }
+
+  async function markSold() {
+    return mutateLifecycle(async () => {
+      const response = await markProductSold(token, productId);
+      return response.data.product;
+    });
+  }
+
+  async function archive() {
+    return mutateLifecycle(async () => {
+      const response = await archiveProduct(token, productId);
+      return response.data.product;
+    });
+  }
+
+  async function unarchive() {
+    return mutateLifecycle(async () => {
+      const response = await unarchiveProduct(token, productId);
+      return response.data.product;
+    });
+  }
+
+  async function removeProduct() {
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const response = await deleteProduct(token, productId);
+      return response.data.deleted;
+    } catch (mutationError) {
+      setError(formatApiError(mutationError));
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  async function mutateLifecycle(runMutation: () => Promise<ProductDetail>) {
+    setIsUpdatingLifecycle(true);
+    setError(null);
+
+    try {
+      const nextProduct = await runMutation();
+      setProduct(nextProduct);
+      return nextProduct;
+    } catch (mutationError) {
+      setError(formatApiError(mutationError));
+      return null;
+    } finally {
+      setIsUpdatingLifecycle(false);
+    }
+  }
+
   return {
     product,
     isLoading,
     isRefreshing,
     isSaving,
+    isReprocessing,
+    isUpdatingLifecycle,
+    isDeleting,
     isPolling: shouldPollProductDetail(product),
     error,
     refresh,
     saveProduct,
+    retryProcessing,
+    markSold,
+    archive,
+    unarchive,
+    removeProduct,
   };
 }

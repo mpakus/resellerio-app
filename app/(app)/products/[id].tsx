@@ -1,18 +1,25 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useState, type PropsWithChildren } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { Button, InlineError, Screen, SectionCard, TextField } from '@/src/components/ui';
+import { Button, DialogModal, InlineError, Screen, SectionCard, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import {
   manualProductStatusOptions,
 } from '@/src/features/products/review-form';
 import {
+  formatConfidenceScore,
+  formatCurrencyAmount,
+  formatProductDetailTimestamp,
   imageKindCounts,
+  marketplaceListingHeadline,
   processingBannerDescription,
   processingHeadline,
   productPriceLabel,
   productStatusLabel,
   productSubtitle,
+  storefrontPublicationSummary,
+  storefrontSelectionCount,
   shouldPollProductDetail,
 } from '@/src/features/products/helpers';
 import { useProductDetail } from '@/src/features/products/use-product-detail';
@@ -20,13 +27,72 @@ import { useProductReviewForm } from '@/src/features/products/use-product-review
 import { useProductTabs } from '@/src/features/products/use-product-tabs';
 import { colors } from '@/src/theme/colors';
 
+type DetailPanelProps = PropsWithChildren<{
+  eyebrow: string;
+  title: string;
+  description?: string;
+}>;
+
+function DetailPanel({ eyebrow, title, description, children }: DetailPanelProps) {
+  return (
+    <View
+      style={{
+        gap: 14,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.card,
+        padding: 18,
+      }}
+    >
+      <View style={{ gap: 6 }}>
+        <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+          {eyebrow.toUpperCase()}
+        </Text>
+        <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>{title}</Text>
+        {description ? (
+          <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>{description}</Text>
+        ) : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function DetailMetaRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ gap: 4 }}>
+      <Text style={{ color: colors.mutedText, fontSize: 12, fontWeight: '700', letterSpacing: 0.8 }}>
+        {label.toUpperCase()}
+      </Text>
+      <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>{value}</Text>
+    </View>
+  );
+}
+
 export default function ProductDetailScreen() {
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { session } = useAuth();
 
   const productId = Number(id);
 
-  const { product, isLoading, isPolling, error, refresh, saveProduct } = useProductDetail(
+  const {
+    product,
+    isLoading,
+    isPolling,
+    error,
+    refresh,
+    saveProduct,
+    isReprocessing,
+    isUpdatingLifecycle,
+    isDeleting,
+    retryProcessing,
+    markSold,
+    archive,
+    unarchive,
+    removeProduct,
+  } = useProductDetail(
     session.token,
     Number.isFinite(productId) ? productId : 0,
   );
@@ -38,7 +104,7 @@ export default function ProductDetailScreen() {
   const {
     draft,
     isDirty,
-    isSaving,
+    isSaving: isReviewSaving,
     error: reviewError,
     updateField,
     reset,
@@ -57,6 +123,18 @@ export default function ProductDetailScreen() {
   }
 
   const imageCounts = imageKindCounts(product?.images ?? []);
+  const isLifecycleBusy = isReprocessing || isUpdatingLifecycle || isDeleting || isReviewSaving;
+
+  async function handleDelete() {
+    const deleted = await removeProduct();
+
+    if (!deleted) {
+      return;
+    }
+
+    setDeleteModalVisible(false);
+    router.replace('/products');
+  }
 
   return (
     <Screen scrollable>
@@ -71,9 +149,8 @@ export default function ProductDetailScreen() {
             {product?.title ?? 'Loading product'}
           </Text>
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
-            This is the first mobile product detail view powered by `GET /api/v1/products/:id`.
-            It shows AI summary, pricing, listings, processing state, and image counts from the real
-            backend response.
+            Review product data, monitor AI processing, and manage the seller workflow from the same
+            live mobile API payload the web workspace uses.
           </Text>
         </View>
 
@@ -339,8 +416,8 @@ export default function ProductDetailScreen() {
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={{ flex: 1 }}>
                       <Button
-                        label={isSaving ? 'Saving changes...' : 'Save changes'}
-                        disabled={!isDirty || isSaving}
+                        label={isReviewSaving ? 'Saving changes...' : 'Save changes'}
+                        disabled={!isDirty || isReviewSaving}
                         onPress={() => {
                           void save();
                         }}
@@ -350,7 +427,7 @@ export default function ProductDetailScreen() {
                       <Button
                         label="Reset"
                         kind="secondary"
-                        disabled={!isDirty || isSaving}
+                        disabled={!isDirty || isReviewSaving}
                         onPress={reset}
                       />
                     </View>
@@ -361,27 +438,215 @@ export default function ProductDetailScreen() {
               )}
             </View>
 
-            <SectionCard
+            <View
+              style={{
+                gap: 14,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+                padding: 18,
+              }}
+            >
+              <View style={{ gap: 6 }}>
+                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+                  LIFECYCLE
+                </Text>
+                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                  Quick product actions
+                </Text>
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  Use the same mobile API lifecycle actions the web workspace uses for retry, sold, archive, restore, and delete flows.
+                </Text>
+              </View>
+
+              {product.images.length > 0 ? (
+                <Button
+                  label={isReprocessing ? (product.status === 'processing' ? 'Resuming processing...' : 'Retrying AI...') : product.status === 'processing' ? 'Resume processing' : 'Retry AI'}
+                  kind="secondary"
+                  disabled={isLifecycleBusy}
+                  onPress={() => {
+                    void retryProcessing();
+                  }}
+                />
+              ) : null}
+
+              {product.status !== 'sold' ? (
+                <Button
+                  label="Mark sold"
+                  kind="secondary"
+                  disabled={isLifecycleBusy}
+                  onPress={() => {
+                    void markSold();
+                  }}
+                />
+              ) : null}
+
+              {product.status !== 'archived' ? (
+                <Button
+                  label="Archive"
+                  kind="secondary"
+                  disabled={isLifecycleBusy}
+                  onPress={() => {
+                    void archive();
+                  }}
+                />
+              ) : (
+                <Button
+                  label="Restore"
+                  kind="secondary"
+                  disabled={isLifecycleBusy}
+                  onPress={() => {
+                    void unarchive();
+                  }}
+                />
+              )}
+
+              <Button
+                label={isDeleting ? 'Deleting product...' : 'Delete product'}
+                kind="secondary"
+                disabled={isLifecycleBusy}
+                onPress={() => {
+                  setDeleteModalVisible(true);
+                }}
+              />
+            </View>
+
+            <DetailPanel
+              eyebrow="Storefront"
+              title={
+                product.storefront_enabled
+                  ? product.storefront_published_at
+                    ? 'Published to storefront'
+                    : 'Storefront enabled'
+                  : 'Not on storefront'
+              }
+              description={storefrontPublicationSummary(product)}
+            >
+              <DetailMetaRow
+                label="Publication status"
+                value={product.storefront_enabled ? 'Enabled' : 'Disabled'}
+              />
+              <DetailMetaRow
+                label="Published at"
+                value={formatProductDetailTimestamp(product.storefront_published_at)}
+              />
+              <DetailMetaRow
+                label="Selected gallery images"
+                value={`${storefrontSelectionCount(product.images)} of ${product.images.length}`}
+              />
+            </DetailPanel>
+
+            <DetailPanel
               eyebrow="AI Summary"
               title={product.ai_summary ?? 'No AI summary yet'}
               description={
-                product.description_draft?.short_description ??
-                'Description draft content will expand in the next review-focused step.'
+                product.ai_summary
+                  ? 'AI summary and confidence are available for quick mobile review.'
+                  : 'The backend has not produced a seller-facing AI summary for this product yet.'
               }
-            />
+            >
+              <DetailMetaRow
+                label="Confidence"
+                value={formatConfidenceScore(product.ai_confidence)}
+              />
+              <DetailMetaRow
+                label="Processing step"
+                value={product.latest_processing_run?.step ?? 'Not available'}
+              />
+              <DetailMetaRow
+                label="Latest run"
+                value={product.latest_processing_run?.status ?? 'Not available'}
+              />
+            </DetailPanel>
 
-            <SectionCard
-              eyebrow="Pricing"
+            <DetailPanel
+              eyebrow="Description Draft"
+              title={product.description_draft?.suggested_title ?? 'No generated title yet'}
+              description={
+                product.description_draft?.short_description ??
+                'A short resale-ready description will appear here once the draft is generated.'
+              }
+            >
+              <DetailMetaRow
+                label="Draft status"
+                value={product.description_draft?.status ?? 'Not generated'}
+              />
+              <DetailMetaRow
+                label="Key features"
+                value={
+                  product.description_draft?.key_features.length
+                    ? product.description_draft.key_features.join(', ')
+                    : 'No key features yet'
+                }
+              />
+              <DetailMetaRow
+                label="SEO keywords"
+                value={
+                  product.description_draft?.seo_keywords.length
+                    ? product.description_draft.seo_keywords.join(', ')
+                    : 'No SEO keywords yet'
+                }
+              />
+              {product.description_draft?.missing_details_warning ? (
+                <InlineError message={product.description_draft.missing_details_warning} />
+              ) : null}
+              {product.description_draft?.long_description ? (
+                <DetailMetaRow
+                  label="Long description"
+                  value={product.description_draft.long_description}
+                />
+              ) : null}
+            </DetailPanel>
+
+            <DetailPanel
+              eyebrow="Price Research"
               title={
                 product.price_research?.suggested_target_price
-                  ? `$${product.price_research.suggested_target_price} target`
+                  ? `${formatCurrencyAmount(product.price_research.suggested_target_price, product.price_research.currency)} target`
                   : 'No price research yet'
               }
               description={
                 product.price_research?.rationale_summary ??
-                'Pricing rationale will appear here when the backend has completed research.'
+                'Comparable pricing signals will appear here when research has completed.'
               }
-            />
+            >
+              <DetailMetaRow
+                label="Target range"
+                value={
+                  product.price_research
+                    ? `${formatCurrencyAmount(product.price_research.suggested_min_price, product.price_research.currency)} to ${formatCurrencyAmount(product.price_research.suggested_max_price, product.price_research.currency)}`
+                    : 'Not available'
+                }
+              />
+              <DetailMetaRow
+                label="Median"
+                value={
+                  product.price_research
+                    ? formatCurrencyAmount(
+                        product.price_research.suggested_median_price,
+                        product.price_research.currency,
+                      )
+                    : 'Not available'
+                }
+              />
+              <DetailMetaRow
+                label="Confidence"
+                value={
+                  product.price_research
+                    ? formatConfidenceScore(product.price_research.pricing_confidence)
+                    : 'Not available'
+                }
+              />
+              <DetailMetaRow
+                label="Market signals"
+                value={
+                  product.price_research?.market_signals.length
+                    ? product.price_research.market_signals.join(', ')
+                    : 'No market signals yet'
+                }
+              />
+            </DetailPanel>
 
             <SectionCard
               eyebrow="Images"
@@ -389,15 +654,67 @@ export default function ProductDetailScreen() {
               description={`Originals: ${imageCounts.original ?? 0} · Background removed: ${imageCounts.background_removed ?? 0} · Lifestyle: ${imageCounts.lifestyle_generated ?? 0}`}
             />
 
-            <SectionCard
-              eyebrow="Marketplaces"
+            <DetailPanel
+              eyebrow="Marketplace Listings"
               title={`${product.marketplace_listings.length} generated listing${product.marketplace_listings.length === 1 ? '' : 's'}`}
               description={
-                product.marketplace_listings[0]
-                  ? `${product.marketplace_listings[0].marketplace}: ${product.marketplace_listings[0].generated_title ?? 'Generated'}`
+                product.marketplace_listings.length > 0
+                  ? 'Review generated marketplace copy, pricing suggestions, warnings, and saved live URLs.'
                   : 'No marketplace listings have been generated yet.'
               }
-            />
+            >
+              {product.marketplace_listings.length === 0 ? (
+                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                  Generate marketplace listings on web or from a later mobile phase to review them here.
+                </Text>
+              ) : (
+                product.marketplace_listings.map((listing) => (
+                  <View
+                    key={listing.id}
+                    style={{
+                      gap: 10,
+                      borderRadius: 18,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      padding: 14,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                      {marketplaceListingHeadline(listing)}
+                    </Text>
+                    <DetailMetaRow
+                      label="Title"
+                      value={listing.generated_title ?? 'No generated title yet'}
+                    />
+                    <DetailMetaRow
+                      label="Suggested price"
+                      value={formatCurrencyAmount(listing.generated_price_suggestion)}
+                    />
+                    <DetailMetaRow
+                      label="Live URL"
+                      value={listing.external_url ?? 'No live URL saved'}
+                    />
+                    <DetailMetaRow
+                      label="URL added"
+                      value={formatProductDetailTimestamp(listing.external_url_added_at)}
+                    />
+                    <DetailMetaRow
+                      label="Tags"
+                      value={listing.generated_tags.length ? listing.generated_tags.join(', ') : 'No tags yet'}
+                    />
+                    <DetailMetaRow
+                      label="Warnings"
+                      value={
+                        listing.compliance_warnings.length
+                          ? listing.compliance_warnings.join(', ')
+                          : 'No compliance warnings'
+                      }
+                    />
+                  </View>
+                ))
+              )}
+            </DetailPanel>
 
             <View
               style={{
@@ -424,6 +741,39 @@ export default function ProductDetailScreen() {
           </>
         ) : null}
       </View>
+
+      <DialogModal
+        visible={deleteModalVisible}
+        title="Delete this product?"
+        description="This permanently removes the product, images, AI metadata, listings, and processing history."
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteModalVisible(false);
+          }
+        }}
+      >
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label={isDeleting ? 'Deleting...' : 'Delete forever'}
+              disabled={isDeleting}
+              onPress={() => {
+                void handleDelete();
+              }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="Cancel"
+              kind="secondary"
+              disabled={isDeleting}
+              onPress={() => {
+                setDeleteModalVisible(false);
+              }}
+            />
+          </View>
+        </View>
+      </DialogModal>
     </Screen>
   );
 }

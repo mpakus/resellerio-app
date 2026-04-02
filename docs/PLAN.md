@@ -47,6 +47,11 @@ Primary seller journey:
 - [x] 2026-04-01 Step 24: Added the first editable mobile review form for seller-managed product fields, including status and tab updates.
 - [x] 2026-04-01 Step 25: Added unit tests for review draft building, dirty-state preservation during refresh, and `PATCH /api/v1/products/:id` save behavior.
 - [x] 2026-04-02 Step 26: Added right-side copy-to-clipboard actions to product review form inputs for faster reuse of field values on mobile.
+- [x] 2026-04-02 Step 27: Added quick product lifecycle actions on detail for retry AI, mark sold, archive or restore, and delete with confirmation.
+- [x] 2026-04-02 Step 28: Added unit tests for product-detail lifecycle mutations, including reprocess, sold or archive flows, and delete.
+- [x] 2026-04-02 Step 29: Audited the local Phoenix backend and marked Phase 0 backend parity prerequisites complete for the public mobile API.
+- [x] 2026-04-02 Step 30: Expanded product detail with richer storefront, AI summary, description draft, price research, and marketplace listing panels backed by the new API fields.
+- [x] 2026-04-02 Step 31: Added unit tests for the new product-detail presentation helpers and detail screen rendering.
 
 ## Current Web Functionality Analyzed
 
@@ -77,7 +82,7 @@ Current mobile-facing API already covers:
 ## Product Decisions
 
 - [x] Use the existing bearer token API as the default mobile auth approach
-- [ ] Keep the user signed in for 1 year on one device
+- [x] Keep the user signed in for 1 year on one device
 - [x] Mirror the web upload-first product intake flow
 - [x] Mirror the web product review flow
 - [x] Include Inquiries
@@ -86,26 +91,25 @@ Current mobile-facing API already covers:
 
 Notes:
 
-- Backend currently issues mobile API tokens with `api_token_ttl_days = 30`.
-- To truly support 1-year login, we must either raise token TTL to `365` days or add a refresh-token/JWT flow.
-- Recommendation: keep the existing bearer-token design and increase TTL to 365 days first. It is the smallest change and matches the current backend architecture.
+- Backend mobile API token TTL is now configured to `365` days as of 2026-04-02.
+- The current bearer-token design is still the default mobile auth approach, so no refresh-token/JWT migration is required for the planned v1 session lifetime.
 
 ## Phase 0: Backend Parity Prerequisites
 
 These are backend tasks required for real mobile parity with the existing web workspace.
 
-- [ ] Change mobile auth lifetime from 30 days to 365 days, or add refresh-token support
-- [ ] Return an absolute pricing URL in `402 limit_exceeded` responses for mobile upgrade CTAs
-- [ ] Expose `storefront_enabled` and `storefront_published_at` in `GET /api/v1/products/:id`
-- [ ] Expose `storefront_visible` and `storefront_position` on product images in product responses
-- [ ] Expose marketplace listing `external_url` fields in product responses
-- [ ] Accept marketplace external URLs in a public mobile API endpoint
-- [ ] Add public mobile API support for uploading storefront logo assets
-- [ ] Add public mobile API support for uploading storefront header assets
-- [ ] Add public mobile API support to reorder storefront pages
-- [ ] Add public mobile API support to prepare uploads for an existing product so mobile can match the web "upload new images" flow on the review screen
+- [x] Change mobile auth lifetime from 30 days to 365 days, or add refresh-token support
+- [x] Return an absolute pricing URL in `402 limit_exceeded` responses for mobile upgrade CTAs
+- [x] Expose `storefront_enabled` and `storefront_published_at` in `GET /api/v1/products/:id`
+- [x] Expose `storefront_visible` and `storefront_position` on product images in product responses
+- [x] Expose marketplace listing `external_url` fields in product responses
+- [x] Accept marketplace external URLs in a public mobile API endpoint
+- [x] Add public mobile API support for uploading storefront logo assets
+- [x] Add public mobile API support for uploading storefront header assets
+- [x] Add public mobile API support to reorder storefront pages
+- [x] Add public mobile API support to prepare uploads for an existing product so mobile can match the web "upload new images" flow on the review screen
 
-Without these items, mobile can still ship a strong v1, but not a full web-parity version.
+Phase 0 backend parity is complete as of 2026-04-02, so the remaining mobile work can target the full public API surface instead of web-only fallbacks.
 
 ## Phase 1: App Foundation
 
@@ -198,15 +202,15 @@ Mirror the current web `/app/products/:id` review experience.
 - [x] Product detail screen using `GET /api/v1/products/:id`
 - [x] Processing banner and poll loop while AI is running
 - [x] Review/edit fields: title, brand, category, condition, color, size, material, SKU, tags, price, cost, notes, status, tab
-- [ ] AI summary panel
-- [ ] Description draft panel
-- [ ] Price research panel
-- [ ] Marketplace listings panel
+- [x] AI summary panel
+- [x] Description draft panel
+- [x] Price research panel
+- [x] Marketplace listings panel
 - [x] Save product changes with `PATCH /api/v1/products/:id`
-- [ ] Reprocess with `POST /api/v1/products/:id/reprocess`
-- [ ] Mark sold
-- [ ] Archive / unarchive
-- [ ] Delete product
+- [x] Reprocess with `POST /api/v1/products/:id/reprocess`
+- [x] Mark sold
+- [x] Archive / unarchive
+- [x] Delete product
 
 Acceptance:
 
@@ -229,9 +233,9 @@ Acceptance:
 - [ ] Publish product to storefront
 - [ ] Share public product URL once publication fields are exposed in the API
 
-Important dependency:
+Dependency note:
 
-- True storefront gallery management depends on Phase 0 API fixes because current product responses do not expose storefront image selection fields.
+- Backend storefront image and publication fields are now available in the mobile API, so Phase 7 can build directly on the public contract.
 
 ## Phase 8: Inquiries
 

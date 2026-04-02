@@ -23,6 +23,8 @@ describe('useProductReviewForm', () => {
       name: 'Shoes',
       position: 1,
     },
+    storefront_enabled: false,
+    storefront_published_at: null,
     sku: 'NK-90',
     tags: ['air-max', 'vintage'],
     notes: 'Minor wear on heel',
