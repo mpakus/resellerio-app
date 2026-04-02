@@ -69,6 +69,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 46: Added unit tests for new image preview helpers, publication draft state, storefront slug loading, and public URL actions.
 - [x] 2026-04-02 Step 47: Added lifestyle-scene regeneration controls so mobile can rerun the default set or a single `scene_key` directly from product detail.
 - [x] 2026-04-02 Step 48: Added unit tests for scene-key helper formatting, scene-specific generation calls, and the new lifestyle shortcut UI.
+- [x] 2026-04-02 Step 49: Added a dedicated mobile transfers feature with recent export and import history persisted locally because the public API exposes create and status endpoints, not list endpoints.
+- [x] 2026-04-02 Step 50: Added a new Settings transfers section for catalog export creation, ZIP import, active-job polling, and finished export download actions.
+- [x] 2026-04-02 Step 51: Added unit tests for transfers helpers, transfers state, and the new Settings transfers actions.
 
 ## Current Web Functionality Analyzed
 
@@ -292,12 +295,16 @@ Settings API parity note:
 Useful after the main seller flow is stable.
 
 - [ ] Dashboard summary screen similar to `/app`
-- [ ] Exports flow using `POST /api/v1/exports` and `GET /api/v1/exports/:id`
-- [ ] Imports flow using `POST /api/v1/imports` and `GET /api/v1/imports/:id`
+- [x] Exports flow using `POST /api/v1/exports` and `GET /api/v1/exports/:id`
+- [x] Imports flow using `POST /api/v1/imports` and `GET /api/v1/imports/:id`
 - [ ] Better sharing actions for storefront and product URLs
 - [ ] Push notifications for processing complete, lifestyle generation complete, and new inquiries
 - [ ] Offline draft capture before upload
 - [ ] Crash reporting and production analytics
+
+Phase 10 note:
+
+- Mobile stores recent export and import IDs locally and re-fetches them on refresh because the public API does not expose list endpoints for transfers yet.
 
 ## Suggested Delivery Order
 
@@ -319,7 +326,7 @@ Useful after the main seller flow is stable.
 - [x] User can edit product details and manage lifecycle
 - [x] User can generate and approve lifestyle images
 - [x] User can manage storefront-related product image selection
-- [ ] User can publish products to storefront once required API fields exist
-- [ ] User can read and clear inquiries
-- [ ] User can update storefront settings and marketplace defaults
+- [x] User can publish products to storefront once required API fields exist
+- [x] User can read and clear inquiries
+- [x] User can update storefront settings and marketplace defaults
 - [ ] App works on both iOS and Android

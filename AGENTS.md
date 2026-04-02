@@ -55,6 +55,7 @@ Keep environment and API base URL logic in one place. Do not scatter host detect
 - Storefront: publish product, storefront settings, theme, pages, branding assets
 - Inquiries: searchable inbox for storefront leads
 - Account: marketplace defaults, plan usage, billing links
+- Transfers: catalog export download and ZIP import status
 
 ## Mobile Architecture Rules
 
@@ -73,6 +74,7 @@ Recommended target structure:
 - `src/features/products/`
 - `src/features/inquiries/`
 - `src/features/settings/`
+- `src/features/transfers/`
 - `src/lib/api/`
 - `src/lib/auth/`
 - `src/lib/config/`
@@ -114,13 +116,24 @@ Lifestyle generation is also asynchronous:
 - `POST /api/v1/products/:id/generate_lifestyle_images`
 - poll `GET /api/v1/products/:id` and optionally `GET /api/v1/products/:id/lifestyle_generation_runs`
 
+Transfers are asynchronous too:
+
+- `POST /api/v1/exports`
+- `GET /api/v1/exports/:id`
+- `POST /api/v1/imports`
+- `GET /api/v1/imports/:id`
+
+Important current backend fact:
+
+- Transfers do not have public list endpoints yet, so mobile must persist recent export/import IDs locally and rehydrate status cards from those IDs.
+
 ## Web Parity Gaps To Respect
 
 The web workspace already supports some behaviors that mobile still needs to catch up on.
 
 Known gaps from backend analysis:
 
-- Exports/imports, dashboard, and a few polish flows still trail the web workspace.
+- Dashboard and a few polish flows still trail the web workspace.
 
 Do not paper over these gaps with fragile client-only state. If mobile parity depends on them, extend the backend contract first.
 
@@ -136,10 +149,11 @@ Completed in the app:
 - Lifestyle generation controls, regenerate-all and regenerate-by-scene actions, approval/delete actions, storefront image selection/order, and storefront publish/share flows
 - Inquiries inbox with search, pagination, delete, and open-product action
 - Settings workspace with marketplace defaults, storefront profile, branding assets, storefront pages, usage/account, billing links, and sign out
+- Transfers workspace in Settings with catalog export creation, finished-download open action, ZIP import, and recent transfer polling
 
 Still in progress:
 
-- Exports/imports, dashboard, and production polish
+- Dashboard and production polish
 
 ## Testing
 

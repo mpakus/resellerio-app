@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 
 import SettingsScreen from '@/app/(app)/(tabs)/settings';
 import { useSettingsOverview } from '@/src/features/settings/use-settings-overview';
+import { useTransfersOverview } from '@/src/features/transfers/use-transfers-overview';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 
 jest.mock('@/src/lib/auth/auth-provider', () => ({
@@ -13,20 +14,29 @@ jest.mock('@/src/features/settings/use-settings-overview', () => ({
   useSettingsOverview: jest.fn(),
 }));
 
+jest.mock('@/src/features/transfers/use-transfers-overview', () => ({
+  useTransfersOverview: jest.fn(),
+}));
+
 jest.mock('expo-linking', () => ({
   openURL: jest.fn(),
 }));
 
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseSettingsOverview = jest.mocked(useSettingsOverview);
+const mockedUseTransfersOverview = jest.mocked(useTransfersOverview);
 const mockedOpenURL = jest.mocked(Linking.openURL);
 const mockSaveMarketplaceDraft = jest.fn();
 const mockUploadStorefrontAsset = jest.fn();
+const mockStartExport = jest.fn();
+const mockStartImport = jest.fn();
 
 describe('SettingsScreen', () => {
   beforeEach(() => {
     mockSaveMarketplaceDraft.mockReset();
     mockUploadStorefrontAsset.mockReset();
+    mockStartExport.mockReset();
+    mockStartImport.mockReset();
     mockedOpenURL.mockReset();
 
     mockedUseAuth.mockReturnValue({
@@ -161,6 +171,61 @@ describe('SettingsScreen', () => {
       removePage: jest.fn().mockResolvedValue(true),
       savePageOrder: jest.fn().mockResolvedValue(true),
     });
+
+    mockedUseTransfersOverview.mockReturnValue({
+      recentExports: [
+        {
+          id: 11,
+          name: 'Catalog export',
+          file_name: 'catalog.zip',
+          filter_params: {},
+          product_count: 12,
+          status: 'completed',
+          storage_key: 'users/1/exports/11/catalog.zip',
+          download_url: 'https://cdn.example.test/catalog.zip',
+          requested_at: '2026-04-02T00:00:00Z',
+          completed_at: '2026-04-02T00:02:00Z',
+          expires_at: '2026-04-09T00:02:00Z',
+          error_message: null,
+          inserted_at: '2026-04-02T00:00:00Z',
+          updated_at: '2026-04-02T00:02:00Z',
+        },
+      ],
+      recentImports: [
+        {
+          id: 21,
+          status: 'completed',
+          source_filename: 'catalog.zip',
+          source_storage_key: 'users/1/imports/21/source.zip',
+          requested_at: '2026-04-02T00:00:00Z',
+          started_at: '2026-04-02T00:01:00Z',
+          finished_at: '2026-04-02T00:04:00Z',
+          total_products: 12,
+          imported_products: 11,
+          failed_products: 1,
+          error_message: null,
+          failure_details: {
+            items: [],
+          },
+          payload: {},
+          inserted_at: '2026-04-02T00:00:00Z',
+          updated_at: '2026-04-02T00:04:00Z',
+        },
+      ],
+      exportNameDraft: '',
+      isLoading: false,
+      isRefreshing: false,
+      isCreatingExport: false,
+      isImporting: false,
+      isPolling: false,
+      error: null,
+      exportError: null,
+      importError: null,
+      refresh: jest.fn(),
+      setExportNameDraft: jest.fn(),
+      startExport: mockStartExport,
+      startImport: mockStartImport,
+    });
   });
 
   it('renders settings data and storefront pages', () => {
@@ -204,5 +269,23 @@ describe('SettingsScreen', () => {
 
     expect(mockedOpenURL).toHaveBeenCalledWith('https://resellerio.com/pricing');
     expect(mockedOpenURL).toHaveBeenCalledWith('https://app.lemonsqueezy.com/billing');
+  });
+
+  it('starts exports and opens finished export downloads', () => {
+    render(<SettingsScreen />);
+
+    fireEvent.press(screen.getByText('Start catalog export'));
+    fireEvent.press(screen.getByText('Open export download'));
+
+    expect(mockStartExport).toHaveBeenCalled();
+    expect(mockedOpenURL).toHaveBeenCalledWith('https://cdn.example.test/catalog.zip');
+  });
+
+  it('starts import flow from the transfers section', () => {
+    render(<SettingsScreen />);
+
+    fireEvent.press(screen.getByText('Import ZIP archive'));
+
+    expect(mockStartImport).toHaveBeenCalled();
   });
 });

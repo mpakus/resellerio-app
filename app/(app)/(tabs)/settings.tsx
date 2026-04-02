@@ -21,6 +21,14 @@ import {
 } from '@/src/features/settings/helpers';
 import type { StorefrontPage } from '@/src/features/settings/types';
 import { useSettingsOverview } from '@/src/features/settings/use-settings-overview';
+import {
+  describeExportJob,
+  describeImportJob,
+  formatTransferStatus,
+  getExportDisplayName,
+  getImportDisplayName,
+} from '@/src/features/transfers/helpers';
+import { useTransfersOverview } from '@/src/features/transfers/use-transfers-overview';
 import { colors } from '@/src/theme/colors';
 
 const PRICING_URL = 'https://resellerio.com/pricing';
@@ -72,6 +80,21 @@ export default function SettingsScreen() {
     removePage,
     savePageOrder,
   } = useSettingsOverview(session.token);
+  const {
+    recentExports,
+    recentImports,
+    exportNameDraft,
+    isLoading: isLoadingTransfers,
+    isCreatingExport,
+    isImporting,
+    error: transfersError,
+    exportError,
+    importError,
+    refresh: refreshTransfers,
+    setExportNameDraft,
+    startExport,
+    startImport,
+  } = useTransfersOverview(session.token);
 
   async function handleSignOut() {
     setSubmitting(true);
@@ -102,9 +125,17 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
-        <Button label="Refresh settings" kind="secondary" onPress={refresh} />
+        <Button
+          label="Refresh data"
+          kind="secondary"
+          onPress={() => {
+            refresh();
+            refreshTransfers();
+          }}
+        />
 
         {error ? <InlineError message={error} /> : null}
+        {transfersError ? <InlineError message={transfersError} /> : null}
 
         <SectionCard
           eyebrow="Account"
@@ -204,6 +235,148 @@ export default function SettingsScreen() {
           title={user.plan_period ?? 'Current subscription'}
           description={addonCreditsSummary(user.addon_credits ?? {})}
         />
+
+        <View
+          style={{
+            gap: 16,
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.card,
+            padding: 18,
+          }}
+        >
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+              TRANSFERS
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+              Export and import catalog ZIPs
+            </Text>
+            <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+              Start full-catalog exports, download finished ZIPs, and import reseller archives from the device. Recent jobs are kept locally on this device because the public API exposes create and status endpoints, not list endpoints.
+            </Text>
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <TextField
+              label="Export name"
+              placeholder="Optional label for this export"
+              value={exportNameDraft}
+              onChangeText={setExportNameDraft}
+            />
+            {exportError ? <InlineError message={exportError} /> : null}
+            <Button
+              label={isCreatingExport ? 'Starting export...' : 'Start catalog export'}
+              disabled={isCreatingExport}
+              onPress={() => {
+                void startExport();
+              }}
+            />
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Recent exports</Text>
+
+            {isLoadingTransfers ? (
+              <Text style={{ color: colors.mutedText, fontSize: 14 }}>Loading recent transfers...</Text>
+            ) : null}
+
+            {!isLoadingTransfers && recentExports.length === 0 ? (
+              <SectionCard
+                eyebrow="No exports"
+                title="No catalog exports yet"
+                description="Start a catalog export to prepare a ZIP with spreadsheet data, manifest metadata, and product images."
+              />
+            ) : null}
+
+            {recentExports.map((job) => (
+              <View
+                key={job.id}
+                style={{
+                  gap: 10,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  padding: 14,
+                }}
+              >
+                <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                  {getExportDisplayName(job)}
+                </Text>
+                <Text style={{ color: colors.mutedText, fontSize: 14 }}>
+                  {formatTransferStatus(job.status)} · {describeExportJob(job)}
+                </Text>
+                {job.error_message ? (
+                  <Text style={{ color: colors.danger, fontSize: 14 }}>{job.error_message}</Text>
+                ) : null}
+                {job.download_url ? (
+                  <Button
+                    label="Open export download"
+                    kind="secondary"
+                    onPress={() => {
+                      openExternalUrl(job.download_url!);
+                    }}
+                  />
+                ) : null}
+              </View>
+            ))}
+          </View>
+
+          <View style={{ gap: 10 }}>
+            {importError ? <InlineError message={importError} /> : null}
+            <Button
+              label={isImporting ? 'Importing ZIP...' : 'Import ZIP archive'}
+              kind="secondary"
+              disabled={isImporting}
+              onPress={() => {
+                void startImport();
+              }}
+            />
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Recent imports</Text>
+
+            {!isLoadingTransfers && recentImports.length === 0 ? (
+              <SectionCard
+                eyebrow="No imports"
+                title="No catalog imports yet"
+                description="Pick a ZIP archive from the device to recreate products and media in the seller workspace."
+              />
+            ) : null}
+
+            {recentImports.map((job) => (
+              <View
+                key={job.id}
+                style={{
+                  gap: 10,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  padding: 14,
+                }}
+              >
+                <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                  {getImportDisplayName(job)}
+                </Text>
+                <Text style={{ color: colors.mutedText, fontSize: 14 }}>
+                  {formatTransferStatus(job.status)} · {describeImportJob(job)}
+                </Text>
+                {job.error_message ? (
+                  <Text style={{ color: colors.danger, fontSize: 14 }}>{job.error_message}</Text>
+                ) : null}
+                {Array.isArray(job.failure_details.items) && job.failure_details.items.length > 0 ? (
+                  <Text style={{ color: colors.mutedText, fontSize: 13 }}>
+                    Failure details available for {job.failure_details.items.length} item(s).
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </View>
 
         <View
           style={{
