@@ -55,6 +55,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 32: Added product-detail lifestyle generation controls, run history, and seller approval or delete actions backed by the public mobile API.
 - [x] 2026-04-02 Step 33: Added storefront gallery selection and reordering controls for ready product images on mobile.
 - [x] 2026-04-02 Step 34: Added unit tests for the new media helpers plus product-detail media and storefront mutations.
+- [x] 2026-04-02 Step 35: Replaced the inquiries placeholder with a real mobile inbox backed by `GET /api/v1/inquiries`.
+- [x] 2026-04-02 Step 36: Added inquiry search, pagination, delete, and linked-product navigation actions on mobile.
+- [x] 2026-04-02 Step 37: Added unit tests for inquiry inbox state and screen rendering.
 
 ## Current Web Functionality Analyzed
 
@@ -243,12 +246,12 @@ Dependency note:
 
 ## Phase 8: Inquiries
 
-- [ ] Inquiries list using `GET /api/v1/inquiries`
-- [ ] Search by name, contact, or message
-- [ ] Pagination
-- [ ] Inquiry row showing contact, message, product reference, and source path
-- [ ] Delete inquiry with `DELETE /api/v1/inquiries/:id`
-- [ ] Optional quick action to open related product detail
+- [x] Inquiries list using `GET /api/v1/inquiries`
+- [x] Search by name, contact, or message
+- [x] Pagination
+- [x] Inquiry row showing contact, message, product reference, and source path
+- [x] Delete inquiry with `DELETE /api/v1/inquiries/:id`
+- [x] Optional quick action to open related product detail
 
 Acceptance:
 
