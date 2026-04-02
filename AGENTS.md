@@ -88,12 +88,11 @@ Recommended target structure:
 - Load `GET /api/v1/me/usage` for limits, quotas, and upgrade messaging.
 - Treat `401` as session loss: clear credentials and route back to auth.
 - Treat `402 limit_exceeded` as a product state, not a generic crash.
-- Do not claim "1 year login" is already implemented unless backend token TTL is changed to match it.
+- A 1-year mobile session is now supported by backend token TTL configuration.
 
 Important current backend fact:
 
-- `Reseller.Accounts.api_token_ttl_days` is configured to `30` days in `~/www/elixir/reseller/config/config.exs`.
-- If product requires "stay logged in for 1 year", backend config or auth design must change before we promise it in the app.
+- `Reseller.Accounts.api_token_ttl_days` is configured to `365` days in `~/www/elixir/reseller/config/config.exs`.
 
 ## Upload And Processing Rules
 
@@ -117,20 +116,34 @@ Lifestyle generation is also asynchronous:
 
 ## Web Parity Gaps To Respect
 
-The web workspace already supports some behaviors that the public mobile API does not fully expose yet.
+The web workspace already supports some behaviors that mobile still needs to catch up on.
 
 Known gaps from backend analysis:
 
-- No mobile API endpoint yet for storefront logo upload
-- No mobile API endpoint yet for storefront header upload
-- No mobile API endpoint yet to reorder storefront pages
-- No public API endpoint yet to prepare new uploads for an existing product detail screen
-- `product_json/1` does not currently expose `storefront_enabled` or `storefront_published_at`
-- `image_json/1` does not currently expose `storefront_visible` or `storefront_position`
-- `marketplace_listing_json/1` does not currently expose seller `external_url`
-- The web product review flow updates marketplace external URLs through server-side LiveView code, not the public mobile API
+- Product image payloads still return `storage_key` metadata rather than a renderable public or signed download URL, so mobile media preview remains partial.
+- Brand asset upload flows are available in the API, but the mobile UI is not wired yet.
+- Storefront publication/share actions are still incomplete in the mobile UI.
 
 Do not paper over these gaps with fragile client-only state. If mobile parity depends on them, extend the backend contract first.
+
+## Current Mobile Progress
+
+Completed in the app:
+
+- Auth with secure persistence and bearer token restore
+- Products list, tabs, search, pagination, and detail
+- Upload-first product intake with signed uploads and finalize
+- Product review editing and lifecycle actions
+- Lifestyle generation controls, approval/delete actions, and storefront image selection/order
+- Inquiries inbox with search, pagination, delete, and open-product action
+- Settings foundation with marketplace defaults, storefront profile, storefront pages, usage/account, and sign out
+
+Still in progress:
+
+- Actual image preview/full-screen media
+- Storefront branding asset upload UI
+- Product storefront publish/share actions
+- Exports/imports, dashboard, and production polish
 
 ## Testing
 

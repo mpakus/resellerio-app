@@ -8,21 +8,8 @@ import {
 
 import { ApiError } from '@/src/lib/api/client';
 import { getCurrentUsage, getCurrentUser, login, register } from '@/src/lib/api/auth';
-import type {
-  SupportedMarketplace,
-  UsageCounters,
-  User,
-} from '@/src/lib/api/types';
+import { emptySession, type Session } from '@/src/lib/auth/session';
 import { deleteSecureItem, getSecureItem, setSecureItem } from '@/src/lib/storage/secure-store';
-
-type Session = {
-  token: string;
-  expiresAt: string | null;
-  user: User;
-  supportedMarketplaces: SupportedMarketplace[];
-  usage: UsageCounters;
-  limits: UsageCounters;
-};
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -35,33 +22,6 @@ type AuthContextValue = {
 };
 
 const AUTH_STORAGE_KEY = 'resellerio.mobile.session';
-
-const zeroUsage: UsageCounters = {
-  ai_drafts: 0,
-  background_removals: 0,
-  lifestyle: 0,
-  price_research: 0,
-};
-
-const emptySession: Session = {
-  token: '',
-  expiresAt: null,
-  user: {
-    id: 0,
-    email: '',
-    confirmed_at: null,
-    selected_marketplaces: [],
-    plan: null,
-    plan_status: null,
-    plan_period: null,
-    plan_expires_at: null,
-    trial_ends_at: null,
-    addon_credits: {},
-  },
-  supportedMarketplaces: [],
-  usage: zeroUsage,
-  limits: zeroUsage,
-};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 

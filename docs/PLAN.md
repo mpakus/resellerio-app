@@ -58,6 +58,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 35: Replaced the inquiries placeholder with a real mobile inbox backed by `GET /api/v1/inquiries`.
 - [x] 2026-04-02 Step 36: Added inquiry search, pagination, delete, and linked-product navigation actions on mobile.
 - [x] 2026-04-02 Step 37: Added unit tests for inquiry inbox state and screen rendering.
+- [x] 2026-04-02 Step 38: Replaced the settings placeholder with a real account/storefront workspace backed by `GET /api/v1/me`, `GET /api/v1/me/usage`, and `GET /api/v1/storefront`.
+- [x] 2026-04-02 Step 39: Added marketplace defaults saving, storefront profile editing, and storefront page create/edit/delete/reorder flows on mobile.
+- [x] 2026-04-02 Step 40: Added unit tests for settings overview state, storefront page mutations, and settings screen rendering.
 
 ## Current Web Functionality Analyzed
 
@@ -267,10 +270,16 @@ Mirror the important parts of web `/app/settings`.
 - [ ] Storefront pages list/create/update/delete
 - [ ] Storefront page editor for About, Shipping, Returns, and similar content
 - [ ] Usage and quota screen using `GET /api/v1/me/usage`
+- [x] Marketplace defaults using `GET /api/v1/me` and `PATCH /api/v1/me`
+- [x] Storefront profile using `GET /api/v1/storefront` and `PUT /api/v1/storefront`
+- [x] Storefront fields: enabled, slug, title, tagline, description, theme
+- [x] Storefront pages list/create/update/delete
+- [x] Storefront page editor for About, Shipping, Returns, and similar content
+- [x] Usage and quota screen using `GET /api/v1/me/usage`
 - [ ] Subscription/account section using `plan`, `plan_status`, `plan_expires_at`, `trial_ends_at`, and `addon_credits`
 - [ ] Deep link to `https://resellerio.com/pricing`
 - [ ] Deep link to billing management if required
-- [ ] Sign out
+- [x] Sign out
 
 Settings API parity note:
 
