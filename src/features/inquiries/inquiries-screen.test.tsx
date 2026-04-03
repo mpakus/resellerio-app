@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Linking } from 'react-native';
 
 import InquiriesScreen from '@/app/(app)/(tabs)/inquiries';
 import { useInquiriesOverview } from '@/src/features/inquiries/use-inquiries-overview';
@@ -20,12 +21,14 @@ jest.mock('@/src/features/inquiries/use-inquiries-overview', () => ({
 
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseInquiriesOverview = jest.mocked(useInquiriesOverview);
+const mockedOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
 
 const mockSubmitSearch = jest.fn();
 
 describe('InquiriesScreen', () => {
   beforeEach(() => {
     mockSubmitSearch.mockReset();
+    mockedOpenURL.mockClear();
 
     mockedUseAuth.mockReturnValue({
       status: 'authenticated',
@@ -114,5 +117,15 @@ describe('InquiriesScreen', () => {
     fireEvent.press(screen.getByText('Search'));
 
     expect(mockSubmitSearch).toHaveBeenCalled();
+  });
+
+  it('opens the storefront inquiry source path in the browser', () => {
+    render(<InquiriesScreen />);
+
+    fireEvent.press(screen.getByText('/store/my-store/products/1-vintage-jacket'));
+
+    expect(mockedOpenURL).toHaveBeenCalledWith(
+      'http://localhost:4000/store/my-store/products/1-vintage-jacket',
+    );
   });
 });

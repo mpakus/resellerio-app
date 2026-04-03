@@ -120,6 +120,23 @@ export function buildStorefrontUrl(storefrontSlug: string | null, baseUrl: strin
   return `${baseUrl}/store/${normalizedSlug}`;
 }
 
+export function buildPublicAppUrl(pathOrUrl: string | null, baseUrl: string = appBaseUrl) {
+  const normalizedValue = pathOrUrl?.trim();
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(normalizedValue)) {
+    return normalizedValue;
+  }
+
+  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
+  const normalizedPath = normalizedValue.startsWith('/') ? normalizedValue : `/${normalizedValue}`;
+
+  return `${normalizedBaseUrl}${normalizedPath}`;
+}
+
 export function addonCreditsSummary(addonCredits: Record<string, number>) {
   const entries = Object.entries(addonCredits).filter(([, value]) => value > 0);
 
@@ -153,7 +170,12 @@ export function buildReorderedStorefrontPageIds(
   return reordered;
 }
 
-export function subscriptionDetailsSummary(storefrontUrl: string | null, user: { plan_status: string | null; plan_period: string | null; plan_expires_at: string | null; trial_ends_at: string | null; }) {
+export function subscriptionDetailsSummary(user: {
+  plan_status: string | null;
+  plan_period: string | null;
+  plan_expires_at: string | null;
+  trial_ends_at: string | null;
+}) {
   const detailParts = [user.plan_status ?? 'free'];
 
   if (user.plan_period) {
@@ -164,10 +186,6 @@ export function subscriptionDetailsSummary(storefrontUrl: string | null, user: {
     detailParts.push(`renews ${user.plan_expires_at}`);
   } else if (user.trial_ends_at) {
     detailParts.push(`trial ends ${user.trial_ends_at}`);
-  }
-
-  if (storefrontUrl) {
-    detailParts.push(storefrontUrl);
   }
 
   return detailParts.join(' · ');

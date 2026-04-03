@@ -280,6 +280,7 @@ describe('SettingsScreen', () => {
   it('opens and shares the public storefront URL', () => {
     render(<SettingsScreen />);
 
+    fireEvent.press(screen.getAllByText('http://localhost:4000/store/my-store')[0]);
     fireEvent.press(screen.getByText('Open storefront'));
     fireEvent.press(screen.getByText('Share storefront'));
 

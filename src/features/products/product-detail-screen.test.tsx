@@ -371,6 +371,9 @@ describe('ProductDetailScreen panels', () => {
   it('opens and shares the public storefront URL', async () => {
     render(<ProductDetailScreen />);
 
+    fireEvent.press(
+      screen.getAllByText('http://localhost:4000/store/my-store/products/11-nike-air-max-90')[0],
+    );
     fireEvent.press(screen.getByText('Open live page'));
     fireEvent.press(screen.getByText('Share product URL'));
 
@@ -381,6 +384,18 @@ describe('ProductDetailScreen panels', () => {
       message: 'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
       url: 'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
     });
+  });
+
+  it('opens image and marketplace URLs in the browser from link actions', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getAllByText('Open image URL in browser')[0]);
+    fireEvent.press(screen.getByText('https://www.ebay.com/itm/1234567890'));
+
+    expect(mockedLinkingOpenURL).toHaveBeenCalledWith(
+      'https://cdn.example.test/users/1/products/11/original.jpg',
+    );
+    expect(mockedLinkingOpenURL).toHaveBeenCalledWith('https://www.ebay.com/itm/1234567890');
   });
 
   it('starts scene-specific lifestyle regeneration from the shortcut button', () => {

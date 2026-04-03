@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 
 import {
   BrandedTitle,
   Button,
   InlineError,
+  LinkText,
   Screen,
   SectionCard,
   TextField,
@@ -15,6 +16,7 @@ import {
   inquiryPrimaryText,
   inquirySecondaryText,
 } from '@/src/features/inquiries/helpers';
+import { buildPublicAppUrl } from '@/src/features/settings/helpers';
 import { useInquiriesOverview } from '@/src/features/inquiries/use-inquiries-overview';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { colors } from '@/src/theme/colors';
@@ -136,8 +138,13 @@ export default function InquiriesScreen() {
               {formatInquiryTimestamp(inquiry.inserted_at)}
             </Text>
 
-            {inquiry.source_path ? (
-              <Text style={{ color: colors.mutedText, fontSize: 13 }}>{inquiry.source_path}</Text>
+            {buildPublicAppUrl(inquiry.source_path) ? (
+              <LinkText
+                label={inquiry.source_path!}
+                onPress={() => {
+                  void Linking.openURL(buildPublicAppUrl(inquiry.source_path)!);
+                }}
+              />
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 10 }}>

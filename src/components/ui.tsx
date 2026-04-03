@@ -104,6 +104,25 @@ export function Button({ label, kind = 'primary', disabled = false, onPress }: B
   );
 }
 
+type LinkTextProps = {
+  label: string;
+  disabled?: boolean;
+  onPress: () => void;
+};
+
+export function LinkText({ label, disabled = false, onPress }: LinkTextProps) {
+  return (
+    <Pressable
+      accessibilityRole="link"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.linkWrap, (disabled || pressed) && styles.buttonPressed]}
+    >
+      <Text style={[styles.linkText, disabled && styles.linkTextDisabled]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 type TextFieldProps = TextInputProps & {
   label: string;
   copyable?: boolean;
@@ -344,6 +363,20 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     fontWeight: '700',
+  },
+  linkWrap: {
+    alignSelf: 'flex-start',
+  },
+  linkText: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 22,
+    textDecorationLine: 'underline',
+  },
+  linkTextDisabled: {
+    color: colors.mutedText,
+    textDecorationLine: 'none',
   },
   fieldLabel: {
     color: colors.text,

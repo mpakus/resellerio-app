@@ -1,4 +1,5 @@
 import {
+  buildPublicAppUrl,
   buildStorefrontUrl,
   storefrontAssetDetails,
   subscriptionDetailsSummary,
@@ -24,13 +25,13 @@ describe('settings helpers', () => {
 
   it('builds a compact subscription summary', () => {
     expect(
-      subscriptionDetailsSummary('https://resellerio.com/store/my-store', {
+      subscriptionDetailsSummary({
         plan_status: 'active',
         plan_period: 'monthly',
         plan_expires_at: '2026-05-01T00:00:00Z',
         trial_ends_at: null,
       }),
-    ).toBe('active · monthly · renews 2026-05-01T00:00:00Z · https://resellerio.com/store/my-store');
+    ).toBe('active · monthly · renews 2026-05-01T00:00:00Z');
   });
 
   it('builds a storefront URL when a slug is available', () => {
@@ -38,5 +39,14 @@ describe('settings helpers', () => {
       'https://resellerio.com/store/my-store',
     );
     expect(buildStorefrontUrl(null, 'https://resellerio.com')).toBeNull();
+  });
+
+  it('builds a public URL from either a relative path or absolute URL', () => {
+    expect(buildPublicAppUrl('/store/my-store/products/11-shoes', 'https://resellerio.com')).toBe(
+      'https://resellerio.com/store/my-store/products/11-shoes',
+    );
+    expect(buildPublicAppUrl('https://cdn.example.test/image.jpg', 'https://resellerio.com')).toBe(
+      'https://cdn.example.test/image.jpg',
+    );
   });
 });

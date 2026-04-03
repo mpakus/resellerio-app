@@ -8,6 +8,7 @@ import {
   Button,
   DialogModal,
   InlineError,
+  LinkText,
   Screen,
   SectionCard,
   TextField,
@@ -137,6 +138,14 @@ function ImagePreviewCard({
           onPreview(image);
         }}
       />
+      {image.url ? (
+        <LinkText
+          label="Open image URL in browser"
+          onPress={() => {
+            void Linking.openURL(image.url!);
+          }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -178,6 +187,15 @@ function ImageLightbox({
             <Text style={{ color: '#b1b8c5', fontSize: 15 }}>This image is not available for preview.</Text>
           )}
         </View>
+
+        {image?.url ? (
+          <LinkText
+            label={image.url}
+            onPress={() => {
+              void Linking.openURL(image.url!);
+            }}
+          />
+        ) : null}
       </View>
     </Modal>
   );
@@ -792,6 +810,15 @@ export default function ProductDetailScreen() {
                   />
                 </View>
               </View>
+              {publicProductUrl ? (
+                <LinkText
+                  label={publicProductUrl}
+                  disabled={!canSharePublicProduct}
+                  onPress={() => {
+                    void Linking.openURL(publicProductUrl);
+                  }}
+                />
+              ) : null}
             </DetailPanel>
 
             <DetailPanel
@@ -988,10 +1015,28 @@ export default function ProductDetailScreen() {
                       label="Suggested price"
                       value={formatCurrencyAmount(listing.generated_price_suggestion)}
                     />
-                    <DetailMetaRow
-                      label="Live URL"
-                      value={listing.external_url ?? 'No live URL saved'}
-                    />
+                    {listing.external_url ? (
+                      <View style={{ gap: 4 }}>
+                        <Text
+                          style={{
+                            color: colors.mutedText,
+                            fontSize: 12,
+                            fontWeight: '700',
+                            letterSpacing: 0.8,
+                          }}
+                        >
+                          LIVE URL
+                        </Text>
+                        <LinkText
+                          label={listing.external_url}
+                          onPress={() => {
+                            void Linking.openURL(listing.external_url!);
+                          }}
+                        />
+                      </View>
+                    ) : (
+                      <DetailMetaRow label="Live URL" value="No live URL saved" />
+                    )}
                     <DetailMetaRow
                       label="URL added"
                       value={formatProductDetailTimestamp(listing.external_url_added_at)}

@@ -7,6 +7,7 @@ import {
   Button,
   DialogModal,
   InlineError,
+  LinkText,
   Screen,
   SectionCard,
   TextField,
@@ -149,10 +150,7 @@ export default function SettingsScreen() {
         <SectionCard
           eyebrow="Account"
           title={user.email}
-          description={`Plan ${user.plan ?? 'free'} · ${subscriptionDetailsSummary(
-            storefrontUrl,
-            user,
-          )}`}
+          description={`Plan ${user.plan ?? 'free'} · ${subscriptionDetailsSummary(user)}`}
         />
 
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -445,6 +443,14 @@ export default function SettingsScreen() {
                 : 'Save a storefront slug first to enable public storefront links.'
             }
           />
+          {storefrontUrl ? (
+            <LinkText
+              label={storefrontUrl}
+              onPress={() => {
+                openExternalUrl(storefrontUrl);
+              }}
+            />
+          ) : null}
 
           {storefrontError ? <InlineError message={storefrontError} /> : null}
 

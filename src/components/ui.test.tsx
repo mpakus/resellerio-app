@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { BrandedTitle, TextField } from '@/src/components/ui';
+import { BrandedTitle, LinkText, TextField } from '@/src/components/ui';
 
 jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn(),
@@ -38,5 +38,15 @@ describe('TextField copy action', () => {
 
     expect(screen.getByLabelText('ResellerIO logo')).toBeTruthy();
     expect(screen.getByText('Products workspace')).toBeTruthy();
+  });
+
+  it('triggers the browser-style link action when tapped', () => {
+    const onPress = jest.fn();
+
+    render(<LinkText label="http://localhost:4000/store/my-store" onPress={onPress} />);
+
+    fireEvent.press(screen.getByText('http://localhost:4000/store/my-store'));
+
+    expect(onPress).toHaveBeenCalled();
   });
 });
