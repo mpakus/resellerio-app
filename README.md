@@ -1,50 +1,103 @@
-# Welcome to your Expo app 👋
+# ResellerIO Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo + React Native mobile app for ResellerIO sellers on iOS and Android.
 
-## Get started
+The app mirrors the web seller workspace as closely as practical against the existing Phoenix `/api/v1` backend. Current mobile coverage includes auth, products, upload-first intake, AI review, lifestyle images, storefront controls, inquiries, settings, transfers, and the home dashboard.
 
-1. Install dependencies
+## Backend
 
-   ```bash
-   npm install
-   ```
+- Local web/API: [http://localhost:4000](http://localhost:4000)
+- API docs: [http://localhost:4000/docs/api](http://localhost:4000/docs/api)
+- OpenAPI: [http://localhost:4000/api/v1/openapi.json](http://localhost:4000/api/v1/openapi.json)
+- Production base URL: [https://resellerio.com](https://resellerio.com)
 
-2. Start the app
+The backend project lives at `/Users/mpak/www/elixir/reseller`.
 
-   ```bash
-   npx expo start
-   ```
+## Local Setup
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Start the Expo app:
 
-## Learn more
+```bash
+npm start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+3. Run on a simulator/device:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run ios
+npm run android
+```
 
-## Join the community
+By default the app uses:
 
-Join our community of developers creating universal apps.
+- iOS / web dev API: `http://localhost:4000/api/v1`
+- Android emulator dev API: `http://10.0.2.2:4000/api/v1`
+- Production API: `https://resellerio.com/api/v1`
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+You can override the API base with:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://resellerio.com/api/v1 npm start
+```
+
+## Test Account
+
+Use the local seller account for development and manual testing:
+
+- Email: `seller@reseller.local`
+- Password: `very-secure-password`
+
+## Scripts
+
+- `npm start` - start Expo
+- `npm run ios` - open iOS simulator flow
+- `npm run android` - open Android emulator flow
+- `npm run web` - run Expo web
+- `npm run lint` - run lint checks
+- `npm test` - run Jest tests
+
+## Project Structure
+
+- [`app`](/Users/mpak/www/elixir/resellerio-app/app) - Expo Router screens
+- [`src/components`](/Users/mpak/www/elixir/resellerio-app/src/components) - shared UI building blocks
+- [`src/features/products`](/Users/mpak/www/elixir/resellerio-app/src/features/products) - products, intake, detail, review, storefront, lifestyle
+- [`src/features/inquiries`](/Users/mpak/www/elixir/resellerio-app/src/features/inquiries) - inquiry inbox
+- [`src/features/settings`](/Users/mpak/www/elixir/resellerio-app/src/features/settings) - storefront profile, themes, branding, pages, account settings
+- [`src/features/transfers`](/Users/mpak/www/elixir/resellerio-app/src/features/transfers) - exports and imports
+- [`src/features/dashboard`](/Users/mpak/www/elixir/resellerio-app/src/features/dashboard) - home/dashboard
+- [`src/lib`](/Users/mpak/www/elixir/resellerio-app/src/lib) - auth, API client, storage, config, URL safety helpers
+- [`docs/PLAN.md`](/Users/mpak/www/elixir/resellerio-app/docs/PLAN.md) - implementation log and current delivery plan
+
+## Security Notes
+
+Recent hardening in this repo:
+
+- External links are validated before opening or sharing. The app allows:
+  - `https://...`
+  - local-development `http://...` URLs such as `localhost`, `10.0.2.2`, private LAN ranges, and `.local`
+- Unsupported schemes like `javascript:` and unsafe public `http://` URLs are blocked
+- API responses are parsed defensively so non-JSON proxy/server errors fail safely instead of crashing the client
+- Native auth persistence uses Expo SecureStore
+- Web fallback auth persistence now uses session-scoped storage instead of long-lived `localStorage`
+
+## Documentation
+
+- Mobile implementation plan: [docs/PLAN.md](/Users/mpak/www/elixir/resellerio-app/docs/PLAN.md)
+- Deferred push notifications plan: [docs/PLAN-PUSH-NOTIFICATIONS.md](/Users/mpak/www/elixir/resellerio-app/docs/PLAN-PUSH-NOTIFICATIONS.md)
+- Contributor notes: [AGENTS.md](/Users/mpak/www/elixir/resellerio-app/AGENTS.md)
+
+## Verification
+
+Recommended local verification before shipping:
+
+```bash
+npm test -- --runInBand
+npm run lint
+npx tsc --noEmit
+```

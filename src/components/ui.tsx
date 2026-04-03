@@ -319,6 +319,8 @@ type DialogModalProps = PropsWithChildren<{
   title: string;
   description?: string;
   onClose: () => void;
+  showCloseButton?: boolean;
+  closeLabel?: string;
 }>;
 
 export function DialogModal({
@@ -326,6 +328,8 @@ export function DialogModal({
   title,
   description,
   onClose,
+  showCloseButton = false,
+  closeLabel = 'Close dialog',
   children,
 }: DialogModalProps) {
   return (
@@ -338,9 +342,21 @@ export function DialogModal({
             event.stopPropagation();
           }}
         >
-          <View style={{ gap: 8 }}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            {description ? <Text style={styles.modalDescription}>{description}</Text> : null}
+          <View style={styles.modalHeaderRow}>
+            <View style={styles.modalHeaderText}>
+              <Text style={styles.modalTitle}>{title}</Text>
+              {description ? <Text style={styles.modalDescription}>{description}</Text> : null}
+            </View>
+            {showCloseButton ? (
+              <Pressable
+                accessibilityLabel={closeLabel}
+                accessibilityRole="button"
+                onPress={onClose}
+                style={({ pressed }) => [styles.modalCloseButton, pressed && styles.buttonPressed]}
+              >
+                <Ionicons color={colors.text} name="close" size={18} />
+              </Pressable>
+            ) : null}
           </View>
           {children}
         </Pressable>
@@ -580,6 +596,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     padding: 20,
   },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  modalHeaderText: {
+    flex: 1,
+    gap: 8,
+  },
   modalTitle: {
     color: colors.text,
     fontSize: 22,
@@ -590,5 +615,15 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 15,
     lineHeight: 23,
+  },
+  modalCloseButton: {
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
   },
 });

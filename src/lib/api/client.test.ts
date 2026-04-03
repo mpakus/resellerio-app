@@ -56,4 +56,32 @@ describe('api client', () => {
 
     expect(formatApiError(error)).toBe('Monthly limit reached: 10/10 used.');
   });
+
+  it('does not crash on non-JSON error responses', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => '<html>Bad gateway</html>',
+    } as Response);
+
+    await expect(apiRequest('/health')).rejects.toMatchObject({
+      name: 'ApiError',
+      message: 'Request failed.',
+      status: 502,
+    });
+  });
+
+  it('fails safely when a success response is not valid JSON', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => 'not-json',
+    } as Response);
+
+    await expect(apiRequest('/health')).rejects.toMatchObject({
+      name: 'ApiError',
+      message: 'Invalid server response.',
+      status: 200,
+    });
+  });
 });

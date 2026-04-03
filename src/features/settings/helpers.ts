@@ -5,6 +5,7 @@ import type {
   StorefrontAssetKind,
   StorefrontPage,
   StorefrontPageDraft,
+  StorefrontTheme,
 } from '@/src/features/settings/types';
 import { appBaseUrl } from '@/src/lib/config/env';
 
@@ -103,11 +104,44 @@ export function storefrontAssetDetails(asset: StorefrontAsset | null) {
     return 'No image uploaded yet.';
   }
 
-  const dimensions =
-    asset.width && asset.height ? `${asset.width}x${asset.height}` : 'Unknown size';
-  const filename = asset.original_filename ?? 'Uploaded image';
+  return 'Preview ready';
+}
 
-  return `${filename} · ${dimensions}`;
+export function visibleStorefrontThemes(
+  themes: StorefrontTheme[],
+  showAllThemes: boolean,
+  currentThemeId: string,
+) {
+  if (showAllThemes || themes.length <= 2) {
+    return themes;
+  }
+
+  const selectedTheme = themes.find((theme) => theme.id === currentThemeId);
+  const defaults = themes.slice(0, 2);
+
+  if (selectedTheme && !defaults.some((theme) => theme.id === selectedTheme.id)) {
+    return [defaults[0], selectedTheme].filter(Boolean) as StorefrontTheme[];
+  }
+
+  return defaults;
+}
+
+export function selectedStorefrontTheme(
+  themes: StorefrontTheme[],
+  currentThemeId: string,
+) {
+  return themes.find((theme) => theme.id === currentThemeId) ?? themes[0] ?? null;
+}
+
+export function storefrontThemePreviewSwatches(theme: StorefrontTheme) {
+  const colors = theme.colors;
+
+  return [
+    colors.primary_button,
+    colors.secondary_accent,
+    colors.page_background,
+    colors.text,
+  ].filter((value): value is string => Boolean(value));
 }
 
 export function buildStorefrontUrl(storefrontSlug: string | null, baseUrl: string = appBaseUrl) {

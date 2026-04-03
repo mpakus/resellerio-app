@@ -155,14 +155,23 @@ Completed in the app:
 - Products advanced sorting and updated-date filters via modal controls
 - Product detail polish: selectable text, streamlined storefront/review copy, simpler original-image actions, and copy-to-clipboard controls for marketplace listing blocks
 - Product detail media polish: lifestyle and storefront-gallery thumbnails, simplified add/remove storefront actions, and a standard bottom navigation footer on the Product screen
+- Lifestyle image cards now stay minimal on Product detail, showing the preview and seller actions without extra scene, approval, or source-image metadata
+- Lifestyle image actions now use compact icon controls for preview, regenerate, approve-state checkbox, and delete
 - Storefront Gallery selection now uses a top-right circle toggle instead of add/remove buttons
 - Storefront Gallery now keeps images in one stable list and places the selection toggle directly over the image preview
+- Inquiries inbox now uses compact rows with full name, contact, and received-at time, opening a detail dialog for message review and delete
 - Upload-first product intake with signed uploads and finalize
 - Product review editing and lifecycle actions
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions
 - Lifestyle generation controls, regenerate-all and regenerate-by-scene actions, approval/delete actions, storefront image selection/order, and storefront publish/share flows
 - Inquiries inbox with search, pagination, delete, and open-product action
 - Settings workspace with marketplace defaults, storefront profile, branding assets, storefront pages, usage/account, storefront open/share, billing links, and sign out
+- Settings storefront profile uses one clickable public URL, logo/header previews, shorter branding/save labels, and icon-based page controls with delete confirmation
+- Settings now consumes backend storefront theme presets and shows mobile theme preview cards with a show-more toggle instead of a raw theme ID field
+- Marketplace selection now lives inside a dedicated Marketplaces block with shorter save copy, and branding blocks hide filename/size details when previews are available
+- Settings Logo/Header branding cards now use compact upload and trash icon actions instead of text buttons
+- External link opening/sharing is now gated through a shared safe-URL helper that blocks unsupported schemes and unsafe public `http://` links
+- API response parsing now fails safely on non-JSON responses, and web auth fallback storage is session-scoped instead of long-lived local storage
 - Transfers workspace in Settings with catalog export creation, finished-download open action, ZIP import, and recent transfer polling
 
 Still in progress:

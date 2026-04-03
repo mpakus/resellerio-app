@@ -65,6 +65,8 @@ const mockedShare = jest.spyOn(Share, 'share').mockResolvedValue({
   activityType: undefined,
 });
 const mockGenerateLifestyle = jest.fn();
+const mockApproveLifestyleImage = jest.fn();
+const mockDeleteLifestyleImage = jest.fn();
 const mockSetImageStorefrontVisibility = jest.fn();
 
 describe('ProductDetailScreen panels', () => {
@@ -74,6 +76,8 @@ describe('ProductDetailScreen panels', () => {
     mockedSetStringAsync.mockResolvedValue(true);
     mockedShare.mockClear();
     mockGenerateLifestyle.mockReset();
+    mockApproveLifestyleImage.mockReset();
+    mockDeleteLifestyleImage.mockReset();
     mockSetImageStorefrontVisibility.mockReset();
   });
 
@@ -305,8 +309,8 @@ describe('ProductDetailScreen panels', () => {
       unarchive: jest.fn(),
       removeProduct: jest.fn().mockResolvedValue(true),
       generateLifestyle: mockGenerateLifestyle,
-      approveLifestyleImage: jest.fn(),
-      deleteLifestyleImage: jest.fn(),
+      approveLifestyleImage: mockApproveLifestyleImage,
+      deleteLifestyleImage: mockDeleteLifestyleImage,
       setImageStorefrontVisibility: mockSetImageStorefrontVisibility,
       saveStorefrontImageOrder: jest.fn(),
     });
@@ -372,6 +376,10 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('Regenerate all scenes')).toBeTruthy();
     expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
     expect(screen.getByText('Regenerate Casual Lifestyle')).toBeTruthy();
+    expect(screen.getByLabelText('Preview lifestyle image 201')).toBeTruthy();
+    expect(screen.getByLabelText('Regenerate lifestyle image 201')).toBeTruthy();
+    expect(screen.getByLabelText('Approve lifestyle image 201')).toBeTruthy();
+    expect(screen.getByLabelText('Delete lifestyle image 201')).toBeTruthy();
     expect(screen.getByText('STOREFRONT GALLERY')).toBeTruthy();
     expect(screen.getByLabelText('Add image 201 to storefront')).toBeTruthy();
     expect(screen.getByLabelText('Remove image 101 from storefront')).toBeTruthy();
@@ -386,6 +394,11 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.queryByText('Position')).toBeNull();
     expect(screen.queryByText('Add to storefront')).toBeNull();
     expect(screen.queryByText('Remove from storefront')).toBeNull();
+    expect(screen.queryByText('Scene')).toBeNull();
+    expect(screen.queryByText('Approved')).toBeNull();
+    expect(screen.queryByText('Source images')).toBeNull();
+    expect(screen.queryByText('Scene casual_lifestyle')).toBeNull();
+    expect(screen.queryByText('Scene model_studio')).toBeNull();
     expect(screen.getByLabelText('Move image 101 up')).toBeTruthy();
     expect(screen.getByLabelText('Move image 101 down')).toBeTruthy();
     expect(screen.getAllByText('Products').length).toBeGreaterThan(0);
@@ -452,11 +465,23 @@ describe('ProductDetailScreen panels', () => {
     expect(mockGenerateLifestyle).toHaveBeenCalledWith('casual_lifestyle');
   });
 
-  it('uses the shorter per-image regenerate label in lifestyle cards', () => {
+  it('uses icon actions for per-image lifestyle controls', () => {
     render(<ProductDetailScreen />);
 
-    expect(screen.getByText('Regenerate')).toBeTruthy();
-    expect(screen.queryByText('Regenerate scene')).toBeNull();
+    expect(screen.queryByText('Approve')).toBeNull();
+    expect(screen.queryByText('Delete')).toBeNull();
+    expect(screen.queryByText('Preview full screen')).toBeNull();
+    expect(screen.getByLabelText('Regenerate lifestyle image 201')).toBeTruthy();
+  });
+
+  it('runs approve and delete actions from lifestyle icon controls', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Approve lifestyle image 201'));
+    fireEvent.press(screen.getByLabelText('Delete lifestyle image 201'));
+
+    expect(mockApproveLifestyleImage).toHaveBeenCalledWith(201);
+    expect(mockDeleteLifestyleImage).toHaveBeenCalledWith(201);
   });
 
   it('toggles storefront image selection from the top-right circle control', () => {

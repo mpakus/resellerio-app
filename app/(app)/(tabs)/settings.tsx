@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import * as Linking from 'expo-linking';
-import { Pressable, ScrollView, Share, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
+import { useState, type ComponentProps } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import {
   BrandedTitle,
@@ -13,16 +14,19 @@ import {
   TextField,
 } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
+import { openExternalUrlSafely, shareExternalUrlSafely } from '@/src/lib/linking/external-url';
 import {
   addonCreditsSummary,
   buildStorefrontUrl,
   buildReorderedStorefrontPageIds,
   createStorefrontPageDraft,
+  selectedStorefrontTheme,
   storefrontAssetDetails,
-  storefrontAssetSummary,
+  storefrontThemePreviewSwatches,
   subscriptionDetailsSummary,
+  visibleStorefrontThemes,
 } from '@/src/features/settings/helpers';
-import type { StorefrontPage } from '@/src/features/settings/types';
+import type { StorefrontPage, StorefrontTheme } from '@/src/features/settings/types';
 import { useSettingsOverview } from '@/src/features/settings/use-settings-overview';
 import {
   describeExportJob,
@@ -37,11 +41,168 @@ import { colors } from '@/src/theme/colors';
 const PRICING_URL = 'https://resellerio.com/pricing';
 const BILLING_URL = 'https://app.lemonsqueezy.com/billing';
 
+function PageActionIconButton({
+  accessibilityLabel,
+  icon,
+  tone = 'default',
+  disabled = false,
+  onPress,
+}: {
+  accessibilityLabel: string;
+  icon: ComponentProps<typeof Ionicons>['name'];
+  tone?: 'default' | 'danger';
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        width: 46,
+        height: 46,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: tone === 'danger' ? '#f0c4bb' : colors.border,
+        backgroundColor: tone === 'danger' ? '#fff1ec' : colors.card,
+        opacity: disabled || pressed ? 0.65 : 1,
+      })}
+    >
+      <Ionicons
+        color={tone === 'danger' ? colors.danger : disabled ? colors.border : colors.text}
+        name={icon}
+        size={18}
+      />
+    </Pressable>
+  );
+}
+
+function ThemePresetCard({
+  theme,
+  selected,
+  title,
+  tagline,
+  onPress,
+}: {
+  theme: StorefrontTheme;
+  selected: boolean;
+  title: string;
+  tagline: string;
+  onPress: () => void;
+}) {
+  const colorsMap = theme.colors;
+  const pageBackground = colorsMap.page_background ?? '#f7f2e9';
+  const surfaceBackground = colorsMap.surface_background ?? '#fffaf4';
+  const textColor = colorsMap.text ?? '#1f1f1d';
+  const borderColor = colorsMap.border ?? '#d8c6ae';
+  const heroStart = colorsMap.secondary_accent ?? '#d9c2a0';
+  const heroEnd = colorsMap.hero_overlay ?? colorsMap.primary_button ?? '#f0debe';
+
+  return (
+    <Pressable
+      accessibilityLabel={`Select theme ${theme.label}`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        gap: 12,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: selected ? colors.accent : borderColor,
+        backgroundColor: pageBackground,
+        padding: 14,
+        opacity: pressed ? 0.82 : 1,
+      })}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={{ color: textColor, fontSize: 15, fontWeight: '700' }}>{theme.label}</Text>
+          <Text style={{ color: textColor, fontSize: 11, opacity: 0.7 }}>{theme.id}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          {storefrontThemePreviewSwatches(theme).slice(0, 4).map((swatch) => (
+            <View
+              key={`${theme.id}-${swatch}`}
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.65)',
+                backgroundColor: swatch,
+              }}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View
+        style={{
+          gap: 10,
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.4)',
+          overflow: 'hidden',
+          backgroundColor: surfaceBackground,
+        }}
+      >
+        <View
+          style={{
+            paddingHorizontal: 14,
+            paddingVertical: 16,
+            backgroundColor: heroStart,
+          }}
+        >
+          <Text style={{ color: textColor, fontSize: 11, opacity: 0.75 }}>Header sample</Text>
+          <Text style={{ color: textColor, fontSize: 16, fontWeight: '700', marginTop: 6 }}>{title}</Text>
+          <Text style={{ color: textColor, fontSize: 12, lineHeight: 18, marginTop: 4, opacity: 0.8 }}>
+            {tagline}
+          </Text>
+          <View
+            style={{
+              position: 'absolute',
+              right: -18,
+              top: -12,
+              width: 88,
+              height: 88,
+              borderRadius: 999,
+              backgroundColor: heroEnd,
+              opacity: 0.34,
+            }}
+          />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 14, paddingBottom: 14 }}>
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.45)',
+              backgroundColor: heroEnd,
+            }}
+          />
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={{ color: textColor, fontSize: 11, opacity: 0.7 }}>Product card</Text>
+            <Text style={{ color: textColor, fontSize: 14, fontWeight: '700' }}>Vintage denim jacket</Text>
+            <Text style={{ color: textColor, fontSize: 12, opacity: 0.8 }}>$84 · Ready to share</Text>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function SettingsScreen() {
   const { session, signOut } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [pageModalVisible, setPageModalVisible] = useState(false);
   const [editingPage, setEditingPage] = useState<StorefrontPage | null>(null);
+  const [deletePageTarget, setDeletePageTarget] = useState<StorefrontPage | null>(null);
+  const [showAllThemes, setShowAllThemes] = useState(false);
   const [pageDraft, setPageDraft] = useState(createStorefrontPageDraft());
   const {
     user,
@@ -49,6 +210,7 @@ export default function SettingsScreen() {
     usage,
     limits,
     storefront,
+    themes,
     storefrontPages,
     selectedMarketplacesDraft,
     storefrontDraft,
@@ -109,17 +271,20 @@ export default function SettingsScreen() {
     }
   }
 
-  function openExternalUrl(url: string) {
-    void Linking.openURL(url);
-  }
-
   const storefrontUrl = buildStorefrontUrl(storefront.slug);
+  const selectedTheme = selectedStorefrontTheme(themes, storefrontDraft.theme_id);
+  const visibleThemes = visibleStorefrontThemes(themes, showAllThemes, storefrontDraft.theme_id);
 
-  async function shareExternalUrl(url: string) {
-    await Share.share({
-      message: url,
-      url,
-    });
+  async function confirmDeletePage() {
+    if (!deletePageTarget) {
+      return;
+    }
+
+    const didDelete = await removePage(deletePageTarget.id);
+
+    if (didDelete) {
+      setDeletePageTarget(null);
+    }
   }
 
   return (
@@ -161,7 +326,7 @@ export default function SettingsScreen() {
               disabled={!storefrontUrl}
               onPress={() => {
                 if (storefrontUrl) {
-                  openExternalUrl(storefrontUrl);
+                  void openExternalUrlSafely(storefrontUrl);
                 }
               }}
             />
@@ -173,7 +338,7 @@ export default function SettingsScreen() {
               disabled={!storefrontUrl}
               onPress={() => {
                 if (storefrontUrl) {
-                  void shareExternalUrl(storefrontUrl);
+                  void shareExternalUrlSafely(storefrontUrl);
                 }
               }}
             />
@@ -186,7 +351,7 @@ export default function SettingsScreen() {
               label="View plans"
               kind="secondary"
               onPress={() => {
-                openExternalUrl(PRICING_URL);
+                void openExternalUrlSafely(PRICING_URL);
               }}
             />
           </View>
@@ -195,66 +360,83 @@ export default function SettingsScreen() {
               label="Manage billing"
               kind="secondary"
               onPress={() => {
-                openExternalUrl(BILLING_URL);
+                void openExternalUrlSafely(BILLING_URL);
               }}
             />
           </View>
         </View>
 
-        <SectionCard
-          eyebrow="Marketplaces"
-          title={`${selectedMarketplacesDraft.length} selected`}
-          description={`${supportedMarketplaces.length} supported marketplaces available for AI listing generation.`}
-        />
+        <View
+          style={{
+            gap: 12,
+            borderRadius: 24,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.card,
+            padding: 18,
+          }}
+        >
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+              MARKETPLACES
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+              {selectedMarketplacesDraft.length} selected
+            </Text>
+            <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+              {supportedMarketplaces.length} supported marketplaces available for AI listing generation.
+            </Text>
+          </View>
 
-        {marketplaceError ? <InlineError message={marketplaceError} /> : null}
+          {marketplaceError ? <InlineError message={marketplaceError} /> : null}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {supportedMarketplaces.map((marketplace) => {
+                const isActive = selectedMarketplacesDraft.includes(marketplace.id);
+
+                return (
+                  <Pressable
+                    key={marketplace.id}
+                    onPress={() => {
+                      toggleMarketplace(marketplace.id);
+                    }}
+                    style={{
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: isActive ? colors.accent : colors.border,
+                      backgroundColor: isActive ? colors.accentSoft : colors.card,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                      {marketplace.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            {supportedMarketplaces.map((marketplace) => {
-              const isActive = selectedMarketplacesDraft.includes(marketplace.id);
-
-              return (
-                <Pressable
-                  key={marketplace.id}
-                  onPress={() => {
-                    toggleMarketplace(marketplace.id);
-                  }}
-                  style={{
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: isActive ? colors.accent : colors.border,
-                    backgroundColor: isActive ? colors.accentSoft : colors.card,
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                  }}
-                >
-                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
-                    {marketplace.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
-
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <Button
-              label={isSavingMarketplaces ? 'Saving marketplaces...' : 'Save marketplaces'}
-              disabled={!isMarketplacesDirty || isSavingMarketplaces}
-              onPress={() => {
-                void saveMarketplaceDraft();
-              }}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              label="Reset"
-              kind="secondary"
-              disabled={!isMarketplacesDirty || isSavingMarketplaces}
-              onPress={resetMarketplaceDraft}
-            />
+            <View style={{ flex: 1 }}>
+              <Button
+                label={isSavingMarketplaces ? 'Saving...' : 'Save'}
+                disabled={!isMarketplacesDirty || isSavingMarketplaces}
+                onPress={() => {
+                  void saveMarketplaceDraft();
+                }}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Reset"
+                kind="secondary"
+                disabled={!isMarketplacesDirty || isSavingMarketplaces}
+                onPress={resetMarketplaceDraft}
+              />
+            </View>
           </View>
         </View>
 
@@ -350,7 +532,7 @@ export default function SettingsScreen() {
                     label="Open export download"
                     kind="secondary"
                     onPress={() => {
-                      openExternalUrl(job.download_url!);
+                      void openExternalUrlSafely(job.download_url);
                     }}
                   />
                 ) : null}
@@ -427,30 +609,41 @@ export default function SettingsScreen() {
               STOREFRONT PROFILE
             </Text>
             <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
-              Seller-facing storefront settings
-            </Text>
-            <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
-              Save slug, title, tagline, description, theme, and enabled state with the mobile storefront API.
+              Settings
             </Text>
           </View>
 
-          <SectionCard
-            eyebrow="Public URL"
-            title={storefrontUrl ?? 'Storefront URL unavailable'}
-            description={
-              storefrontUrl
+          <View
+            style={{
+              gap: 10,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.background,
+              padding: 14,
+            }}
+          >
+            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+              PUBLIC URL
+            </Text>
+            <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+              {storefrontUrl
                 ? 'Open or share the public storefront directly from mobile.'
-                : 'Save a storefront slug first to enable public storefront links.'
-            }
-          />
-          {storefrontUrl ? (
-            <LinkText
-              label={storefrontUrl}
-              onPress={() => {
-                openExternalUrl(storefrontUrl);
-              }}
-            />
-          ) : null}
+                : 'Save a storefront slug first to enable public storefront links.'}
+            </Text>
+            {storefrontUrl ? (
+              <LinkText
+                label={storefrontUrl}
+                onPress={() => {
+                  void openExternalUrlSafely(storefrontUrl);
+                }}
+              />
+            ) : (
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                Storefront URL unavailable
+              </Text>
+            )}
+          </View>
 
           {storefrontError ? <InlineError message={storefrontError} /> : null}
 
@@ -484,13 +677,56 @@ export default function SettingsScreen() {
               updateStorefrontField('description', value);
             }}
           />
-          <TextField
-            label="Theme ID"
-            value={storefrontDraft.theme_id}
-            onChangeText={(value) => {
-              updateStorefrontField('theme_id', value);
-            }}
-          />
+          <View style={{ gap: 10 }}>
+            <View style={{ gap: 4 }}>
+              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Selected theme</Text>
+              <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                {selectedTheme ? selectedTheme.label : 'No theme preset available'}
+              </Text>
+            </View>
+
+            {visibleThemes.length > 0 ? (
+              <View style={{ gap: 12 }}>
+                {visibleThemes.map((theme) => (
+                  <ThemePresetCard
+                    key={theme.id}
+                    theme={theme}
+                    selected={storefrontDraft.theme_id === theme.id}
+                    title={storefrontDraft.title || 'Your storefront'}
+                    tagline={storefrontDraft.tagline || 'Curated resale inventory and quick shipping.'}
+                    onPress={() => {
+                      updateStorefrontField('theme_id', theme.id);
+                    }}
+                  />
+                ))}
+              </View>
+            ) : null}
+
+            {themes.length > 2 ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setShowAllThemes((current) => !current);
+                }}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  alignSelf: 'flex-start',
+                  opacity: pressed ? 0.72 : 1,
+                })}
+              >
+                <Ionicons
+                  color={colors.mutedText}
+                  name={showAllThemes ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                />
+                <Text style={{ color: colors.mutedText, fontSize: 14, fontWeight: '600' }}>
+                  {showAllThemes ? 'Show fewer themes' : `Show all ${themes.length} themes`}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
 
           <View style={{ gap: 10 }}>
             <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Storefront status</Text>
@@ -527,7 +763,7 @@ export default function SettingsScreen() {
 
           <SectionCard
             eyebrow="Branding"
-            title={storefrontAssetSummary(storefront)}
+            title="Logo and header"
             description="Upload one logo and one storefront header image, or replace either asset at any time."
           />
 
@@ -549,40 +785,59 @@ export default function SettingsScreen() {
               }}
             >
               <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{item.title}</Text>
-              <Text style={{ color: colors.mutedText, fontSize: 14 }}>
-                {storefrontAssetDetails(item.asset)}
-              </Text>
+              {item.asset?.url ? (
+                <Pressable
+                  accessibilityLabel={`Open ${item.title.toLowerCase()} preview`}
+                  accessibilityRole="button"
+                  onPress={() => {
+                    void openExternalUrlSafely(item.asset?.url);
+                  }}
+                  style={({ pressed }) => ({
+                    overflow: 'hidden',
+                    borderRadius: 18,
+                    opacity: pressed ? 0.78 : 1,
+                  })}
+                >
+                  <Image
+                    accessibilityLabel={`${item.title} preview`}
+                    contentFit="cover"
+                    source={{ uri: item.asset.url }}
+                    style={{
+                      width: '100%',
+                      height: item.kind === 'logo' ? 120 : 140,
+                      borderRadius: 18,
+                      backgroundColor: colors.card,
+                    }}
+                  />
+                </Pressable>
+              ) : null}
+              {!item.asset?.url ? (
+                <Text style={{ color: colors.mutedText, fontSize: 14 }}>
+                  {storefrontAssetDetails(item.asset)}
+                </Text>
+              ) : null}
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label={
-                      uploadingAssetKind === item.kind
-                        ? `Uploading ${item.title.toLowerCase()}...`
-                        : item.asset
-                          ? `Replace ${item.title.toLowerCase()}`
-                          : `Upload ${item.title.toLowerCase()}`
-                    }
-                    kind="secondary"
-                    disabled={uploadingAssetKind !== null}
-                    onPress={() => {
-                      void uploadStorefrontAsset(item.kind);
-                    }}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label={
-                      deletingAssetKind === item.kind
-                        ? `Removing ${item.title.toLowerCase()}...`
-                        : `Remove ${item.title.toLowerCase()}`
-                    }
-                    kind="secondary"
-                    disabled={!item.asset || deletingAssetKind !== null}
-                    onPress={() => {
-                      void removeAsset(item.kind);
-                    }}
-                  />
-                </View>
+                <PageActionIconButton
+                  accessibilityLabel={
+                    item.asset
+                      ? `Replace ${item.title.toLowerCase()}`
+                      : `Upload ${item.title.toLowerCase()}`
+                  }
+                  icon="cloud-upload-outline"
+                  disabled={uploadingAssetKind !== null}
+                  onPress={() => {
+                    void uploadStorefrontAsset(item.kind);
+                  }}
+                />
+                <PageActionIconButton
+                  accessibilityLabel={`Remove ${item.title.toLowerCase()}`}
+                  icon="trash-outline"
+                  tone="danger"
+                  disabled={!item.asset || deletingAssetKind !== null}
+                  onPress={() => {
+                    void removeAsset(item.kind);
+                  }}
+                />
               </View>
             </View>
           ))}
@@ -590,7 +845,7 @@ export default function SettingsScreen() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Button
-                label={isSavingStorefront ? 'Saving storefront...' : 'Save storefront'}
+                label={isSavingStorefront ? 'Saving...' : 'Save'}
                 disabled={!isStorefrontDirty || isSavingStorefront}
                 onPress={() => {
                   void saveStorefrontDraft();
@@ -676,56 +931,51 @@ export default function SettingsScreen() {
                 {page.body ?? 'No body content yet.'}
               </Text>
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Edit"
-                    kind="secondary"
-                    onPress={() => {
-                      setEditingPage(page);
-                      setPageDraft(createStorefrontPageDraft(page));
-                      setPageModalVisible(true);
-                    }}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Move earlier"
-                    kind="secondary"
-                    disabled={reorderingPageId === page.id || index === 0}
-                    onPress={() => {
-                      const nextIds = buildReorderedStorefrontPageIds(
-                        storefrontPages.map((item) => item.id),
-                        page.id,
-                        'earlier',
-                      );
-                      void savePageOrder(nextIds, page.id);
-                    }}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Move later"
-                    kind="secondary"
-                    disabled={reorderingPageId === page.id || index === storefrontPages.length - 1}
-                    onPress={() => {
-                      const nextIds = buildReorderedStorefrontPageIds(
-                        storefrontPages.map((item) => item.id),
-                        page.id,
-                        'later',
-                      );
-                      void savePageOrder(nextIds, page.id);
-                    }}
-                  />
-                </View>
+                <PageActionIconButton
+                  accessibilityLabel={`Edit page ${page.title}`}
+                  icon="pencil-outline"
+                  onPress={() => {
+                    setEditingPage(page);
+                    setPageDraft(createStorefrontPageDraft(page));
+                    setPageModalVisible(true);
+                  }}
+                />
+                <PageActionIconButton
+                  accessibilityLabel={`Move page ${page.title} up`}
+                  icon="arrow-up"
+                  disabled={reorderingPageId === page.id || index === 0}
+                  onPress={() => {
+                    const nextIds = buildReorderedStorefrontPageIds(
+                      storefrontPages.map((item) => item.id),
+                      page.id,
+                      'earlier',
+                    );
+                    void savePageOrder(nextIds, page.id);
+                  }}
+                />
+                <PageActionIconButton
+                  accessibilityLabel={`Move page ${page.title} down`}
+                  icon="arrow-down"
+                  disabled={reorderingPageId === page.id || index === storefrontPages.length - 1}
+                  onPress={() => {
+                    const nextIds = buildReorderedStorefrontPageIds(
+                      storefrontPages.map((item) => item.id),
+                      page.id,
+                      'later',
+                    );
+                    void savePageOrder(nextIds, page.id);
+                  }}
+                />
+                <PageActionIconButton
+                  accessibilityLabel={`Delete page ${page.title}`}
+                  icon="trash-outline"
+                  tone="danger"
+                  disabled={deletingPageId === page.id}
+                  onPress={() => {
+                    setDeletePageTarget(page);
+                  }}
+                />
               </View>
-              <Button
-                label={deletingPageId === page.id ? 'Deleting page...' : 'Delete page'}
-                kind="secondary"
-                disabled={deletingPageId === page.id}
-                onPress={() => {
-                  void removePage(page.id);
-                }}
-              />
             </View>
           ))}
         </View>
@@ -848,6 +1098,47 @@ export default function SettingsScreen() {
                 disabled={isSavingPage}
                 onPress={() => {
                   setPageModalVisible(false);
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      </DialogModal>
+
+      <DialogModal
+        visible={deletePageTarget !== null}
+        title={deletePageTarget ? `Delete ${deletePageTarget.title}?` : 'Delete page'}
+        description="This will permanently remove the storefront page."
+        showCloseButton
+        closeLabel="Close delete page dialog"
+        onClose={() => {
+          if (deletingPageId === null) {
+            setDeletePageTarget(null);
+          }
+        }}
+      >
+        <View style={{ gap: 12 }}>
+          <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+            You can recreate the page later, but its current content and position will be lost.
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Button
+                label={deletePageTarget && deletingPageId === deletePageTarget.id ? 'Deleting...' : 'Delete'}
+                kind="secondary"
+                disabled={deletePageTarget ? deletingPageId === deletePageTarget.id : true}
+                onPress={() => {
+                  void confirmDeletePage();
+                }}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Cancel"
+                kind="secondary"
+                disabled={deletePageTarget ? deletingPageId === deletePageTarget.id : false}
+                onPress={() => {
+                  setDeletePageTarget(null);
                 }}
               />
             </View>

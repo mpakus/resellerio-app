@@ -8,6 +8,10 @@ export function inquiryPrimaryText(inquiry: Inquiry) {
   return inquiry.message?.trim() || 'No message provided.';
 }
 
+export function inquiryContactText(inquiry: Inquiry) {
+  return inquiry.contact?.trim() || 'No contact details';
+}
+
 export function inquirySecondaryText(inquiry: Inquiry) {
   return inquiry.contact?.trim() || inquiry.source_path?.trim() || 'No contact details';
 }

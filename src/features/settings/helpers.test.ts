@@ -1,12 +1,15 @@
 import {
   buildPublicAppUrl,
   buildStorefrontUrl,
+  selectedStorefrontTheme,
   storefrontAssetDetails,
+  storefrontThemePreviewSwatches,
   subscriptionDetailsSummary,
+  visibleStorefrontThemes,
 } from '@/src/features/settings/helpers';
 
 describe('settings helpers', () => {
-  it('describes storefront assets with filename and dimensions', () => {
+  it('describes storefront assets with preview-ready copy', () => {
     expect(
       storefrontAssetDetails({
         id: 9,
@@ -20,7 +23,37 @@ describe('settings helpers', () => {
         inserted_at: null,
         updated_at: null,
       }),
-    ).toBe('logo.png · 400x200');
+    ).toBe('Preview ready');
+  });
+
+  it('returns selected theme and visible theme subset', () => {
+    const themes = [
+      { id: 'desert-clay', label: 'Desert Clay', colors: { text: '#111111' } },
+      { id: 'linen-ink', label: 'Linen Ink', colors: { text: '#222222' } },
+      { id: 'forest-study', label: 'Forest Study', colors: { text: '#333333' } },
+    ];
+
+    expect(selectedStorefrontTheme(themes, 'forest-study')?.label).toBe('Forest Study');
+    expect(visibleStorefrontThemes(themes, false, 'forest-study').map((theme) => theme.id)).toEqual([
+      'desert-clay',
+      'forest-study',
+    ]);
+    expect(visibleStorefrontThemes(themes, true, 'forest-study')).toHaveLength(3);
+  });
+
+  it('builds storefront theme swatches from the theme colors', () => {
+    expect(
+      storefrontThemePreviewSwatches({
+        id: 'desert-clay',
+        label: 'Desert Clay',
+        colors: {
+          primary_button: '#111111',
+          secondary_accent: '#222222',
+          page_background: '#333333',
+          text: '#444444',
+        },
+      }),
+    ).toEqual(['#111111', '#222222', '#333333', '#444444']);
   });
 
   it('builds a compact subscription summary', () => {

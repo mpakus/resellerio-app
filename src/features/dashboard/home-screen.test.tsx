@@ -92,7 +92,7 @@ describe('HomeScreen', () => {
     expect(screen.getByText('seller@reseller.local')).toBeTruthy();
     expect(screen.getByText('14')).toBeTruthy();
     expect(screen.getByText('Nike Air Max 90')).toBeTruthy();
-    expect(screen.getByText('2 tracked exports · 1 tracked imports')).toBeTruthy();
+    expect(screen.queryByText('2 tracked exports · 1 tracked imports')).toBeNull();
   });
 
   it('renders quick action buttons', () => {
@@ -101,7 +101,7 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByText('+ Add product'));
     fireEvent.press(screen.getByText('Open products'));
     fireEvent.press(screen.getByText('Open inquiries'));
-    fireEvent.press(screen.getByText('Open transfers and settings'));
+    fireEvent.press(screen.getByText('Open Settings'));
 
     expect(screen.getByText('Jump into the next workflow')).toBeTruthy();
   });

@@ -2,8 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { Linking, Modal, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentProps, type PropsWithChildren } from 'react';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
 import {
   BrandedTitle,
@@ -16,6 +16,7 @@ import {
   StandardBottomNav,
   TextField,
 } from '@/src/components/ui';
+import { openExternalUrlSafely, shareExternalUrlSafely } from '@/src/lib/linking/external-url';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { manualProductStatusOptions } from '@/src/features/products/review-form';
 import {
@@ -230,7 +231,7 @@ function ImagePreviewCard({
           label="Open Image in Browser"
           kind="secondary"
           onPress={() => {
-            void Linking.openURL(image.url!);
+            void openExternalUrlSafely(image.url);
           }}
         />
       ) : null}
@@ -341,6 +342,55 @@ function StorefrontMoveButton({
   );
 }
 
+function MediaIconButton({
+  accessibilityLabel,
+  icon,
+  disabled,
+  active = false,
+  tone = 'default',
+  onPress,
+}: {
+  accessibilityLabel: string;
+  icon: ComponentProps<typeof Ionicons>['name'];
+  disabled: boolean;
+  active?: boolean;
+  tone?: 'default' | 'danger';
+  onPress: () => void;
+}) {
+  const iconColor = tone === 'danger'
+    ? colors.danger
+    : active
+      ? colors.accent
+      : colors.text;
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        width: 46,
+        height: 46,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: tone === 'danger' ? '#f0c4bb' : active ? colors.accent : colors.border,
+        backgroundColor:
+          tone === 'danger'
+            ? '#fff1ec'
+            : active
+              ? colors.accentSoft
+              : colors.card,
+        opacity: disabled || pressed ? 0.65 : 1,
+      })}
+    >
+      <Ionicons color={iconColor} name={icon} size={21} />
+    </Pressable>
+  );
+}
+
 function ImageLightbox({
   image,
   visible,
@@ -385,7 +435,7 @@ function ImageLightbox({
           <LinkText
             label={image.url}
             onPress={() => {
-              void Linking.openURL(image.url!);
+              void openExternalUrlSafely(image.url);
             }}
           />
         ) : null}
@@ -485,10 +535,7 @@ export default function ProductDetailScreen() {
   const isStorefrontEnabled = publicationDraft?.storefrontEnabled ?? product?.storefront_enabled ?? false;
 
   async function handleShareUrl(url: string) {
-    await Share.share({
-      message: url,
-      url,
-    });
+    await shareExternalUrlSafely(url);
   }
 
   async function handleDelete() {
@@ -985,7 +1032,7 @@ export default function ProductDetailScreen() {
                         disabled={!canSharePublicProduct}
                         onPress={() => {
                           if (publicProductUrl) {
-                            void Linking.openURL(publicProductUrl);
+                            void openExternalUrlSafely(publicProductUrl);
                           }
                         }}
                       />
@@ -1258,7 +1305,7 @@ export default function ProductDetailScreen() {
                             const liveUrl = publicationDraft.marketplaceExternalUrls[listing.marketplace]?.trim();
 
                             if (liveUrl) {
-                              void Linking.openURL(liveUrl);
+                              void openExternalUrlSafely(liveUrl);
                             }
                           }}
                         />
@@ -1397,60 +1444,51 @@ export default function ProductDetailScreen() {
                       Lifestyle image #{image.id}
                     </Text>
                     <InlineImagePreview image={image} />
-                    <DetailMetaRow label="Scene" value={image.scene_key ?? 'Default scene'} />
-                    <DetailMetaRow
-                      label="Approved"
-                      value={image.seller_approved ? `Yes · ${formatProductDetailTimestamp(image.approved_at)}` : 'No'}
-                    />
-                    <DetailMetaRow
-                      label="Source images"
-                      value={image.source_image_ids.length > 0 ? image.source_image_ids.join(', ') : 'Not available'}
-                    />
-                    {image.url ? (
-                      <Button
-                        label="Preview full screen"
-                        kind="secondary"
-                        disabled={isUpdatingMedia}
-                        onPress={() => {
-                          setSelectedImage(image);
-                        }}
-                        />
-                    ) : null}
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                      {image.scene_key ? (
-                        <View style={{ flex: 1 }}>
-                          <Button
-                            label="Regenerate"
-                            kind="secondary"
-                            disabled={isGeneratingLifestyle || isUpdatingMedia}
-                            onPress={() => {
-                              void generateLifestyle(image.scene_key ?? undefined);
-                            }}
-                          />
-                        </View>
-                      ) : null}
-                      {!image.seller_approved ? (
-                        <View style={{ flex: 1 }}>
-                          <Button
-                            label="Approve"
-                            kind="secondary"
-                            disabled={isUpdatingMedia}
-                            onPress={() => {
-                              void approveLifestyleImage(image.id);
-                            }}
-                          />
-                        </View>
-                      ) : null}
-                      <View style={{ flex: 1 }}>
-                        <Button
-                          label="Delete"
-                          kind="secondary"
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                      {image.url ? (
+                        <MediaIconButton
+                          accessibilityLabel={`Preview lifestyle image ${image.id}`}
+                          icon="expand-outline"
                           disabled={isUpdatingMedia}
                           onPress={() => {
-                            void deleteLifestyleImage(image.id);
+                            setSelectedImage(image);
                           }}
                         />
-                      </View>
+                      ) : null}
+                      {image.scene_key ? (
+                        <MediaIconButton
+                          accessibilityLabel={`Regenerate lifestyle image ${image.id}`}
+                          icon="refresh-circle-outline"
+                          disabled={isGeneratingLifestyle || isUpdatingMedia}
+                          onPress={() => {
+                            void generateLifestyle(image.scene_key ?? undefined);
+                          }}
+                        />
+                      ) : null}
+                      <MediaIconButton
+                        accessibilityLabel={
+                          image.seller_approved
+                            ? `Lifestyle image ${image.id} is approved`
+                            : `Approve lifestyle image ${image.id}`
+                        }
+                        icon={image.seller_approved ? 'checkbox' : 'square-outline'}
+                        active={image.seller_approved}
+                        disabled={isUpdatingMedia || image.seller_approved}
+                        onPress={() => {
+                          if (!image.seller_approved) {
+                            void approveLifestyleImage(image.id);
+                          }
+                        }}
+                      />
+                      <MediaIconButton
+                        accessibilityLabel={`Delete lifestyle image ${image.id}`}
+                        icon="trash-outline"
+                        tone="danger"
+                        disabled={isUpdatingMedia}
+                        onPress={() => {
+                          void deleteLifestyleImage(image.id);
+                        }}
+                      />
                     </View>
                   </View>
                 ))

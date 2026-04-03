@@ -36,6 +36,7 @@ import type {
   StorefrontAssetKind,
   StorefrontPage,
   StorefrontPageDraft,
+  StorefrontTheme,
 } from '@/src/features/settings/types';
 
 const emptyStorefront: Storefront = {
@@ -52,6 +53,8 @@ const emptyStorefront: Storefront = {
   updated_at: null,
 };
 
+const emptyThemes: StorefrontTheme[] = [];
+
 export function useSettingsOverview(token: string) {
   const refreshRequestedRef = useRef(false);
   const [overview, setOverview] = useState<SettingsOverview>({
@@ -60,6 +63,7 @@ export function useSettingsOverview(token: string) {
     usage: emptySession.usage,
     limits: emptySession.limits,
     storefront: emptyStorefront,
+    themes: emptyThemes,
   });
   const [storefrontPages, setStorefrontPages] = useState<StorefrontPage[]>([]);
   const [selectedMarketplacesDraft, setSelectedMarketplacesDraft] = useState<string[]>([]);
@@ -116,6 +120,7 @@ export function useSettingsOverview(token: string) {
           usage: usageResponse.data.usage,
           limits: usageResponse.data.limits,
           storefront,
+          themes: storefrontResponse.data.themes,
         });
         setSelectedMarketplacesDraft(meResponse.data.user.selected_marketplaces);
         setStorefrontDraft(createStorefrontDraft(storefront));
@@ -213,6 +218,7 @@ export function useSettingsOverview(token: string) {
       setOverview((current) => ({
         ...current,
         storefront,
+        themes: response.data.themes,
       }));
       setStorefrontDraft(createStorefrontDraft(storefront));
       return true;
@@ -404,6 +410,7 @@ export function useSettingsOverview(token: string) {
     usage: overview.usage,
     limits: overview.limits,
     storefront: overview.storefront,
+    themes: overview.themes,
     storefrontPages,
     selectedMarketplacesDraft,
     storefrontDraft,

@@ -133,6 +133,24 @@ describe('useSettingsOverview', () => {
           inserted_at: '2026-04-01T00:00:00Z',
           updated_at: '2026-04-01T00:00:00Z',
         },
+        themes: [
+          {
+            id: 'neutral-warm',
+            label: 'Neutral Warm',
+            colors: {
+              page_background: '#f7f2e9',
+              text: '#1f1f1d',
+            },
+          },
+          {
+            id: 'desert-clay',
+            label: 'Desert Clay',
+            colors: {
+              page_background: '#f6ecdc',
+              text: '#34261b',
+            },
+          },
+        ],
       },
     });
 
@@ -212,6 +230,7 @@ describe('useSettingsOverview', () => {
 
     expect(result.current.user.email).toBe('seller@reseller.local');
     expect(result.current.storefront.title).toBe('My Store');
+    expect(result.current.themes).toHaveLength(2);
     expect(result.current.storefrontPages).toHaveLength(1);
   });
 
@@ -264,6 +283,7 @@ describe('useSettingsOverview', () => {
           ...result.current.storefront,
           title: 'Updated Store',
         },
+        themes: result.current.themes,
       },
     });
 

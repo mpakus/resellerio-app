@@ -1,5 +1,4 @@
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 
 async function canUseSecureStore() {
   try {
@@ -9,13 +8,23 @@ async function canUseSecureStore() {
   }
 }
 
+function webSessionStorage() {
+  if (typeof sessionStorage !== 'undefined') {
+    return sessionStorage;
+  }
+
+  return null;
+}
+
 export async function getSecureItem(key: string) {
   if (await canUseSecureStore()) {
     return SecureStore.getItemAsync(key);
   }
 
-  if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-    return localStorage.getItem(key);
+  const storage = webSessionStorage();
+
+  if (storage) {
+    return storage.getItem(key);
   }
 
   return null;
@@ -27,8 +36,10 @@ export async function setSecureItem(key: string, value: string) {
     return;
   }
 
-  if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-    localStorage.setItem(key, value);
+  const storage = webSessionStorage();
+
+  if (storage) {
+    storage.setItem(key, value);
   }
 }
 
@@ -38,7 +49,9 @@ export async function deleteSecureItem(key: string) {
     return;
   }
 
-  if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-    localStorage.removeItem(key);
+  const storage = webSessionStorage();
+
+  if (storage) {
+    storage.removeItem(key);
   }
 }

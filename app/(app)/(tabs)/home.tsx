@@ -21,8 +21,6 @@ export default function HomeScreen() {
     readyProducts,
     processingProducts,
     inquiries,
-    trackedExports,
-    trackedImports,
     recentProducts,
     isLoading,
     error,
@@ -144,7 +142,7 @@ export default function HomeScreen() {
               }}
             />
             <Button
-              label="Open transfers and settings"
+              label="Open Settings"
               kind="secondary"
               onPress={() => {
                 router.push('/settings');
@@ -152,12 +150,6 @@ export default function HomeScreen() {
             />
           </View>
         </View>
-
-        <SectionCard
-          eyebrow="Transfers"
-          title={`${trackedExports} tracked exports · ${trackedImports} tracked imports`}
-          description="These counts reflect recent transfer jobs saved on this device. The public API still exposes create and status endpoints for transfers, not account-wide list endpoints."
-        />
 
         <SectionCard
           eyebrow="Quota"

@@ -31,10 +31,14 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   });
 
   const text = await response.text();
-  const payload = text ? (JSON.parse(text) as T & ApiErrorPayload) : null;
+  const payload = parseJsonResponse<T & ApiErrorPayload>(text);
 
   if (!response.ok) {
     throw new ApiError(extractErrorMessage(payload), response.status, payload);
+  }
+
+  if (text && payload === null) {
+    throw new ApiError('Invalid server response.', response.status, null);
   }
 
   return payload as T;
@@ -92,4 +96,16 @@ function extractFieldMessage(payload: ApiErrorPayload | null) {
   }
 
   return firstField.join(', ');
+}
+
+function parseJsonResponse<T>(text: string) {
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
 }

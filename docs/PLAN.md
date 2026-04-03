@@ -92,6 +92,14 @@ Primary seller journey:
 - [x] 2026-04-02 Step 69: Added lifestyle and storefront-gallery thumbnail previews, simplified storefront gallery to add/remove-focused actions, removed the Product fields snapshot block, and added a standard bottom navigation footer on Product detail with updated tests.
 - [x] 2026-04-02 Step 70: Replaced Storefront Gallery add/remove buttons with a top-right circle selection toggle that switches between empty and checked states while keeping the same storefront visibility behavior, with updated screen tests.
 - [x] 2026-04-02 Step 71: Kept Storefront Gallery images in a single stable list so cards stay in place when toggled, and moved the selection circle directly onto the image as an overlay control.
+- [x] 2026-04-02 Step 72: Simplified the mobile inquiry inbox into compact tap-to-open rows that show full name, contact, and date/time, and moved deletion into the inquiry detail dialog with added helper and screen tests.
+- [x] 2026-04-02 Step 73: Simplified Lifestyle image cards on Product detail by removing scene, approval, and source-image metadata so the mobile UI focuses on preview plus seller actions.
+- [x] 2026-04-02 Step 74: Replaced per-image Lifestyle text buttons with compact icon actions for preview, regenerate, approve-state checkbox, and delete, with updated screen coverage.
+- [x] 2026-04-03 Step 75: Refined Settings storefront profile with a single clickable public URL, real logo/header previews, shorter Replace/Remove/Save labels, and icon-based storefront page edit/reorder/delete actions behind confirmation.
+- [x] 2026-04-03 Step 76: Reworked Settings to use backend-provided storefront theme presets with mobile preview cards and a show-more toggle, moved marketplace selection into its own block with shorter save copy, and trimmed branding/profile copy to a cleaner storefront settings layout.
+- [x] 2026-04-03 Step 77: Replaced Settings branding text buttons with compact icon actions for upload or replace and remove on the Logo and Header cards, with updated screen coverage.
+- [x] 2026-04-03 Step 78: Audited the mobile codebase for security and cleanup issues, then hardened external URL opening/sharing, defensive API JSON parsing, and web session persistence fallback, with focused unit and screen coverage.
+- [x] 2026-04-03 Step 79: Replaced the Expo starter README with a real project README covering setup, backend links, scripts, testing credentials, structure, and current security notes.
 
 ## Current Web Functionality Analyzed
 

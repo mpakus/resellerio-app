@@ -9,6 +9,7 @@ export type StorefrontAsset = {
   id: number | null;
   kind: string;
   storage_key: string | null;
+  url?: string | null;
   content_type: string | null;
   original_filename: string | null;
   width: number | null;
@@ -46,9 +47,16 @@ export type Storefront = {
   updated_at: string | null;
 };
 
+export type StorefrontTheme = {
+  id: string;
+  label: string;
+  colors: Record<string, string | null | undefined>;
+};
+
 export type StorefrontResponse = {
   data: {
     storefront: Storefront;
+    themes: StorefrontTheme[];
   };
 };
 
@@ -84,6 +92,7 @@ export type SettingsOverview = {
   usage: UsageCounters;
   limits: UsageCounters;
   storefront: Storefront;
+  themes: StorefrontTheme[];
 };
 
 export type SettingsLoadResult = {
