@@ -4,6 +4,8 @@ import ProductsScreen from '@/app/(app)/(tabs)/products';
 import { useProductsOverview } from '@/src/features/products/use-products-overview';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
 jest.mock('expo-router', () => ({
   router: {
     push: jest.fn(),
@@ -144,5 +146,16 @@ describe('ProductsScreen tab dialogs', () => {
     fireEvent.press(screen.getByText('Filters'));
 
     expect(screen.getByText('More filters')).toBeTruthy();
+  });
+
+  it('keeps the search dialog hidden by default and opens it from the zoom action', () => {
+    render(<ProductsScreen />);
+
+    expect(screen.queryByText('Search products')).toBeNull();
+
+    fireEvent.press(screen.getByLabelText('Open search'));
+
+    expect(screen.getByText('Search products')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Nike, denim, jacket...')).toBeTruthy();
   });
 });

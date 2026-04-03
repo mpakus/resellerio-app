@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -27,6 +28,7 @@ export default function ProductsScreen() {
   const [createTabModalVisible, setCreateTabModalVisible] = useState(false);
   const [manageTabsModalVisible, setManageTabsModalVisible] = useState(false);
   const [filtersModalVisible, setFiltersModalVisible] = useState(false);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
   const { session } = useAuth();
   const {
     products,
@@ -82,6 +84,10 @@ export default function ProductsScreen() {
     setFiltersModalVisible(false);
   }
 
+  function closeSearchModal() {
+    setSearchModalVisible(false);
+  }
+
   return (
     <Screen scrollable>
       <View style={{ gap: 18 }}>
@@ -104,54 +110,73 @@ export default function ProductsScreen() {
 
         <View
           style={{
-            gap: 16,
-            borderRadius: 24,
-            borderWidth: 1,
-            borderColor: colors.border,
-            backgroundColor: colors.card,
-            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
           }}
         >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
+          <Pressable
+            accessibilityLabel="Open search"
+            accessibilityRole="button"
+            onPress={() => {
+              setSearchModalVisible(true);
             }}
+            style={({ pressed }) => ({
+              width: 54,
+              height: 54,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.card,
+              opacity: pressed ? 0.72 : 1,
+            })}
           >
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
-                SEARCH
-              </Text>
-              <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
-                Find products fast
-              </Text>
-            </View>
-            <View style={{ minWidth: 120, gap: 8 }}>
-              <Button label="Filters" kind="secondary" onPress={openFiltersModal} />
-              <Button label="Refresh" kind="secondary" onPress={refresh} />
-            </View>
+            <Ionicons color={colors.text} name="search-outline" size={22} />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Button label="Filters" kind="secondary" onPress={openFiltersModal} />
           </View>
-
-          <TextField
-            label="Search title or brand"
-            placeholder="Nike, denim, jacket..."
-            returnKeyType="search"
-            value={searchDraft}
-            onChangeText={setSearchDraft}
-            onSubmitEditing={submitSearch}
-          />
-
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <Button label="Search" onPress={submitSearch} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button label="Clear" kind="secondary" onPress={clearSearch} />
-            </View>
+          <View style={{ flex: 1 }}>
+            <Button label="Refresh" kind="secondary" onPress={refresh} />
           </View>
         </View>
+
+        <DialogModal
+          visible={searchModalVisible}
+          title="Search products"
+          description="Search inventory by title or brand without keeping the full search panel open."
+          onClose={closeSearchModal}
+        >
+          <View style={{ gap: 16 }}>
+            <TextField
+              label="Search title or brand"
+              placeholder="Nike, denim, jacket..."
+              returnKeyType="search"
+              value={searchDraft}
+              onChangeText={setSearchDraft}
+              onSubmitEditing={() => {
+                submitSearch();
+                closeSearchModal();
+              }}
+            />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Search"
+                  onPress={() => {
+                    submitSearch();
+                    closeSearchModal();
+                  }}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button label="Clear" kind="secondary" onPress={clearSearch} />
+              </View>
+            </View>
+          </View>
+        </DialogModal>
 
         <View style={{ gap: 10 }}>
           <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
