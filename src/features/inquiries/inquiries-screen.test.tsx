@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { Linking } from 'react-native';
 
 import InquiriesScreen from '@/app/(app)/(tabs)/inquiries';
 import { formatInquiryTimestamp } from '@/src/features/inquiries/helpers';
@@ -24,7 +23,6 @@ jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseInquiriesOverview = jest.mocked(useInquiriesOverview);
-const mockedOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
 
 const mockSubmitSearch = jest.fn();
 const mockRemoveInquiry = jest.fn();
@@ -33,7 +31,6 @@ describe('InquiriesScreen', () => {
   beforeEach(() => {
     mockSubmitSearch.mockReset();
     mockRemoveInquiry.mockReset();
-    mockedOpenURL.mockClear();
 
     mockedUseAuth.mockReturnValue({
       status: 'authenticated',
@@ -126,15 +123,26 @@ describe('InquiriesScreen', () => {
     expect(mockSubmitSearch).toHaveBeenCalled();
   });
 
-  it('opens an inquiry detail dialog with delete and product actions', () => {
+  it('opens an inquiry detail dialog with the requested actions only', () => {
     render(<InquiriesScreen />);
 
     fireEvent.press(screen.getByLabelText('Open inquiry from Jane Buyer'));
 
     expect(screen.getByText('Is this still available?')).toBeTruthy();
-    expect(screen.getByText('Open product')).toBeTruthy();
-    expect(screen.getByText('Delete')).toBeTruthy();
+    expect(screen.getByLabelText('Open Product')).toBeTruthy();
+    expect(screen.getByLabelText('Close inquiry actions')).toBeTruthy();
+    expect(screen.getByLabelText('Delete inquiry')).toBeTruthy();
     expect(screen.getByLabelText('Close inquiry')).toBeTruthy();
+    expect(screen.queryByText('/store/my-store/products/1-vintage-jacket')).toBeNull();
+  });
+
+  it('closes the inquiry detail dialog from the icon action', () => {
+    render(<InquiriesScreen />);
+
+    fireEvent.press(screen.getByLabelText('Open inquiry from Jane Buyer'));
+    fireEvent.press(screen.getByLabelText('Close inquiry actions'));
+
+    expect(screen.queryByText('Is this still available?')).toBeNull();
   });
 
   it('closes the inquiry detail dialog from the top-right close control', () => {
@@ -146,25 +154,36 @@ describe('InquiriesScreen', () => {
     expect(screen.queryByText('Is this still available?')).toBeNull();
   });
 
-  it('deletes the selected inquiry from the detail dialog', async () => {
+  it('asks for confirmation before deleting the selected inquiry', () => {
     render(<InquiriesScreen />);
 
     fireEvent.press(screen.getByLabelText('Open inquiry from Jane Buyer'));
+    fireEvent.press(screen.getByLabelText('Delete inquiry'));
+
+    expect(screen.getByText('Delete this inquiry?')).toBeTruthy();
+    expect(mockRemoveInquiry).not.toHaveBeenCalled();
+  });
+
+  it('closes the delete confirmation without removing the inquiry', () => {
+    render(<InquiriesScreen />);
+
+    fireEvent.press(screen.getByLabelText('Open inquiry from Jane Buyer'));
+    fireEvent.press(screen.getByLabelText('Delete inquiry'));
+    fireEvent.press(screen.getByText('Cancel'));
+
+    expect(screen.queryByText('Delete this inquiry?')).toBeNull();
+    expect(mockRemoveInquiry).not.toHaveBeenCalled();
+  });
+
+  it('deletes the selected inquiry after confirmation', async () => {
+    render(<InquiriesScreen />);
+
+    fireEvent.press(screen.getByLabelText('Open inquiry from Jane Buyer'));
+    fireEvent.press(screen.getByLabelText('Delete inquiry'));
     fireEvent.press(screen.getByText('Delete'));
 
     await waitFor(() => {
       expect(mockRemoveInquiry).toHaveBeenCalledWith(7);
     });
-  });
-
-  it('opens the storefront inquiry source path in the browser from the detail dialog', () => {
-    render(<InquiriesScreen />);
-
-    fireEvent.press(screen.getByLabelText('Open inquiry from Jane Buyer'));
-    fireEvent.press(screen.getByText('/store/my-store/products/1-vintage-jacket'));
-
-    expect(mockedOpenURL).toHaveBeenCalledWith(
-      'http://localhost:4000/store/my-store/products/1-vintage-jacket',
-    );
   });
 });

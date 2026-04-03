@@ -376,7 +376,7 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('Regenerate all scenes')).toBeTruthy();
     expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
     expect(screen.getByText('Regenerate Casual Lifestyle')).toBeTruthy();
-    expect(screen.getByLabelText('Preview lifestyle image 201')).toBeTruthy();
+    expect(screen.getByLabelText('Open lifestyle image 201')).toBeTruthy();
     expect(screen.getByLabelText('Regenerate lifestyle image 201')).toBeTruthy();
     expect(screen.getByLabelText('Approve lifestyle image 201')).toBeTruthy();
     expect(screen.getByLabelText('Delete lifestyle image 201')).toBeTruthy();
@@ -471,16 +471,73 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.queryByText('Approve')).toBeNull();
     expect(screen.queryByText('Delete')).toBeNull();
     expect(screen.queryByText('Preview full screen')).toBeNull();
+    expect(screen.queryByLabelText('Preview lifestyle image 201')).toBeNull();
     expect(screen.getByLabelText('Regenerate lifestyle image 201')).toBeTruthy();
   });
 
-  it('runs approve and delete actions from lifestyle icon controls', () => {
+  it('opens a lifestyle image when the seller taps the photo', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Open lifestyle image 201'));
+
+    expect(screen.getByText('Lifestyle · #201')).toBeTruthy();
+    expect(screen.getByText('https://cdn.example.test/users/1/products/11/lifestyle.jpg')).toBeTruthy();
+  });
+
+  it('runs approve from the lifestyle icon control and keeps approved state one-way', () => {
     render(<ProductDetailScreen />);
 
     fireEvent.press(screen.getByLabelText('Approve lifestyle image 201'));
-    fireEvent.press(screen.getByLabelText('Delete lifestyle image 201'));
 
     expect(mockApproveLifestyleImage).toHaveBeenCalledWith(201);
+    expect(screen.queryByLabelText('Unapprove lifestyle image 201')).toBeNull();
+  });
+
+  it('hides regenerate once a lifestyle image is already approved', () => {
+    const baseState = mockedUseProductDetail('token-123', 11);
+
+    mockedUseProductDetail.mockReturnValue({
+      ...baseState,
+      product: {
+        ...baseState.product!,
+        images: baseState.product!.images.map((image) =>
+          image.id === 201
+            ? {
+                ...image,
+                seller_approved: true,
+                approved_at: '2026-04-02T15:20:00Z',
+              }
+            : image,
+        ),
+      },
+    });
+
+    render(<ProductDetailScreen />);
+
+    expect(screen.queryByLabelText('Regenerate lifestyle image 201')).toBeNull();
+    expect(screen.getByLabelText('Lifestyle image 201 approved')).toBeTruthy();
+  });
+
+  it('asks for confirmation before deleting a lifestyle image', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Delete lifestyle image 201'));
+
+    expect(screen.getByText('Delete lifestyle image?')).toBeTruthy();
+    expect(mockDeleteLifestyleImage).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByText('Cancel'));
+
+    expect(screen.queryByText('Delete lifestyle image?')).toBeNull();
+    expect(mockDeleteLifestyleImage).not.toHaveBeenCalled();
+  });
+
+  it('deletes a lifestyle image after confirmation', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Delete lifestyle image 201'));
+    fireEvent.press(screen.getByText('Delete'));
+
     expect(mockDeleteLifestyleImage).toHaveBeenCalledWith(201);
   });
 

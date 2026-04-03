@@ -242,21 +242,40 @@ function ImagePreviewCard({
 function InlineImagePreview({
   image,
   overlay,
+  onPress,
+  accessibilityLabel,
 }: {
   image: ProductImage;
   overlay?: React.ReactNode;
+  onPress?: () => void;
+  accessibilityLabel?: string;
 }) {
   if (!image.url) {
     return null;
   }
 
+  const imageNode = (
+    <Image
+      source={image.url}
+      style={{ height: 176, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
+      contentFit="cover"
+    />
+  );
+
   return (
     <View style={{ position: 'relative' }}>
-      <Image
-        source={image.url}
-        style={{ height: 176, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
-        contentFit="cover"
-      />
+      {onPress ? (
+        <Pressable
+          accessibilityLabel={accessibilityLabel}
+          accessibilityRole="button"
+          onPress={onPress}
+          style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}
+        >
+          {imageNode}
+        </Pressable>
+      ) : (
+        imageNode
+      )}
       {overlay ? (
         <View style={{ position: 'absolute', right: 10, top: 10 }}>
           {overlay}
@@ -447,6 +466,7 @@ function ImageLightbox({
 export default function ProductDetailScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ProductImage | null>(null);
+  const [deleteLifestyleTarget, setDeleteLifestyleTarget] = useState<ProductImage | null>(null);
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { session } = useAuth();
 
@@ -547,6 +567,24 @@ export default function ProductDetailScreen() {
 
     setDeleteModalVisible(false);
     router.replace('/products');
+  }
+
+  async function handleDeleteLifestyleImage() {
+    if (!deleteLifestyleTarget) {
+      return;
+    }
+
+    const deletedImageId = deleteLifestyleTarget.id;
+    const nextProduct = await deleteLifestyleImage(deletedImageId);
+
+    if (!nextProduct) {
+      return;
+    }
+
+    setDeleteLifestyleTarget((currentTarget) =>
+      currentTarget?.id === deletedImageId ? null : currentTarget,
+    );
+    setSelectedImage((currentImage) => (currentImage?.id === deletedImageId ? null : currentImage));
   }
 
   async function handleMoveStorefrontImage(imageId: number, direction: 'earlier' | 'later') {
@@ -1318,7 +1356,7 @@ export default function ProductDetailScreen() {
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
                     <Button
-                      label={isPublicationSaving ? 'Saving URLs...' : 'Save storefront and URLs'}
+                      label={isPublicationSaving ? 'Saving...' : 'Save'}
                       disabled={!isPublicationDirty || isPublicationSaving}
                       onPress={() => {
                         void savePublication();
@@ -1443,19 +1481,15 @@ export default function ProductDetailScreen() {
                     <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                       Lifestyle image #{image.id}
                     </Text>
-                    <InlineImagePreview image={image} />
+                    <InlineImagePreview
+                      image={image}
+                      accessibilityLabel={`Open lifestyle image ${image.id}`}
+                      onPress={() => {
+                        setSelectedImage(image);
+                      }}
+                    />
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                      {image.url ? (
-                        <MediaIconButton
-                          accessibilityLabel={`Preview lifestyle image ${image.id}`}
-                          icon="expand-outline"
-                          disabled={isUpdatingMedia}
-                          onPress={() => {
-                            setSelectedImage(image);
-                          }}
-                        />
-                      ) : null}
-                      {image.scene_key ? (
+                      {image.scene_key && !image.seller_approved ? (
                         <MediaIconButton
                           accessibilityLabel={`Regenerate lifestyle image ${image.id}`}
                           icon="refresh-circle-outline"
@@ -1468,10 +1502,10 @@ export default function ProductDetailScreen() {
                       <MediaIconButton
                         accessibilityLabel={
                           image.seller_approved
-                            ? `Lifestyle image ${image.id} is approved`
+                            ? `Lifestyle image ${image.id} approved`
                             : `Approve lifestyle image ${image.id}`
                         }
-                        icon={image.seller_approved ? 'checkbox' : 'square-outline'}
+                        icon={image.seller_approved ? 'checkmark-circle' : 'checkmark-circle-outline'}
                         active={image.seller_approved}
                         disabled={isUpdatingMedia || image.seller_approved}
                         onPress={() => {
@@ -1486,7 +1520,7 @@ export default function ProductDetailScreen() {
                         tone="danger"
                         disabled={isUpdatingMedia}
                         onPress={() => {
-                          void deleteLifestyleImage(image.id);
+                          setDeleteLifestyleTarget(image);
                         }}
                       />
                     </View>
@@ -1625,6 +1659,39 @@ export default function ProductDetailScreen() {
           </View>
         </View>
         </DialogModal>
+
+      <DialogModal
+        visible={deleteLifestyleTarget !== null}
+        title="Delete lifestyle image?"
+        description="This removes the generated lifestyle image from the product. This action cannot be undone."
+        onClose={() => {
+          if (!isUpdatingMedia) {
+            setDeleteLifestyleTarget(null);
+          }
+        }}
+      >
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              label={isUpdatingMedia ? 'Deleting...' : 'Delete'}
+              disabled={isUpdatingMedia}
+              onPress={() => {
+                void handleDeleteLifestyleImage();
+              }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              label="Cancel"
+              kind="secondary"
+              disabled={isUpdatingMedia}
+              onPress={() => {
+                setDeleteLifestyleTarget(null);
+              }}
+            />
+          </View>
+        </View>
+      </DialogModal>
 
       <ImageLightbox
         image={selectedImage}

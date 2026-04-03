@@ -156,7 +156,7 @@ Completed in the app:
 - Product detail polish: selectable text, streamlined storefront/review copy, simpler original-image actions, and copy-to-clipboard controls for marketplace listing blocks
 - Product detail media polish: lifestyle and storefront-gallery thumbnails, simplified add/remove storefront actions, and a standard bottom navigation footer on the Product screen
 - Lifestyle image cards now stay minimal on Product detail, showing the preview and seller actions without extra scene, approval, or source-image metadata
-- Lifestyle image actions now use compact icon controls for preview, regenerate, approve-state checkbox, and delete
+- Lifestyle image actions now use compact icon controls for regenerate, one-way approve status, and delete with confirmation, while tapping the image itself opens the full preview
 - Storefront Gallery selection now uses a top-right circle toggle instead of add/remove buttons
 - Storefront Gallery now keeps images in one stable list and places the selection toggle directly over the image preview
 - Inquiries inbox now uses compact rows with full name, contact, and received-at time, opening a detail dialog for message review and delete

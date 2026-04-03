@@ -100,6 +100,7 @@ Primary seller journey:
 - [x] 2026-04-03 Step 77: Replaced Settings branding text buttons with compact icon actions for upload or replace and remove on the Logo and Header cards, with updated screen coverage.
 - [x] 2026-04-03 Step 78: Audited the mobile codebase for security and cleanup issues, then hardened external URL opening/sharing, defensive API JSON parsing, and web session persistence fallback, with focused unit and screen coverage.
 - [x] 2026-04-03 Step 79: Replaced the Expo starter README with a real project README covering setup, backend links, scripts, testing credentials, structure, and current security notes.
+- [x] 2026-04-03 Step 80: Polished Product detail by shortening Marketplace save copy, moving Lifestyle full-screen open onto the image itself, adding confirm-before-delete for Lifestyle images, and clarifying that Lifestyle approval is currently one-way on mobile because the public API exposes approve/delete but not unapprove.
 
 ## Current Web Functionality Analyzed
 

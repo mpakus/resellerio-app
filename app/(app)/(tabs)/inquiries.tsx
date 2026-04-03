@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -7,7 +8,6 @@ import {
   Button,
   DialogModal,
   InlineError,
-  LinkText,
   Screen,
   SectionCard,
   TextField,
@@ -19,16 +19,58 @@ import {
   inquiryPrimaryText,
 } from '@/src/features/inquiries/helpers';
 import type { Inquiry } from '@/src/features/inquiries/types';
-import { buildPublicAppUrl } from '@/src/features/settings/helpers';
 import { useInquiriesOverview } from '@/src/features/inquiries/use-inquiries-overview';
 import { useAuth } from '@/src/lib/auth/auth-provider';
-import { openExternalUrlSafely } from '@/src/lib/linking/external-url';
 import { colors } from '@/src/theme/colors';
 
 type InquiryListItemProps = {
   inquiry: Inquiry;
   onPress: () => void;
 };
+
+type InquiryModalActionButtonProps = {
+  accessibilityLabel: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  onPress: () => void;
+  disabled?: boolean;
+  tone?: 'default' | 'danger';
+};
+
+function InquiryModalActionButton({
+  accessibilityLabel,
+  icon,
+  onPress,
+  disabled = false,
+  tone = 'default',
+}: InquiryModalActionButtonProps) {
+  const isDanger = tone === 'danger';
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        width: 54,
+        height: 54,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: isDanger ? '#f0c4bb' : colors.border,
+        backgroundColor: isDanger ? '#fff1ec' : colors.card,
+        opacity: disabled || pressed ? 0.65 : 1,
+      })}
+    >
+      <Ionicons
+        color={isDanger ? colors.danger : colors.text}
+        name={icon}
+        size={22}
+      />
+    </Pressable>
+  );
+}
 
 function InquiryListItem({ inquiry, onPress }: InquiryListItemProps) {
   return (
@@ -81,6 +123,7 @@ function InquiryListItem({ inquiry, onPress }: InquiryListItemProps) {
 export default function InquiriesScreen() {
   const { session } = useAuth();
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const {
     inquiries,
     filters,
@@ -105,8 +148,18 @@ export default function InquiriesScreen() {
     const didDelete = await removeInquiry(selectedInquiry.id);
 
     if (didDelete) {
+      setDeleteConfirmVisible(false);
       setSelectedInquiry(null);
     }
+  }
+
+  function closeInquiryModal() {
+    setDeleteConfirmVisible(false);
+    setSelectedInquiry(null);
+  }
+
+  function closeDeleteConfirm() {
+    setDeleteConfirmVisible(false);
   }
 
   return (
@@ -197,78 +250,108 @@ export default function InquiriesScreen() {
 
       <DialogModal
         visible={selectedInquiry !== null}
-        title={selectedInquiry ? inquiryDisplayName(selectedInquiry) : 'Inquiry'}
+        title={
+          deleteConfirmVisible
+            ? 'Delete this inquiry?'
+            : selectedInquiry
+              ? inquiryDisplayName(selectedInquiry)
+              : 'Inquiry'
+        }
         description={
-          selectedInquiry ? `Received ${formatInquiryTimestamp(selectedInquiry.inserted_at)}` : undefined
+          deleteConfirmVisible
+            ? 'This permanently removes the inquiry from the seller inbox.'
+            : selectedInquiry
+              ? `Received ${formatInquiryTimestamp(selectedInquiry.inserted_at)}`
+              : undefined
         }
         showCloseButton
         closeLabel="Close inquiry"
         onClose={() => {
-          setSelectedInquiry(null);
+          if (deleteConfirmVisible) {
+            closeDeleteConfirm();
+            return;
+          }
+
+          closeInquiryModal();
         }}
       >
         {selectedInquiry ? (
-          <View style={{ gap: 16 }}>
-            <View style={{ gap: 6 }}>
-              <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>
-                FULL NAME
-              </Text>
-              <Text selectable style={{ color: colors.text, fontSize: 16, lineHeight: 24 }}>
-                {inquiryDisplayName(selectedInquiry)}
-              </Text>
-            </View>
-
-            <View style={{ gap: 6 }}>
-              <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>
-                CONTACT
-              </Text>
-              <Text selectable style={{ color: colors.text, fontSize: 16, lineHeight: 24 }}>
-                {inquiryContactText(selectedInquiry)}
-              </Text>
-            </View>
-
-            <View style={{ gap: 6 }}>
-              <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>
-                MESSAGE
-              </Text>
-              <Text selectable style={{ color: colors.text, fontSize: 16, lineHeight: 24 }}>
-                {inquiryPrimaryText(selectedInquiry)}
-              </Text>
-            </View>
-
-            {buildPublicAppUrl(selectedInquiry.source_path) ? (
-              <LinkText
-                label={selectedInquiry.source_path!}
-                onPress={() => {
-                  void openExternalUrlSafely(buildPublicAppUrl(selectedInquiry.source_path));
-                }}
-              />
-            ) : null}
-
+          deleteConfirmVisible ? (
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              {selectedInquiry.product_id ? (
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Open product"
-                    kind="secondary"
-                    onPress={() => {
-                      router.push(`/products/${selectedInquiry.product_id}`);
-                    }}
-                  />
-                </View>
-              ) : null}
               <View style={{ flex: 1 }}>
                 <Button
                   label={deletingInquiryId === selectedInquiry.id ? 'Deleting...' : 'Delete'}
-                  kind="secondary"
                   disabled={deletingInquiryId === selectedInquiry.id}
                   onPress={() => {
                     void handleDeleteSelectedInquiry();
                   }}
                 />
               </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Cancel"
+                  kind="secondary"
+                  disabled={deletingInquiryId === selectedInquiry.id}
+                  onPress={closeDeleteConfirm}
+                />
+              </View>
             </View>
-          </View>
+          ) : (
+            <View style={{ gap: 16 }}>
+              <View style={{ gap: 6 }}>
+                <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>
+                  FULL NAME
+                </Text>
+                <Text selectable style={{ color: colors.text, fontSize: 16, lineHeight: 24 }}>
+                  {inquiryDisplayName(selectedInquiry)}
+                </Text>
+              </View>
+
+              <View style={{ gap: 6 }}>
+                <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>
+                  CONTACT
+                </Text>
+                <Text selectable style={{ color: colors.text, fontSize: 16, lineHeight: 24 }}>
+                  {inquiryContactText(selectedInquiry)}
+                </Text>
+              </View>
+
+              <View style={{ gap: 6 }}>
+                <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>
+                  MESSAGE
+                </Text>
+                <Text selectable style={{ color: colors.text, fontSize: 16, lineHeight: 24 }}>
+                  {inquiryPrimaryText(selectedInquiry)}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                {selectedInquiry.product_id ? (
+                  <InquiryModalActionButton
+                    accessibilityLabel="Open Product"
+                    icon="open-outline"
+                    onPress={() => {
+                      router.push(`/products/${selectedInquiry.product_id}`);
+                    }}
+                  />
+                ) : null}
+                <InquiryModalActionButton
+                  accessibilityLabel="Close inquiry actions"
+                  icon="close-outline"
+                  onPress={closeInquiryModal}
+                />
+                <InquiryModalActionButton
+                  accessibilityLabel="Delete inquiry"
+                  icon="trash-outline"
+                  tone="danger"
+                  disabled={deletingInquiryId === selectedInquiry.id}
+                  onPress={() => {
+                    setDeleteConfirmVisible(true);
+                  }}
+                />
+              </View>
+            </View>
+          )
         ) : null}
       </DialogModal>
     </Screen>
