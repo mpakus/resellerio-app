@@ -17,8 +17,14 @@ export default function AppLayout() {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="products/new" options={{ title: 'New Product', headerShadowVisible: false }} />
-      <Stack.Screen name="products/[id]" options={{ title: 'Product', headerShadowVisible: false }} />
+      <Stack.Screen
+        name="products/new"
+        options={{ title: 'New Product', headerShadowVisible: false, headerBackTitle: 'Back' }}
+      />
+      <Stack.Screen
+        name="products/[id]"
+        options={{ title: 'Product', headerShadowVisible: false, headerBackTitle: 'Back' }}
+      />
     </Stack>
   );
 }

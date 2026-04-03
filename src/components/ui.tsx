@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useRef, useState, type PropsWithChildren, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -24,9 +25,10 @@ const BRAND_LOGO_SOURCE = require('../../assets/images/resellerio-logo.png');
 type ScreenProps = PropsWithChildren<{
   scrollable?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  footer?: ReactNode;
 }>;
 
-export function Screen({ children, scrollable = false, contentContainerStyle }: ScreenProps) {
+export function Screen({ children, scrollable = false, contentContainerStyle, footer }: ScreenProps) {
   if (scrollable) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -37,6 +39,7 @@ export function Screen({ children, scrollable = false, contentContainerStyle }: 
         >
           {children}
         </ScrollView>
+        {footer ? <View style={styles.footerWrap}>{footer}</View> : null}
       </SafeAreaView>
     );
   }
@@ -44,6 +47,7 @@ export function Screen({ children, scrollable = false, contentContainerStyle }: 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.content, contentContainerStyle]}>{children}</View>
+      {footer ? <View style={styles.footerWrap}>{footer}</View> : null}
     </SafeAreaView>
   );
 }
@@ -67,6 +71,7 @@ export function BrandedTitle({ title, size = 'page' }: BrandedTitleProps) {
         />
       </View>
       <Text
+        selectable
         style={[
           styles.brandedTitleText,
           size === 'hero' ? styles.brandedTitleTextHero : styles.brandedTitleTextPage,
@@ -118,7 +123,9 @@ export function LinkText({ label, disabled = false, onPress }: LinkTextProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.linkWrap, (disabled || pressed) && styles.buttonPressed]}
     >
-      <Text style={[styles.linkText, disabled && styles.linkTextDisabled]}>{label}</Text>
+      <Text selectable style={[styles.linkText, disabled && styles.linkTextDisabled]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -170,7 +177,9 @@ export function TextField({
 
   return (
     <View style={{ gap: 8 }}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      <Text selectable style={styles.fieldLabel}>
+        {label}
+      </Text>
       <View style={[styles.inputShell, multiline && styles.inputShellMultiline]}>
         <TextInput
           placeholderTextColor={colors.mutedText}
@@ -213,7 +222,9 @@ export function TextField({
 export function InlineError({ message }: { message: string }) {
   return (
     <View style={styles.errorWrap}>
-      <Text style={styles.errorText}>{message}</Text>
+      <Text selectable style={styles.errorText}>
+        {message}
+      </Text>
     </View>
   );
 }
@@ -227,9 +238,15 @@ type SectionCardProps = {
 export function SectionCard({ eyebrow, title, description }: SectionCardProps) {
   return (
     <View style={styles.sectionCard}>
-      <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.sectionDescription}>{description}</Text>
+      <Text selectable style={styles.sectionEyebrow}>
+        {eyebrow}
+      </Text>
+      <Text selectable style={styles.sectionTitle}>
+        {title}
+      </Text>
+      <Text selectable style={styles.sectionDescription}>
+        {description}
+      </Text>
     </View>
   );
 }
@@ -242,6 +259,58 @@ export function LoadingScreen({ label }: { label: string }) {
         <Text style={{ color: colors.mutedText, fontSize: 15 }}>{label}</Text>
       </View>
     </Screen>
+  );
+}
+
+type StandardBottomNavProps = {
+  activeTab: 'home' | 'products' | 'inquiries' | 'settings';
+};
+
+const bottomNavItems: {
+  key: StandardBottomNavProps['activeTab'];
+  label: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  href: '/home' | '/products' | '/inquiries' | '/settings';
+}[] = [
+  { key: 'home', label: 'Home', icon: 'grid-outline', href: '/home' },
+  { key: 'products', label: 'Products', icon: 'pricetag-outline', href: '/products' },
+  { key: 'inquiries', label: 'Inquiries', icon: 'mail-open-outline', href: '/inquiries' },
+  { key: 'settings', label: 'Settings', icon: 'settings-outline', href: '/settings' },
+];
+
+export function StandardBottomNav({ activeTab }: StandardBottomNavProps) {
+  return (
+    <View style={styles.standardBottomNav}>
+      {bottomNavItems.map((item) => {
+        const isActive = item.key === activeTab;
+
+        return (
+          <Pressable
+            key={item.key}
+            accessibilityRole="button"
+            onPress={() => {
+              if (!isActive) {
+                router.replace(item.href);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.standardBottomNavItem,
+              isActive && styles.standardBottomNavItemActive,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons
+              color={isActive ? colors.accent : colors.mutedText}
+              name={item.icon}
+              size={20}
+            />
+            <Text selectable style={[styles.standardBottomNavLabel, isActive && styles.standardBottomNavLabelActive]}>
+              {item.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -324,6 +393,11 @@ const styles = StyleSheet.create({
   screenBody: {
     flex: 1,
   },
+  footerWrap: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    backgroundColor: colors.card,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
@@ -335,6 +409,34 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 18,
     gap: 20,
+  },
+  standardBottomNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    minHeight: 72,
+    paddingHorizontal: 8,
+    paddingBottom: 10,
+    paddingTop: 8,
+  },
+  standardBottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    borderRadius: 16,
+    paddingVertical: 6,
+  },
+  standardBottomNavItemActive: {
+    backgroundColor: colors.accentSoft,
+  },
+  standardBottomNavLabel: {
+    color: colors.mutedText,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  standardBottomNavLabelActive: {
+    color: colors.accent,
   },
   button: {
     minHeight: 54,

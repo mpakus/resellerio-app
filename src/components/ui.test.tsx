@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { BrandedTitle, LinkText, TextField } from '@/src/components/ui';
+import { BrandedTitle, LinkText, StandardBottomNav, TextField } from '@/src/components/ui';
+
+jest.mock('expo-router', () => ({
+  router: {
+    replace: jest.fn(),
+  },
+}));
 
 jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn(),
@@ -48,5 +54,14 @@ describe('TextField copy action', () => {
     fireEvent.press(screen.getByText('http://localhost:4000/store/my-store'));
 
     expect(onPress).toHaveBeenCalled();
+  });
+
+  it('renders the standard bottom navigation labels', () => {
+    render(<StandardBottomNav activeTab="products" />);
+
+    expect(screen.getByText('Home')).toBeTruthy();
+    expect(screen.getByText('Products')).toBeTruthy();
+    expect(screen.getByText('Inquiries')).toBeTruthy();
+    expect(screen.getByText('Settings')).toBeTruthy();
   });
 });

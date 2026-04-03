@@ -1,6 +1,8 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { useState, type PropsWithChildren } from 'react';
+import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Share, Text, View } from 'react-native';
 
 import {
@@ -11,6 +13,7 @@ import {
   LinkText,
   Screen,
   SectionCard,
+  StandardBottomNav,
   TextField,
 } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
@@ -64,12 +67,14 @@ function DetailPanel({ eyebrow, title, description, children }: DetailPanelProps
       }}
     >
       <View style={{ gap: 6 }}>
-        <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+        <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
           {eyebrow.toUpperCase()}
         </Text>
-        <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>{title}</Text>
+        <Text selectable style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>{title}</Text>
         {description ? (
-          <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>{description}</Text>
+          <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+            {description}
+          </Text>
         ) : null}
       </View>
       {children}
@@ -77,13 +82,106 @@ function DetailPanel({ eyebrow, title, description, children }: DetailPanelProps
   );
 }
 
-function DetailMetaRow({ label, value }: { label: string; value: string }) {
+function CopyableText({
+  label,
+  value,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  tone?: 'default' | 'muted';
+}) {
+  const [copied, setCopied] = useState(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
+  async function handleCopy() {
+    if (!value.trim()) {
+      return;
+    }
+
+    await Clipboard.setStringAsync(value);
+    setCopied(true);
+
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+    }
+
+    resetTimerRef.current = setTimeout(() => {
+      setCopied(false);
+    }, 1200);
+  }
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+      <Text
+        selectable
+        style={{
+          flex: 1,
+          color: tone === 'muted' ? colors.mutedText : colors.text,
+          fontSize: 15,
+          lineHeight: 22,
+        }}
+      >
+        {value}
+      </Text>
+      <Pressable
+        accessibilityLabel={`Copy ${label}`}
+        accessibilityRole="button"
+        disabled={!value.trim()}
+        onPress={() => {
+          void handleCopy();
+        }}
+        style={({ pressed }) => ({
+          width: 32,
+          height: 32,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 999,
+          opacity: !value.trim() || pressed ? 0.6 : 1,
+        })}
+      >
+        <Ionicons
+          color={copied ? colors.accent : value.trim() ? colors.mutedText : colors.border}
+          name={copied ? 'checkmark' : 'copy-outline'}
+          size={18}
+        />
+      </Pressable>
+    </View>
+  );
+}
+
+function DetailMetaRow({
+  label,
+  value,
+  copyable = false,
+}: {
+  label: string;
+  value: string;
+  copyable?: boolean;
+}) {
   return (
     <View style={{ gap: 4 }}>
-      <Text style={{ color: colors.mutedText, fontSize: 12, fontWeight: '700', letterSpacing: 0.8 }}>
+      <Text
+        selectable
+        style={{ color: colors.mutedText, fontSize: 12, fontWeight: '700', letterSpacing: 0.8 }}
+      >
         {label.toUpperCase()}
       </Text>
-      <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>{value}</Text>
+      {copyable ? (
+        <CopyableText label={label} value={value} />
+      ) : (
+        <Text selectable style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>
+          {value}
+        </Text>
+      )}
     </View>
   );
 }
@@ -122,31 +220,34 @@ function ImagePreviewCard({
           style={{ height: 220, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
           contentFit="cover"
         />
-        <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+        <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
           {formatImageKindLabel(image.kind)} · #{image.id}
         </Text>
       </Pressable>
-      <DetailMetaRow label="Filename" value={image.original_filename ?? image.storage_key} />
-      <DetailMetaRow
-        label="Size"
-        value={image.width && image.height ? `${image.width}x${image.height}` : 'Unknown size'}
-      />
-      <Button
-        label="Preview full screen"
-        kind="secondary"
-        onPress={() => {
-          onPreview(image);
-        }}
-      />
       {image.url ? (
-        <LinkText
-          label="Open image URL in browser"
+        <Button
+          label="Open Image in Browser"
+          kind="secondary"
           onPress={() => {
             void Linking.openURL(image.url!);
           }}
         />
       ) : null}
     </View>
+  );
+}
+
+function InlineImagePreview({ image }: { image: ProductImage }) {
+  if (!image.url) {
+    return null;
+  }
+
+  return (
+    <Image
+      source={image.url}
+      style={{ height: 176, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
+      contentFit="cover"
+    />
   );
 }
 
@@ -164,10 +265,10 @@ function ImageLightbox({
       <View style={{ flex: 1, backgroundColor: '#0b0d12', paddingHorizontal: 18, paddingVertical: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ color: '#f7f8fb', fontSize: 20, fontWeight: '800' }}>
+            <Text selectable style={{ color: '#f7f8fb', fontSize: 20, fontWeight: '800' }}>
               {image ? `${formatImageKindLabel(image.kind)} · #${image.id}` : 'Image preview'}
             </Text>
-            <Text style={{ color: '#b1b8c5', fontSize: 14 }}>
+            <Text selectable style={{ color: '#b1b8c5', fontSize: 14 }}>
               {image ? image.original_filename ?? image.storage_key : 'No image selected'}
             </Text>
           </View>
@@ -184,7 +285,9 @@ function ImageLightbox({
               contentFit="contain"
             />
           ) : (
-            <Text style={{ color: '#b1b8c5', fontSize: 15 }}>This image is not available for preview.</Text>
+            <Text selectable style={{ color: '#b1b8c5', fontSize: 15 }}>
+              This image is not available for preview.
+            </Text>
           )}
         </View>
 
@@ -289,6 +392,7 @@ export default function ProductDetailScreen() {
   const backgroundRemovedImages = filterRenderableImages(product?.images ?? [], 'background_removed');
   const publicProductUrl = product ? buildStorefrontProductUrl(storefrontSlug, product) : null;
   const canSharePublicProduct = Boolean(publicProductUrl && product?.storefront_published_at);
+  const isStorefrontEnabled = publicationDraft?.storefrontEnabled ?? product?.storefront_enabled ?? false;
 
   async function handleShareUrl(url: string) {
     await Share.share({
@@ -319,18 +423,17 @@ export default function ProductDetailScreen() {
   }
 
   return (
-    <Screen scrollable>
-      <Stack.Screen options={{ title: product?.title ?? 'Product' }} />
+    <Screen footer={<StandardBottomNav activeTab="products" />} scrollable>
+      <Stack.Screen options={{ title: product?.title ?? 'Product', headerBackTitle: 'Back' }} />
 
       <View style={{ gap: 18 }}>
         <View style={{ gap: 8 }}>
-          <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
+          <Text selectable style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>
             PRODUCT DETAIL
           </Text>
           <BrandedTitle title={product?.title ?? 'Loading product'} />
-          <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
-            Review product data, monitor AI processing, and manage the seller workflow from the same
-            live mobile API payload the web workspace uses.
+          <Text selectable style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
+            Review product data, monitor AI processing, and manage the seller workflow.
           </Text>
         </View>
 
@@ -339,7 +442,9 @@ export default function ProductDetailScreen() {
         {error ? <InlineError message={error} /> : null}
 
         {isLoading ? (
-          <Text style={{ color: colors.mutedText, fontSize: 15 }}>Loading product detail...</Text>
+          <Text selectable style={{ color: colors.mutedText, fontSize: 15 }}>
+            Loading product detail...
+          </Text>
         ) : null}
 
         {product ? (
@@ -355,13 +460,13 @@ export default function ProductDetailScreen() {
                   padding: 18,
                 }}
               >
-                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+                <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
                   PROCESSING ACTIVE
                 </Text>
-                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                <Text selectable style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
                   {isPolling ? 'Auto-refreshing while AI work finishes' : 'Processing update pending'}
                 </Text>
-                <Text style={{ color: colors.mutedText, fontSize: 15, lineHeight: 23 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 15, lineHeight: 23 }}>
                   {processingBannerDescription(product)}
                 </Text>
               </View>
@@ -393,14 +498,11 @@ export default function ProductDetailScreen() {
               }}
             >
               <View style={{ gap: 6 }}>
-                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+                <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
                   REVIEW EDITOR
                 </Text>
-                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
-                  Seller-managed product fields
-                </Text>
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
-                  Edit the same core review fields the web workspace saves through `PATCH /api/v1/products/:id`.
+                <Text selectable style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                  Managed product fields
                 </Text>
               </View>
 
@@ -511,7 +613,9 @@ export default function ProductDetailScreen() {
                   />
 
                   <View style={{ gap: 10 }}>
-                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Status</Text>
+                    <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+                      Status
+                    </Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       <View style={{ flexDirection: 'row', gap: 10 }}>
                         {manualProductStatusOptions.map((option) => {
@@ -532,7 +636,7 @@ export default function ProductDetailScreen() {
                                 paddingVertical: 10,
                               }}
                             >
-                              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                              <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
                                 {option.label}
                               </Text>
                             </Pressable>
@@ -543,9 +647,13 @@ export default function ProductDetailScreen() {
                   </View>
 
                   <View style={{ gap: 10 }}>
-                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Product tab</Text>
+                    <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+                      Product tab
+                    </Text>
                     {isLoadingProductTabs ? (
-                      <Text style={{ color: colors.mutedText, fontSize: 14 }}>Loading tabs...</Text>
+                      <Text selectable style={{ color: colors.mutedText, fontSize: 14 }}>
+                        Loading tabs...
+                      </Text>
                     ) : (
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -562,7 +670,9 @@ export default function ProductDetailScreen() {
                               paddingVertical: 10,
                             }}
                           >
-                            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>No tab</Text>
+                            <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                              No tab
+                            </Text>
                           </Pressable>
                           {productTabs.map((tab) => {
                             const isActive = draft.productTabId === tab.id;
@@ -582,7 +692,7 @@ export default function ProductDetailScreen() {
                                   paddingVertical: 10,
                                 }}
                               >
-                                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                                <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
                                   {tab.name}
                                 </Text>
                               </Pressable>
@@ -614,7 +724,9 @@ export default function ProductDetailScreen() {
                   </View>
                 </>
               ) : (
-                <Text style={{ color: colors.mutedText, fontSize: 14 }}>Preparing review fields...</Text>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14 }}>
+                  Preparing review fields...
+                </Text>
               )}
             </View>
 
@@ -629,13 +741,13 @@ export default function ProductDetailScreen() {
               }}
             >
               <View style={{ gap: 6 }}>
-                <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+                <Text selectable style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
                   LIFECYCLE
                 </Text>
-                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
+                <Text selectable style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>
                   Quick product actions
                 </Text>
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
                   Use the same mobile API lifecycle actions the web workspace uses for retry, sold, archive, restore, and delete flows.
                 </Text>
               </View>
@@ -703,33 +815,13 @@ export default function ProductDetailScreen() {
               }
               description={storefrontPublicationSummary(product)}
             >
-              <DetailMetaRow
-                label="Publication status"
-                value={product.storefront_enabled ? 'Enabled' : 'Disabled'}
-              />
-              <DetailMetaRow
-                label="Published at"
-                value={formatProductDetailTimestamp(product.storefront_published_at)}
-              />
-              <DetailMetaRow
-                label="Selected gallery images"
-                value={`${storefrontSelectionCount(product.images)} of ${product.images.length}`}
-              />
-              <DetailMetaRow
-                label="Public URL"
-                value={
-                  publicProductUrl ??
-                  'Save a storefront slug in Settings before sharing public product links.'
-                }
-              />
-
               {publicationError ? <InlineError message={publicationError} /> : null}
 
               {publicationDraft ? (
                 <>
                   <View style={{ gap: 10 }}>
-                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
-                      Storefront visibility
+                    <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+                      Publication status
                     </Text>
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                       {[
@@ -753,7 +845,7 @@ export default function ProductDetailScreen() {
                               paddingVertical: 10,
                             }}
                           >
-                            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
+                            <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>
                               {option.label}
                             </Text>
                           </Pressable>
@@ -765,7 +857,7 @@ export default function ProductDetailScreen() {
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={{ flex: 1 }}>
                       <Button
-                        label={isPublicationSaving ? 'Saving storefront...' : 'Save storefront settings'}
+                        label={isPublicationSaving ? 'Saving...' : 'Save'}
                         disabled={!isPublicationDirty || isPublicationSaving}
                         onPress={() => {
                           void savePublication();
@@ -784,40 +876,44 @@ export default function ProductDetailScreen() {
                 </>
               ) : null}
 
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Open live page"
-                    kind="secondary"
-                    disabled={!canSharePublicProduct}
-                    onPress={() => {
-                      if (publicProductUrl) {
-                        void Linking.openURL(publicProductUrl);
-                      }
-                    }}
+              {isStorefrontEnabled ? (
+                <>
+                  <DetailMetaRow
+                    label="Published at"
+                    value={formatProductDetailTimestamp(product.storefront_published_at)}
                   />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Share product URL"
-                    kind="secondary"
-                    disabled={!canSharePublicProduct}
-                    onPress={() => {
-                      if (publicProductUrl) {
-                        void handleShareUrl(publicProductUrl);
-                      }
-                    }}
+                  <DetailMetaRow
+                    label="Selected gallery images"
+                    value={`${storefrontSelectionCount(product.images)} of ${product.images.length}`}
                   />
-                </View>
-              </View>
-              {publicProductUrl ? (
-                <LinkText
-                  label={publicProductUrl}
-                  disabled={!canSharePublicProduct}
-                  onPress={() => {
-                    void Linking.openURL(publicProductUrl);
-                  }}
-                />
+
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label="Open"
+                        kind="secondary"
+                        disabled={!canSharePublicProduct}
+                        onPress={() => {
+                          if (publicProductUrl) {
+                            void Linking.openURL(publicProductUrl);
+                          }
+                        }}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label="Share"
+                        kind="secondary"
+                        disabled={!canSharePublicProduct}
+                        onPress={() => {
+                          if (publicProductUrl) {
+                            void handleShareUrl(publicProductUrl);
+                          }
+                        }}
+                      />
+                    </View>
+                  </View>
+                </>
               ) : null}
             </DetailPanel>
 
@@ -852,10 +948,6 @@ export default function ProductDetailScreen() {
                 'A short resale-ready description will appear here once the draft is generated.'
               }
             >
-              <DetailMetaRow
-                label="Draft status"
-                value={product.description_draft?.status ?? 'Not generated'}
-              />
               <DetailMetaRow
                 label="Key features"
                 value={
@@ -941,7 +1033,7 @@ export default function ProductDetailScreen() {
             <DetailPanel
               eyebrow="Original Images"
               title={`${originalImages.length} previewable original${originalImages.length === 1 ? '' : 's'}`}
-              description="Tap any original image to open a full-screen preview using the new public image URLs from the mobile API."
+              description="Tap any original image to open a full-screen preview using the new public image URLs."
             >
               {originalImages.length > 0 ? (
                 originalImages.map((image) => (
@@ -952,7 +1044,7 @@ export default function ProductDetailScreen() {
                   />
                 ))
               ) : (
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
                   No original images are available for preview yet.
                 </Text>
               )}
@@ -972,7 +1064,7 @@ export default function ProductDetailScreen() {
                   />
                 ))
               ) : (
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
                   No background-removed images are ready for preview yet.
                 </Text>
               )}
@@ -988,7 +1080,7 @@ export default function ProductDetailScreen() {
               }
             >
               {product.marketplace_listings.length === 0 ? (
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
                   Generate marketplace listings on web or from a later mobile phase to review them here.
                 </Text>
               ) : (
@@ -1004,20 +1096,24 @@ export default function ProductDetailScreen() {
                       padding: 14,
                     }}
                   >
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
-                      {marketplaceListingHeadline(listing)}
-                    </Text>
+                    <CopyableText
+                      label={`${formatMarketplaceName(listing.marketplace)} headline`}
+                      value={marketplaceListingHeadline(listing)}
+                    />
                     <DetailMetaRow
                       label="Title"
                       value={listing.generated_title ?? 'No generated title yet'}
+                      copyable
                     />
                     <DetailMetaRow
                       label="Suggested price"
                       value={formatCurrencyAmount(listing.generated_price_suggestion)}
+                      copyable
                     />
                     {listing.external_url ? (
                       <View style={{ gap: 4 }}>
                         <Text
+                          selectable
                           style={{
                             color: colors.mutedText,
                             fontSize: 12,
@@ -1027,23 +1123,20 @@ export default function ProductDetailScreen() {
                         >
                           LIVE URL
                         </Text>
-                        <LinkText
-                          label={listing.external_url}
-                          onPress={() => {
-                            void Linking.openURL(listing.external_url!);
-                          }}
-                        />
+                        <CopyableText label="Live URL" value={listing.external_url} />
                       </View>
                     ) : (
-                      <DetailMetaRow label="Live URL" value="No live URL saved" />
+                      <DetailMetaRow label="Live URL" value="No live URL saved" copyable />
                     )}
                     <DetailMetaRow
                       label="URL added"
                       value={formatProductDetailTimestamp(listing.external_url_added_at)}
+                      copyable
                     />
                     <DetailMetaRow
                       label="Tags"
                       value={listing.generated_tags.length ? listing.generated_tags.join(', ') : 'No tags yet'}
+                      copyable
                     />
                     <DetailMetaRow
                       label="Warnings"
@@ -1052,6 +1145,7 @@ export default function ProductDetailScreen() {
                           ? listing.compliance_warnings.join(', ')
                           : 'No compliance warnings'
                       }
+                      copyable
                     />
                     {publicationDraft ? (
                       <>
@@ -1153,7 +1247,7 @@ export default function ProductDetailScreen() {
 
               {lifestyleSceneKeys.length > 0 ? (
                 <View style={{ gap: 10 }}>
-                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+                  <Text selectable style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
                     Scene shortcuts
                   </Text>
                   <View style={{ gap: 10 }}>
@@ -1184,7 +1278,7 @@ export default function ProductDetailScreen() {
                     padding: 14,
                   }}
                 >
-                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                  <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                     Run #{run.id} · {run.status}
                   </Text>
                   <DetailMetaRow label="Step" value={run.step ?? 'Not available'} />
@@ -1209,9 +1303,10 @@ export default function ProductDetailScreen() {
                       padding: 14,
                     }}
                   >
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                    <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                       Lifestyle image #{image.id}
                     </Text>
+                    <InlineImagePreview image={image} />
                     <DetailMetaRow label="Scene" value={image.scene_key ?? 'Default scene'} />
                     <DetailMetaRow
                       label="Approved"
@@ -1235,7 +1330,7 @@ export default function ProductDetailScreen() {
                       {image.scene_key ? (
                         <View style={{ flex: 1 }}>
                           <Button
-                            label="Regenerate scene"
+                            label="Regenerate"
                             kind="secondary"
                             disabled={isGeneratingLifestyle || isUpdatingMedia}
                             onPress={() => {
@@ -1270,7 +1365,7 @@ export default function ProductDetailScreen() {
                   </View>
                 ))
               ) : (
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
                   No lifestyle-generated images yet. Generate a run after AI review is ready.
                 </Text>
               )}
@@ -1307,16 +1402,13 @@ export default function ProductDetailScreen() {
                       padding: 14,
                     }}
                   >
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                    <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                       {image.kind} · #{image.id}
                     </Text>
+                    <InlineImagePreview image={image} />
                     <DetailMetaRow
                       label="Position"
                       value={`Storefront ${image.storefront_position ?? index + 1} · Upload ${image.position ?? 'n/a'}`}
-                    />
-                    <DetailMetaRow
-                      label="Filename"
-                      value={image.original_filename ?? image.storage_key}
                     />
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                       <View style={{ flex: 1 }}>
@@ -1341,7 +1433,7 @@ export default function ProductDetailScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Button
-                          label="Hide"
+                          label="Remove from storefront"
                           kind="secondary"
                           disabled={isUpdatingMedia}
                           onPress={() => {
@@ -1367,17 +1459,10 @@ export default function ProductDetailScreen() {
                       padding: 14,
                     }}
                   >
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                    <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                       {image.kind} · #{image.id}
                     </Text>
-                    <DetailMetaRow
-                      label="Filename"
-                      value={image.original_filename ?? image.storage_key}
-                    />
-                    <DetailMetaRow
-                      label="Ready for storefront"
-                      value={image.processing_status === 'ready' ? 'Yes' : 'No'}
-                    />
+                    <InlineImagePreview image={image} />
                     <Button
                       label="Add to storefront"
                       kind="secondary"
@@ -1393,34 +1478,12 @@ export default function ProductDetailScreen() {
                   </View>
                 ))
               ) : (
-                <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+                <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
                   All ready images are already selected for storefront, or the product has no ready images yet.
                 </Text>
               )}
             </DetailPanel>
 
-            <View
-              style={{
-                gap: 12,
-                borderRadius: 24,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.card,
-                padding: 18,
-              }}
-            >
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>
-                Product fields snapshot
-              </Text>
-              <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
-                Condition: {product.condition ?? 'Not set'}{'\n'}
-                Color: {product.color ?? 'Not set'}{'\n'}
-                Size: {product.size ?? 'Not set'}{'\n'}
-                Material: {product.material ?? 'Not set'}{'\n'}
-                SKU: {product.sku ?? 'Not set'}{'\n'}
-                Tags: {product.tags.length > 0 ? product.tags.join(', ') : 'No tags'}
-              </Text>
-            </View>
           </>
         ) : null}
       </View>

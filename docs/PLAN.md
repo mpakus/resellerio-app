@@ -87,6 +87,9 @@ Primary seller journey:
 - [x] 2026-04-02 Step 64: Added clickable browser-opening links for storefront URLs, inquiry source paths, marketplace live URLs, and image URLs, plus unit and screen tests for the new link behavior.
 - [x] 2026-04-02 Step 65: Collapsed the Products search panel behind a magnifier action and moved search into an on-demand modal, with screen tests covering the hidden-by-default flow.
 - [x] 2026-04-02 Step 66: Audited and optimized the new Products search flow with active-search summary state, normalized trimmed search submissions, clearer search-field accessibility, and deeper helper, hook, and screen test coverage.
+- [x] 2026-04-02 Step 67: Simplified the Product detail Storefront section by hiding storefront-only metadata/actions unless storefront is enabled, shortening action labels, and removing the visible public product URL text.
+- [x] 2026-04-02 Step 68: Polished Product detail copy and UX by simplifying panel text, renaming review and storefront labels, making Product-page text selectable, simplifying original-image cards, and adding marketplace listing copy-to-clipboard actions with screen tests.
+- [x] 2026-04-02 Step 69: Added lifestyle and storefront-gallery thumbnail previews, simplified storefront gallery to add/remove-focused actions, removed the Product fields snapshot block, and added a standard bottom navigation footer on Product detail with updated tests.
 
 ## Current Web Functionality Analyzed
 

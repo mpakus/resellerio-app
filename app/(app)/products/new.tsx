@@ -47,8 +47,8 @@ export default function NewProductScreen() {
           </Text>
           <BrandedTitle title="Start with photos" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
-            This mobile flow mirrors the web intake pattern: select product images first, upload
-            them with signed URLs, finalize, then land in product detail while AI processing starts.
+            Select product images first, upload them with signed URLs, finalize, then land in
+            product detail while AI processing starts.
           </Text>
         </View>
 
@@ -85,7 +85,7 @@ export default function NewProductScreen() {
             </View>
           </View>
           <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
-            Up to 10 images. We use image width, height, and byte size from the picker metadata for
+            Up to 3 images. We use image width, height, and byte size from the picker metadata for
             upload finalization.
           </Text>
         </View>
@@ -242,7 +242,7 @@ export default function NewProductScreen() {
                   ? `Uploading ${progress.uploaded + progress.uploading}/${Math.max(totalAssets, 1)}`
                   : hasFailedUploads
                     ? 'Retry upload'
-                    : 'Create product from photos'
+                    : 'Create'
               }
               disabled={isSubmitting}
               onPress={() => {

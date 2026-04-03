@@ -153,6 +153,8 @@ Completed in the app:
 - Products hidden search modal with active-query summary and normalized search state
 - Clickable external-link actions for storefront URLs, inquiry source paths, marketplace live URLs, and image URLs
 - Products advanced sorting and updated-date filters via modal controls
+- Product detail polish: selectable text, streamlined storefront/review copy, simpler original-image actions, and copy-to-clipboard controls for marketplace listing blocks
+- Product detail media polish: lifestyle and storefront-gallery thumbnails, simplified add/remove storefront actions, and a standard bottom navigation footer on the Product screen
 - Upload-first product intake with signed uploads and finalize
 - Product review editing and lifecycle actions
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions

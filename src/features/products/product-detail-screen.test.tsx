@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Linking, Share } from 'react-native';
 
 import ProductDetailScreen from '@/app/(app)/products/[id]';
@@ -48,12 +49,17 @@ jest.mock('expo-image', () => ({
   Image: 'Image',
 }));
 
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn(),
+}));
+
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseProductDetail = jest.mocked(useProductDetail);
 const mockedUseProductPublicationForm = jest.mocked(useProductPublicationForm);
 const mockedUseProductReviewForm = jest.mocked(useProductReviewForm);
 const mockedUseProductTabs = jest.mocked(useProductTabs);
 const mockedLinkingOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+const mockedSetStringAsync = jest.mocked(Clipboard.setStringAsync);
 const mockedShare = jest.spyOn(Share, 'share').mockResolvedValue({
   action: Share.sharedAction,
   activityType: undefined,
@@ -63,6 +69,8 @@ const mockGenerateLifestyle = jest.fn();
 describe('ProductDetailScreen panels', () => {
   beforeEach(() => {
     mockedLinkingOpenURL.mockClear();
+    mockedSetStringAsync.mockClear();
+    mockedSetStringAsync.mockResolvedValue(true);
     mockedShare.mockClear();
     mockGenerateLifestyle.mockReset();
   });
@@ -364,18 +372,31 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('Regenerate Casual Lifestyle')).toBeTruthy();
     expect(screen.getByText('STOREFRONT GALLERY')).toBeTruthy();
     expect(screen.getByText('Add to storefront')).toBeTruthy();
+    expect(screen.getByText('Remove from storefront')).toBeTruthy();
     expect(screen.getByText('ORIGINAL IMAGES')).toBeTruthy();
-    expect(screen.getAllByText('Preview full screen').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Open Image in Browser').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Draft status')).toBeNull();
+    expect(screen.queryByText('Storefront visibility')).toBeNull();
+    expect(screen.queryByText('Save storefront settings')).toBeNull();
+    expect(screen.queryByText('Product fields snapshot')).toBeNull();
+    expect(screen.queryByText('Filename')).toBeNull();
+    expect(screen.queryByText('Ready for storefront')).toBeNull();
+    expect(screen.getAllByText('Products').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText('Review product data, monitor AI processing, and manage the seller workflow.'),
+    ).toBeTruthy();
+    expect(screen.getByText('Managed product fields')).toBeTruthy();
   });
 
   it('opens and shares the public storefront URL', async () => {
     render(<ProductDetailScreen />);
 
-    fireEvent.press(
-      screen.getAllByText('http://localhost:4000/store/my-store/products/11-nike-air-max-90')[0],
-    );
-    fireEvent.press(screen.getByText('Open live page'));
-    fireEvent.press(screen.getByText('Share product URL'));
+    expect(
+      screen.queryByText('http://localhost:4000/store/my-store/products/11-nike-air-max-90'),
+    ).toBeNull();
+
+    fireEvent.press(screen.getByText('Open'));
+    fireEvent.press(screen.getByText('Share'));
 
     expect(mockedLinkingOpenURL).toHaveBeenCalledWith(
       'http://localhost:4000/store/my-store/products/11-nike-air-max-90',
@@ -389,13 +410,31 @@ describe('ProductDetailScreen panels', () => {
   it('opens image and marketplace URLs in the browser from link actions', () => {
     render(<ProductDetailScreen />);
 
-    fireEvent.press(screen.getAllByText('Open image URL in browser')[0]);
-    fireEvent.press(screen.getByText('https://www.ebay.com/itm/1234567890'));
+    fireEvent.press(screen.getAllByText('Open Image in Browser')[0]);
+    fireEvent.press(screen.getByText('Open marketplace URL'));
 
     expect(mockedLinkingOpenURL).toHaveBeenCalledWith(
       'https://cdn.example.test/users/1/products/11/original.jpg',
     );
     expect(mockedLinkingOpenURL).toHaveBeenCalledWith('https://www.ebay.com/itm/1234567890');
+  });
+
+  it('copies marketplace listing text blocks to the clipboard', async () => {
+    render(<ProductDetailScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByLabelText('Copy Title')[1]);
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Copy Suggested price'));
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Copy Live URL'));
+    });
+
+    expect(mockedSetStringAsync).toHaveBeenCalledWith('Nike Air Max 90 Men Size 10');
+    expect(mockedSetStringAsync).toHaveBeenCalledWith('$84.00');
+    expect(mockedSetStringAsync).toHaveBeenCalledWith('https://www.ebay.com/itm/1234567890');
   });
 
   it('starts scene-specific lifestyle regeneration from the shortcut button', () => {
@@ -404,5 +443,12 @@ describe('ProductDetailScreen panels', () => {
     fireEvent.press(screen.getByText('Regenerate Casual Lifestyle'));
 
     expect(mockGenerateLifestyle).toHaveBeenCalledWith('casual_lifestyle');
+  });
+
+  it('uses the shorter per-image regenerate label in lifestyle cards', () => {
+    render(<ProductDetailScreen />);
+
+    expect(screen.getByText('Regenerate')).toBeTruthy();
+    expect(screen.queryByText('Regenerate scene')).toBeNull();
   });
 });

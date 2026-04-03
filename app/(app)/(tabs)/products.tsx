@@ -99,8 +99,7 @@ export default function ProductsScreen() {
           </Text>
           <BrandedTitle title="Products" />
           <Text style={{ color: colors.mutedText, fontSize: 16, lineHeight: 24 }}>
-            Search inventory, filter by lifecycle status, organize products with tabs, and now open
-            individual product detail screens.
+            Search inventory, filter by lifecycle status, organize products with tabs.
           </Text>
           <Button
             label="+ Add Product"
