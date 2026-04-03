@@ -65,6 +65,7 @@ const mockedShare = jest.spyOn(Share, 'share').mockResolvedValue({
   activityType: undefined,
 });
 const mockGenerateLifestyle = jest.fn();
+const mockSetImageStorefrontVisibility = jest.fn();
 
 describe('ProductDetailScreen panels', () => {
   beforeEach(() => {
@@ -73,6 +74,7 @@ describe('ProductDetailScreen panels', () => {
     mockedSetStringAsync.mockResolvedValue(true);
     mockedShare.mockClear();
     mockGenerateLifestyle.mockReset();
+    mockSetImageStorefrontVisibility.mockReset();
   });
 
   beforeEach(() => {
@@ -305,7 +307,7 @@ describe('ProductDetailScreen panels', () => {
       generateLifestyle: mockGenerateLifestyle,
       approveLifestyleImage: jest.fn(),
       deleteLifestyleImage: jest.fn(),
-      setImageStorefrontVisibility: jest.fn(),
+      setImageStorefrontVisibility: mockSetImageStorefrontVisibility,
       saveStorefrontImageOrder: jest.fn(),
     });
 
@@ -371,8 +373,8 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
     expect(screen.getByText('Regenerate Casual Lifestyle')).toBeTruthy();
     expect(screen.getByText('STOREFRONT GALLERY')).toBeTruthy();
-    expect(screen.getByText('Add to storefront')).toBeTruthy();
-    expect(screen.getByText('Remove from storefront')).toBeTruthy();
+    expect(screen.getByLabelText('Add image 201 to storefront')).toBeTruthy();
+    expect(screen.getByLabelText('Remove image 101 from storefront')).toBeTruthy();
     expect(screen.getByText('ORIGINAL IMAGES')).toBeTruthy();
     expect(screen.getAllByText('Open Image in Browser').length).toBeGreaterThan(0);
     expect(screen.queryByText('Draft status')).toBeNull();
@@ -381,6 +383,11 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.queryByText('Product fields snapshot')).toBeNull();
     expect(screen.queryByText('Filename')).toBeNull();
     expect(screen.queryByText('Ready for storefront')).toBeNull();
+    expect(screen.queryByText('Position')).toBeNull();
+    expect(screen.queryByText('Add to storefront')).toBeNull();
+    expect(screen.queryByText('Remove from storefront')).toBeNull();
+    expect(screen.getByLabelText('Move image 101 up')).toBeTruthy();
+    expect(screen.getByLabelText('Move image 101 down')).toBeTruthy();
     expect(screen.getAllByText('Products').length).toBeGreaterThan(0);
     expect(
       screen.getByText('Review product data, monitor AI processing, and manage the seller workflow.'),
@@ -450,5 +457,23 @@ describe('ProductDetailScreen panels', () => {
 
     expect(screen.getByText('Regenerate')).toBeTruthy();
     expect(screen.queryByText('Regenerate scene')).toBeNull();
+  });
+
+  it('toggles storefront image selection from the top-right circle control', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Add image 201 to storefront'));
+    fireEvent.press(screen.getByLabelText('Remove image 101 from storefront'));
+
+    expect(mockSetImageStorefrontVisibility).toHaveBeenCalledWith(201, true, 2);
+    expect(mockSetImageStorefrontVisibility).toHaveBeenCalledWith(101, false, null);
+  });
+
+  it('keeps storefront gallery images in one list while using overlay toggles', () => {
+    render(<ProductDetailScreen />);
+
+    expect(screen.getByText('original · #101')).toBeTruthy();
+    expect(screen.getByText('lifestyle_generated · #201')).toBeTruthy();
+    expect(screen.queryByText('No ready images are available for storefront yet.')).toBeNull();
   });
 });

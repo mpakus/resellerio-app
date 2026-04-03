@@ -90,6 +90,8 @@ Primary seller journey:
 - [x] 2026-04-02 Step 67: Simplified the Product detail Storefront section by hiding storefront-only metadata/actions unless storefront is enabled, shortening action labels, and removing the visible public product URL text.
 - [x] 2026-04-02 Step 68: Polished Product detail copy and UX by simplifying panel text, renaming review and storefront labels, making Product-page text selectable, simplifying original-image cards, and adding marketplace listing copy-to-clipboard actions with screen tests.
 - [x] 2026-04-02 Step 69: Added lifestyle and storefront-gallery thumbnail previews, simplified storefront gallery to add/remove-focused actions, removed the Product fields snapshot block, and added a standard bottom navigation footer on Product detail with updated tests.
+- [x] 2026-04-02 Step 70: Replaced Storefront Gallery add/remove buttons with a top-right circle selection toggle that switches between empty and checked states while keeping the same storefront visibility behavior, with updated screen tests.
+- [x] 2026-04-02 Step 71: Kept Storefront Gallery images in a single stable list so cards stay in place when toggled, and moved the selection circle directly onto the image as an overlay control.
 
 ## Current Web Functionality Analyzed
 

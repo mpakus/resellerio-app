@@ -36,6 +36,7 @@ import {
   productPriceLabel,
   productStatusLabel,
   productSubtitle,
+  sortDisplayImages,
   sortStorefrontImages,
   storefrontPublicationSummary,
   storefrontSelectionCount,
@@ -237,17 +238,106 @@ function ImagePreviewCard({
   );
 }
 
-function InlineImagePreview({ image }: { image: ProductImage }) {
+function InlineImagePreview({
+  image,
+  overlay,
+}: {
+  image: ProductImage;
+  overlay?: React.ReactNode;
+}) {
   if (!image.url) {
     return null;
   }
 
   return (
-    <Image
-      source={image.url}
-      style={{ height: 176, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
-      contentFit="cover"
-    />
+    <View style={{ position: 'relative' }}>
+      <Image
+        source={image.url}
+        style={{ height: 176, width: '100%', borderRadius: 14, backgroundColor: colors.card }}
+        contentFit="cover"
+      />
+      {overlay ? (
+        <View style={{ position: 'absolute', right: 10, top: 10 }}>
+          {overlay}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function StorefrontSelectionToggle({
+  imageId,
+  isSelected,
+  disabled,
+  onToggle,
+}: {
+  imageId: number;
+  isSelected: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={isSelected ? `Remove image ${imageId} from storefront` : `Add image ${imageId} to storefront`}
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onToggle}
+      style={({ pressed }) => ({
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 999,
+        borderWidth: 1.5,
+        borderColor: isSelected ? colors.accent : colors.border,
+        backgroundColor: isSelected ? colors.accentSoft : colors.card,
+        opacity: disabled || pressed ? 0.65 : 1,
+      })}
+    >
+      <Ionicons
+        color={isSelected ? colors.accent : colors.mutedText}
+        name={isSelected ? 'checkmark' : 'ellipse-outline'}
+        size={18}
+      />
+    </Pressable>
+  );
+}
+
+function StorefrontMoveButton({
+  accessibilityLabel,
+  direction,
+  disabled,
+  onPress,
+}: {
+  accessibilityLabel: string;
+  direction: 'up' | 'down';
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        width: 48,
+        height: 48,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.card,
+        opacity: disabled || pressed ? 0.65 : 1,
+      })}
+    >
+      <Ionicons
+        color={disabled ? colors.border : colors.text}
+        name={direction === 'up' ? 'arrow-up' : 'arrow-down'}
+        size={18}
+      />
+    </Pressable>
   );
 }
 
@@ -385,7 +475,7 @@ export default function ProductDetailScreen() {
   const isLifecycleBusy = isReprocessing || isUpdatingLifecycle || isDeleting || isReviewSaving;
   const readyImages = (product?.images ?? []).filter((image) => image.processing_status === 'ready');
   const storefrontImages = sortStorefrontImages(product?.images ?? []);
-  const availableStorefrontImages = readyImages.filter((image) => !image.storefront_visible);
+  const storefrontGalleryImages = sortDisplayImages(readyImages);
   const lifestyleImages = readyImages.filter((image) => image.kind === 'lifestyle_generated');
   const lifestyleSceneKeys = collectLifestyleSceneKeys(lifestyleImages);
   const originalImages = filterRenderableImages(product?.images ?? [], 'original');
@@ -1389,8 +1479,12 @@ export default function ProductDetailScreen() {
                 value="When no image is selected, the storefront falls back to approved lifestyle, then background-removed, then original images."
               />
 
-              {storefrontImages.length > 0 ? (
-                storefrontImages.map((image, index) => (
+              {storefrontGalleryImages.length > 0 ? (
+                storefrontGalleryImages.map((image) => {
+                  const storefrontIndex = storefrontImages.findIndex((selectedImage) => selectedImage.id === image.id);
+                  const isSelected = storefrontIndex !== -1;
+
+                  return (
                   <View
                     key={image.id}
                     style={{
@@ -1405,81 +1499,54 @@ export default function ProductDetailScreen() {
                     <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
                       {image.kind} · #{image.id}
                     </Text>
-                    <InlineImagePreview image={image} />
-                    <DetailMetaRow
-                      label="Position"
-                      value={`Storefront ${image.storefront_position ?? index + 1} · Upload ${image.position ?? 'n/a'}`}
+                    <InlineImagePreview
+                      image={image}
+                      overlay={
+                        <StorefrontSelectionToggle
+                          imageId={image.id}
+                          isSelected={isSelected}
+                          disabled={isUpdatingMedia}
+                          onToggle={() => {
+                            if (isSelected) {
+                              void setImageStorefrontVisibility(image.id, false, null);
+                              return;
+                            }
+
+                            void setImageStorefrontVisibility(
+                              image.id,
+                              true,
+                              storefrontImages.length + 1,
+                            );
+                          }}
+                        />
+                      }
                     />
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                      <View style={{ flex: 1 }}>
-                        <Button
-                          label="Move earlier"
-                          kind="secondary"
-                          disabled={isUpdatingMedia || index === 0}
+                    {isSelected ? (
+                      <View style={{ flexDirection: 'row', gap: 10 }}>
+                        <StorefrontMoveButton
+                          accessibilityLabel={`Move image ${image.id} up`}
+                          direction="up"
+                          disabled={isUpdatingMedia || storefrontIndex === 0}
                           onPress={() => {
                             void handleMoveStorefrontImage(image.id, 'earlier');
                           }}
                         />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Button
-                          label="Move later"
-                          kind="secondary"
-                          disabled={isUpdatingMedia || index === storefrontImages.length - 1}
+                        <StorefrontMoveButton
+                          accessibilityLabel={`Move image ${image.id} down`}
+                          direction="down"
+                          disabled={isUpdatingMedia || storefrontIndex === storefrontImages.length - 1}
                           onPress={() => {
                             void handleMoveStorefrontImage(image.id, 'later');
                           }}
                         />
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Button
-                          label="Remove from storefront"
-                          kind="secondary"
-                          disabled={isUpdatingMedia}
-                          onPress={() => {
-                            void setImageStorefrontVisibility(image.id, false, null);
-                          }}
-                        />
-                      </View>
-                    </View>
+                    ) : null}
                   </View>
-                ))
-              ) : null}
-
-              {availableStorefrontImages.length > 0 ? (
-                availableStorefrontImages.map((image) => (
-                  <View
-                    key={image.id}
-                    style={{
-                      gap: 10,
-                      borderRadius: 18,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      backgroundColor: colors.background,
-                      padding: 14,
-                    }}
-                  >
-                    <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
-                      {image.kind} · #{image.id}
-                    </Text>
-                    <InlineImagePreview image={image} />
-                    <Button
-                      label="Add to storefront"
-                      kind="secondary"
-                      disabled={isUpdatingMedia}
-                      onPress={() => {
-                        void setImageStorefrontVisibility(
-                          image.id,
-                          true,
-                          storefrontImages.length + 1,
-                        );
-                      }}
-                    />
-                  </View>
-                ))
+                  );
+                })
               ) : (
                 <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
-                  All ready images are already selected for storefront, or the product has no ready images yet.
+                  No ready images are available for storefront yet.
                 </Text>
               )}
             </DetailPanel>
