@@ -94,6 +94,16 @@ export function advancedProductFiltersSummary(filters: Pick<ProductsFilters, 'so
   return detailParts.join(' · ');
 }
 
+export function productSearchSummary(query: string) {
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return 'No active search';
+  }
+
+  return `Search: "${trimmedQuery}"`;
+}
+
 export function productSubtitle(product: {
   brand: string | null;
   category: string | null;

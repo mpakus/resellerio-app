@@ -15,6 +15,7 @@ import { useAuth } from '@/src/lib/auth/auth-provider';
 import {
   advancedProductFiltersSummary,
   productPriceLabel,
+  productSearchSummary,
   productSortDirectionOptions,
   productSortOptions,
   productStatusLabel,
@@ -68,6 +69,7 @@ export default function ProductsScreen() {
     hasActiveAdvancedFilters,
   } = useProductsOverview(session.token);
   const activeCustomTab = productTabs.find((tab) => tab.id === filters.productTabId) ?? null;
+  const hasActiveSearch = filters.query.trim().length > 0;
 
   function closeManageTabsModal() {
     cancelEditingTab();
@@ -128,12 +130,16 @@ export default function ProductsScreen() {
               justifyContent: 'center',
               borderRadius: 18,
               borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.card,
+              borderColor: hasActiveSearch ? colors.accent : colors.border,
+              backgroundColor: hasActiveSearch ? colors.accentSoft : colors.card,
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Ionicons color={colors.text} name="search-outline" size={22} />
+            <Ionicons
+              color={hasActiveSearch ? colors.accent : colors.text}
+              name="search-outline"
+              size={22}
+            />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Button label="Filters" kind="secondary" onPress={openFiltersModal} />
@@ -142,6 +148,26 @@ export default function ProductsScreen() {
             <Button label="Refresh" kind="secondary" onPress={refresh} />
           </View>
         </View>
+        {hasActiveSearch ? (
+          <View
+            style={{
+              gap: 8,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: colors.accent,
+              backgroundColor: colors.accentSoft,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+            }}
+          >
+            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+              ACTIVE SEARCH
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '600', lineHeight: 22 }}>
+              {productSearchSummary(filters.query)}
+            </Text>
+          </View>
+        ) : null}
 
         <DialogModal
           visible={searchModalVisible}
@@ -152,6 +178,7 @@ export default function ProductsScreen() {
           <View style={{ gap: 16 }}>
             <TextField
               label="Search title or brand"
+              accessibilityLabel="Search title or brand"
               placeholder="Nike, denim, jacket..."
               returnKeyType="search"
               value={searchDraft}
@@ -172,7 +199,14 @@ export default function ProductsScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Button label="Clear" kind="secondary" onPress={clearSearch} />
+                <Button
+                  label="Clear"
+                  kind="secondary"
+                  onPress={() => {
+                    clearSearch();
+                    closeSearchModal();
+                  }}
+                />
               </View>
             </View>
           </View>

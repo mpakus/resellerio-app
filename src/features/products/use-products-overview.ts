@@ -118,9 +118,12 @@ export function useProductsOverview(token: string) {
   }
 
   function submitSearch() {
+    const trimmedQuery = searchDraft.trim();
+
+    setSearchDraft(trimmedQuery);
     setFilters((current) => ({
       ...current,
-      query: searchDraft.trim(),
+      query: trimmedQuery,
       page: 1,
     }));
   }

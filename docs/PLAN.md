@@ -86,6 +86,7 @@ Primary seller journey:
 - [x] 2026-04-02 Step 63: Reworked page headers so the ResellerIO logo sits inline with each main screen title instead of consuming a separate top band, and updated shared UI tests for the new branded title pattern.
 - [x] 2026-04-02 Step 64: Added clickable browser-opening links for storefront URLs, inquiry source paths, marketplace live URLs, and image URLs, plus unit and screen tests for the new link behavior.
 - [x] 2026-04-02 Step 65: Collapsed the Products search panel behind a magnifier action and moved search into an on-demand modal, with screen tests covering the hidden-by-default flow.
+- [x] 2026-04-02 Step 66: Audited and optimized the new Products search flow with active-search summary state, normalized trimmed search submissions, clearer search-field accessibility, and deeper helper, hook, and screen test coverage.
 
 ## Current Web Functionality Analyzed
 

@@ -115,6 +115,42 @@ describe('useProductsOverview', () => {
         expect.objectContaining({ query: 'air max', page: 1 }),
       );
     });
+
+    expect(result.current.searchDraft).toBe('air max');
+  });
+
+  it('clears active search text and resets the query filter', async () => {
+    const { result } = renderHook(() => useProductsOverview('token-123'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setSearchDraft('nike');
+    });
+
+    act(() => {
+      result.current.submitSearch();
+    });
+
+    await waitFor(() => {
+      expect(result.current.filters.query).toBe('nike');
+    });
+
+    act(() => {
+      result.current.clearSearch();
+    });
+
+    await waitFor(() => {
+      expect(mockedListProducts).toHaveBeenLastCalledWith(
+        'token-123',
+        expect.objectContaining({ query: '', page: 1 }),
+      );
+    });
+
+    expect(result.current.searchDraft).toBe('');
+    expect(result.current.filters.query).toBe('');
   });
 
   it('applies advanced sort and updated date filters', async () => {

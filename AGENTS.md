@@ -150,6 +150,7 @@ Completed in the app:
 - Home dashboard tab with account summary, product and inquiry metrics, tracked transfer counts, quota visibility, quick actions, and recent products
 - Auth with secure persistence and bearer token restore
 - Products list, tabs, search, pagination, and detail
+- Products hidden search modal with active-query summary and normalized search state
 - Clickable external-link actions for storefront URLs, inquiry source paths, marketplace live URLs, and image URLs
 - Products advanced sorting and updated-date filters via modal controls
 - Upload-first product intake with signed uploads and finalize

@@ -11,6 +11,7 @@ import {
   formatProductDetailTimestamp,
   humanizeSceneKey,
   marketplaceListingHeadline,
+  productSearchSummary,
   sortStorefrontImages,
   storefrontPublicationSummary,
   storefrontSelectionCount,
@@ -153,5 +154,7 @@ describe('product detail presentation helpers', () => {
         updatedTo: '',
       }),
     ).toBe('Sort Updated · Descending');
+    expect(productSearchSummary('  nike air max  ')).toBe('Search: "nike air max"');
+    expect(productSearchSummary('   ')).toBe('No active search');
   });
 });

@@ -22,9 +22,12 @@ jest.mock('@/src/features/products/use-products-overview', () => ({
 
 const mockedUseAuth = jest.mocked(useAuth);
 const mockedUseProductsOverview = jest.mocked(useProductsOverview);
+const mockClearSearch = jest.fn();
 
 describe('ProductsScreen tab dialogs', () => {
   beforeEach(() => {
+    mockClearSearch.mockReset();
+
     mockedUseAuth.mockReturnValue({
       status: 'authenticated',
       session: {
@@ -92,7 +95,7 @@ describe('ProductsScreen tab dialogs', () => {
       setStatus: jest.fn(),
       selectProductTab: jest.fn(),
       submitSearch: jest.fn(),
-      clearSearch: jest.fn(),
+      clearSearch: mockClearSearch,
       loadNextPage: jest.fn(),
       filtersDraft: {
         sort: 'updated_at',
@@ -156,6 +159,81 @@ describe('ProductsScreen tab dialogs', () => {
     fireEvent.press(screen.getByLabelText('Open search'));
 
     expect(screen.getByText('Search products')).toBeTruthy();
-    expect(screen.getByPlaceholderText('Nike, denim, jacket...')).toBeTruthy();
+    expect(screen.getByLabelText('Search title or brand')).toBeTruthy();
+  });
+
+  it('shows the active search summary and clears search from the modal', () => {
+    mockedUseProductsOverview.mockReturnValue({
+      ...mockedUseProductsOverview.mock.results[0]?.value,
+      products: [],
+      productTabs: [
+        {
+          id: 7,
+          name: 'Shoes',
+          position: 1,
+          inserted_at: '2026-04-01T00:00:00Z',
+          updated_at: '2026-04-01T00:00:00Z',
+        },
+      ],
+      filters: {
+        status: 'all',
+        query: 'nike',
+        productTabId: 7,
+        updatedFrom: '',
+        updatedTo: '',
+        sort: 'updated_at',
+        dir: 'desc',
+        page: 1,
+      },
+      searchDraft: 'nike',
+      setSearchDraft: jest.fn(),
+      pagination: { page: 1, page_size: 15, total_count: 0, total_pages: 1 },
+      isLoading: false,
+      isRefreshing: false,
+      error: null,
+      refresh: jest.fn(),
+      setStatus: jest.fn(),
+      selectProductTab: jest.fn(),
+      submitSearch: jest.fn(),
+      clearSearch: mockClearSearch,
+      loadNextPage: jest.fn(),
+      filtersDraft: {
+        sort: 'updated_at',
+        dir: 'desc',
+        updatedFrom: '',
+        updatedTo: '',
+      },
+      tabName: '',
+      setTabName: jest.fn(),
+      tabError: null,
+      filtersError: null,
+      updateFiltersDraft: jest.fn(),
+      resetFiltersDraft: jest.fn(),
+      applyFilters: jest.fn(() => true),
+      clearAdvancedFilters: jest.fn(),
+      isCreatingTab: false,
+      addProductTab: jest.fn().mockResolvedValue(undefined),
+      editingTabId: null,
+      editingTabName: '',
+      setEditingTabName: jest.fn(),
+      startEditingTab: jest.fn(),
+      cancelEditingTab: jest.fn(),
+      isUpdatingTab: false,
+      saveEditingTab: jest.fn().mockResolvedValue(undefined),
+      deletingTabId: null,
+      removeProductTab: jest.fn().mockResolvedValue(undefined),
+      hasActiveAdvancedFilters: false,
+    });
+
+    render(<ProductsScreen />);
+
+    expect(screen.getByText('ACTIVE SEARCH')).toBeTruthy();
+    expect(screen.getByText('Search: "nike"')).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText('Open search'));
+    fireEvent.press(screen.getByText('Clear'));
+
+    expect(mockClearSearch).toHaveBeenCalled();
+    expect(screen.queryByText('Search products')).toBeNull();
   });
 });
