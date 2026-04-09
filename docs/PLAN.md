@@ -101,6 +101,9 @@ Primary seller journey:
 - [x] 2026-04-03 Step 78: Audited the mobile codebase for security and cleanup issues, then hardened external URL opening/sharing, defensive API JSON parsing, and web session persistence fallback, with focused unit and screen coverage.
 - [x] 2026-04-03 Step 79: Replaced the Expo starter README with a real project README covering setup, backend links, scripts, testing credentials, structure, and current security notes.
 - [x] 2026-04-03 Step 80: Polished Product detail by shortening Marketplace save copy, moving Lifestyle full-screen open onto the image itself, adding confirm-before-delete for Lifestyle images, and clarifying that Lifestyle approval is currently one-way on mobile because the public API exposes approve/delete but not unapprove.
+- [x] 2026-04-08 Step 81: Fixed Expo Go physical-device API detection by preferring Expo's LAN host over `localhost` in development, added config tests, and documented that the Phoenix dev server must bind to `0.0.0.0` for iPhone/Android device access.
+- [x] 2026-04-08 Step 82: Added Expo env-file support documentation with committed `.env.production` and a `.env.local.example` template so local LAN API URLs and production builds use predictable `EXPO_PUBLIC_API_BASE_URL` values.
+- [x] 2026-04-08 Step 83: Sanitized Product detail processing errors on mobile so raw backend `Ecto.Changeset` and similar internal failure dumps collapse into seller-facing retry guidance, with helper and screen regression tests.
 
 ## Current Web Functionality Analyzed
 

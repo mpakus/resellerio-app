@@ -135,6 +135,16 @@ export function processingHeadline(product: ProductDetail) {
   return `${productStatusLabel(product.status)}${step}`;
 }
 
+export function processingRunDescription(product: ProductDetail) {
+  const run = product.latest_processing_run;
+
+  if (!run?.error_message) {
+    return 'The latest processing run state is shown here while we build the richer review UI.';
+  }
+
+  return sanitizeProcessingErrorMessage(run.error_message, run.step);
+}
+
 export function imageKindCounts(images: ProductDetail['images']) {
   return images.reduce<Record<string, number>>((accumulator, image) => {
     accumulator[image.kind] = (accumulator[image.kind] ?? 0) + 1;
@@ -372,8 +382,45 @@ export function processingBannerDescription(product: ProductDetail) {
   return 'Processing is not currently active.';
 }
 
+export function sanitizeProcessingErrorMessage(message: string, step?: string | null) {
+  const trimmedMessage = message.trim();
+
+  if (!trimmedMessage) {
+    return 'Processing failed. Review the product fields and retry.';
+  }
+
+  if (!looksLikeInternalProcessingError(trimmedMessage)) {
+    return trimmedMessage;
+  }
+
+  const stepPrefix = step ? ` during ${humanizeProcessingStep(step).toLowerCase()}` : '';
+
+  return `AI processing could not save the generated product details${stepPrefix}. Review the product fields and retry.`;
+}
+
 function isActiveProcessingRun(run: ProductRun | null) {
   return isActiveAsyncRun(run);
+}
+
+function looksLikeInternalProcessingError(message: string) {
+  return (
+    /Ecto\.Changeset/.test(message) ||
+    /#Reseller\./.test(message) ||
+    /valid\?:\s*(true|false)/.test(message) ||
+    /errors:\s*\[/.test(message) ||
+    /changes:\s*%/.test(message) ||
+    /data:\s*#/.test(message)
+  );
+}
+
+function humanizeProcessingStep(step: string) {
+  return step
+    .replace(/-/g, ' ')
+    .replace(/_/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function isActiveAsyncRun(run: ProductRun | null) {

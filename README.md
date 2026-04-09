@@ -39,11 +39,50 @@ By default the app uses:
 - iOS / web dev API: `http://localhost:4000/api/v1`
 - Android emulator dev API: `http://10.0.2.2:4000/api/v1`
 - Production API: `https://resellerio.com/api/v1`
+- Expo Go on a physical device now tries to auto-detect your Expo LAN host and use `http://<your-mac-lan-ip>:4000/api/v1`
 
-You can override the API base with:
+Expo supports standard `.env` files for `EXPO_PUBLIC_` values. This repo now includes:
+
+- [`.env.production`](/Users/mpak/www/elixir/resellerio-app/.env.production) for production builds
+- [`.env.local.example`](/Users/mpak/www/elixir/resellerio-app/.env.local.example) as the local-device template
+
+You can still override the API base manually with:
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL=https://resellerio.com/api/v1 npm start
+```
+
+### Expo Go On iPhone / Android Phone
+
+If you run the app through Expo Go on a real phone, `localhost` will not work because it points to the phone itself, not your Mac.
+
+For local-device testing:
+
+1. Make sure the Phoenix backend listens on your LAN, not only on loopback.
+2. In [`dev.exs`](/Users/mpak/www/elixir/reseller/config/dev.exs), change:
+
+```elixir
+http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")]
+```
+
+to:
+
+```elixir
+http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")]
+```
+
+3. Restart the Phoenix server.
+4. Start Expo in LAN mode, not tunnel mode.
+5. Copy [`.env.local.example`](/Users/mpak/www/elixir/resellerio-app/.env.local.example) to `.env.local` and set your Mac's real LAN IP. With your current Expo output like `exp://192.168.0.125:8081`, the matching local API URL would be:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://192.168.0.125:4000/api/v1
+```
+
+If you still want to force the API base manually, use your Mac's LAN IP:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.44:4000/api/v1 npm start
 ```
 
 ## Test Account

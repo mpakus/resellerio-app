@@ -172,6 +172,9 @@ Completed in the app:
 - Settings Logo/Header branding cards now use compact upload and trash icon actions instead of text buttons
 - External link opening/sharing is now gated through a shared safe-URL helper that blocks unsupported schemes and unsafe public `http://` links
 - API response parsing now fails safely on non-JSON responses, and web auth fallback storage is session-scoped instead of long-lived local storage
+- Expo Go on physical devices now prefers Expo's detected LAN host for local API calls instead of `localhost`, but Phoenix dev must also bind to `0.0.0.0` for phone access
+- Environment setup now includes a committed `.env.production` for production API builds and a `.env.local.example` template for machine-specific local LAN API URLs
+- Product detail processing errors are sanitized on mobile so internal backend dumps like raw `Ecto.Changeset` strings do not leak into seller-facing UI
 - Transfers workspace in Settings with catalog export creation, finished-download open action, ZIP import, and recent transfer polling
 
 Still in progress:

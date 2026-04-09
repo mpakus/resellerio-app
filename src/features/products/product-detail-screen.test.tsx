@@ -373,6 +373,9 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('$84.00 target')).toBeTruthy();
     expect(screen.getByText('eBay · generated')).toBeTruthy();
     expect(screen.getByText('https://www.ebay.com/itm/1234567890')).toBeTruthy();
+    expect(
+      screen.getByText('The latest processing run state is shown here while we build the richer review UI.'),
+    ).toBeTruthy();
     expect(screen.getByText('Regenerate all scenes')).toBeTruthy();
     expect(screen.getByText('Lifestyle image #201')).toBeTruthy();
     expect(screen.getByText('Regenerate Casual Lifestyle')).toBeTruthy();
@@ -406,6 +409,33 @@ describe('ProductDetailScreen panels', () => {
       screen.getByText('Review product data, monitor AI processing, and manage the seller workflow.'),
     ).toBeTruthy();
     expect(screen.getByText('Managed product fields')).toBeTruthy();
+  });
+
+  it('hides raw Ecto changeset internals from the processing panel', () => {
+    const baseState = mockedUseProductDetail('token-123', 11);
+
+    mockedUseProductDetail.mockReturnValue({
+      ...baseState,
+      product: {
+        ...baseState.product!,
+        latest_processing_run: {
+          ...baseState.product!.latest_processing_run!,
+          step: 'prepare_images',
+          status: 'failed',
+          error_message:
+            '#Ecto.Changeset<action: :update, changes: %{title: "Monster High Lagoon Blue"}, errors: [color: {"should be at most %{count} character(s)", [count: 80]}], data: #Reseller.Catalog.Product<>, valid?: false>',
+        },
+      },
+    });
+
+    render(<ProductDetailScreen />);
+
+    expect(
+      screen.getByText(
+        'AI processing could not save the generated product details during prepare images. Review the product fields and retry.',
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Ecto\.Changeset/)).toBeNull();
   });
 
   it('opens and shares the public storefront URL', async () => {

@@ -34,6 +34,7 @@ import {
   marketplaceListingHeadline,
   processingBannerDescription,
   processingHeadline,
+  processingRunDescription,
   productPriceLabel,
   productStatusLabel,
   productSubtitle,
@@ -656,10 +657,7 @@ export default function ProductDetailScreen() {
             <SectionCard
               eyebrow="Processing"
               title={processingHeadline(product)}
-              description={
-                product.latest_processing_run?.error_message ??
-                'The latest processing run state is shown here while we build the richer review UI.'
-              }
+              description={processingRunDescription(product)}
             />
 
             <View

@@ -11,7 +11,9 @@ import {
   formatProductDetailTimestamp,
   humanizeSceneKey,
   marketplaceListingHeadline,
+  processingRunDescription,
   productSearchSummary,
+  sanitizeProcessingErrorMessage,
   sortStorefrontImages,
   storefrontPublicationSummary,
   storefrontSelectionCount,
@@ -156,5 +158,39 @@ describe('product detail presentation helpers', () => {
     ).toBe('Sort Updated · Descending');
     expect(productSearchSummary('  nike air max  ')).toBe('Search: "nike air max"');
     expect(productSearchSummary('   ')).toBe('No active search');
+  });
+
+  it('sanitizes raw internal processing errors into seller-safe copy', () => {
+    expect(
+      sanitizeProcessingErrorMessage(
+        '#Ecto.Changeset<action: :update, changes: %{title: "Monster High"}, errors: [color: {"should be at most %{count} character(s)", [count: 80]}], data: #Reseller.Catalog.Product<>, valid?: false>',
+        'prepare_images',
+      ),
+    ).toBe(
+      'AI processing could not save the generated product details during prepare images. Review the product fields and retry.',
+    );
+  });
+
+  it('keeps friendly processing errors unchanged', () => {
+    expect(
+      sanitizeProcessingErrorMessage(
+        'Gemini rate-limited the request. Try processing again in a moment.',
+        'prepare_images',
+      ),
+    ).toBe('Gemini rate-limited the request. Try processing again in a moment.');
+  });
+
+  it('builds a clean processing panel description from the latest run', () => {
+    expect(
+      processingRunDescription({
+        latest_processing_run: {
+          error_message:
+            '#Ecto.Changeset<action: :update, changes: %{title: "Monster High"}, errors: [color: {"should be at most %{count} character(s)", [count: 80]}], data: #Reseller.Catalog.Product<>, valid?: false>',
+          step: 'prepare_images',
+        },
+      } as never),
+    ).toBe(
+      'AI processing could not save the generated product details during prepare images. Review the product fields and retry.',
+    );
   });
 });
