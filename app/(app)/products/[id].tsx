@@ -1116,11 +1116,16 @@ export default function ProductDetailScreen() {
             <DetailPanel
               eyebrow="Description Draft"
               title={product.description_draft?.suggested_title ?? 'No generated title yet'}
-              description={
-                product.description_draft?.short_description ??
-                'A short resale-ready description will appear here once the draft is generated.'
-              }
+              description="Review and copy the generated title, summary, and long description."
             >
+              <DetailMetaRow
+                label="Short description"
+                value={
+                  product.description_draft?.short_description ??
+                  'A short resale-ready description will appear here once the draft is generated.'
+                }
+                copyable
+              />
               <DetailMetaRow
                 label="Key features"
                 value={
@@ -1128,6 +1133,7 @@ export default function ProductDetailScreen() {
                     ? product.description_draft.key_features.join(', ')
                     : 'No key features yet'
                 }
+                copyable
               />
               <DetailMetaRow
                 label="SEO keywords"
@@ -1136,6 +1142,7 @@ export default function ProductDetailScreen() {
                     ? product.description_draft.seo_keywords.join(', ')
                     : 'No SEO keywords yet'
                 }
+                copyable
               />
               {product.description_draft?.missing_details_warning ? (
                 <InlineError message={product.description_draft.missing_details_warning} />
@@ -1144,6 +1151,7 @@ export default function ProductDetailScreen() {
                 <DetailMetaRow
                   label="Long description"
                   value={product.description_draft.long_description}
+                  copyable
                 />
               ) : null}
             </DetailPanel>
