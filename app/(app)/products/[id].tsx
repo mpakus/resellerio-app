@@ -468,6 +468,7 @@ export default function ProductDetailScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ProductImage | null>(null);
   const [deleteLifestyleTarget, setDeleteLifestyleTarget] = useState<ProductImage | null>(null);
+  const [expandedMarketplaceIds, setExpandedMarketplaceIds] = useState<number[]>([]);
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { session } = useAuth();
 
@@ -596,6 +597,14 @@ export default function ProductDetailScreen() {
     );
 
     await saveStorefrontImageOrder(reorderedIds);
+  }
+
+  function toggleMarketplaceListing(listingId: number) {
+    setExpandedMarketplaceIds((currentIds) =>
+      currentIds.includes(listingId)
+        ? currentIds.filter((currentId) => currentId !== listingId)
+        : [...currentIds, listingId],
+    );
   }
 
   return (
@@ -1277,82 +1286,112 @@ export default function ProductDetailScreen() {
                       padding: 14,
                     }}
                   >
-                    <CopyableText
-                      label={`${formatMarketplaceName(listing.marketplace)} headline`}
-                      value={marketplaceListingHeadline(listing)}
-                    />
-                    <DetailMetaRow
-                      label="Title"
-                      value={listing.generated_title ?? 'No generated title yet'}
-                      copyable
-                    />
-                    <DetailMetaRow
-                      label="Suggested price"
-                      value={formatCurrencyAmount(listing.generated_price_suggestion)}
-                      copyable
-                    />
-                    {listing.external_url ? (
-                      <View style={{ gap: 4 }}>
-                        <Text
-                          selectable
-                          style={{
-                            color: colors.mutedText,
-                            fontSize: 12,
-                            fontWeight: '700',
-                            letterSpacing: 0.8,
-                          }}
-                        >
-                          LIVE URL
+                    <Pressable
+                      accessibilityLabel={`Toggle ${formatMarketplaceName(listing.marketplace)} listing`}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        toggleMarketplaceListing(listing.id);
+                      }}
+                      style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        opacity: pressed ? 0.72 : 1,
+                      })}
+                    >
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <Text selectable style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
+                          {marketplaceListingHeadline(listing)}
                         </Text>
-                        <CopyableText label="Live URL" value={listing.external_url} />
+                        <Text selectable style={{ color: colors.mutedText, fontSize: 14, lineHeight: 21 }}>
+                          {expandedMarketplaceIds.includes(listing.id)
+                            ? 'Tap to hide generated listing details.'
+                            : 'Tap to review generated listing details.'}
+                        </Text>
                       </View>
-                    ) : (
-                      <DetailMetaRow label="Live URL" value="No live URL saved" copyable />
-                    )}
-                    <DetailMetaRow
-                      label="URL added"
-                      value={formatProductDetailTimestamp(listing.external_url_added_at)}
-                      copyable
-                    />
-                    <DetailMetaRow
-                      label="Tags"
-                      value={listing.generated_tags.length ? listing.generated_tags.join(', ') : 'No tags yet'}
-                      copyable
-                    />
-                    <DetailMetaRow
-                      label="Warnings"
-                      value={
-                        listing.compliance_warnings.length
-                          ? listing.compliance_warnings.join(', ')
-                          : 'No compliance warnings'
-                      }
-                      copyable
-                    />
-                    {publicationDraft ? (
+                      <Ionicons
+                        color={colors.mutedText}
+                        name={expandedMarketplaceIds.includes(listing.id) ? 'chevron-up-outline' : 'chevron-down-outline'}
+                        size={22}
+                      />
+                    </Pressable>
+                    {expandedMarketplaceIds.includes(listing.id) ? (
                       <>
-                        <TextField
-                          label={`${formatMarketplaceName(listing.marketplace)} live URL`}
+                        <DetailMetaRow
+                          label="Title"
+                          value={listing.generated_title ?? 'No generated title yet'}
                           copyable
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                          keyboardType="url"
-                          value={publicationDraft.marketplaceExternalUrls[listing.marketplace] ?? ''}
-                          onChangeText={(value) => {
-                            updateMarketplaceUrl(listing.marketplace, value);
-                          }}
                         />
-                        <Button
-                          label="Open marketplace URL"
-                          kind="secondary"
-                          disabled={!(publicationDraft.marketplaceExternalUrls[listing.marketplace] ?? '').trim()}
-                          onPress={() => {
-                            const liveUrl = publicationDraft.marketplaceExternalUrls[listing.marketplace]?.trim();
+                        <DetailMetaRow
+                          label="Suggested price"
+                          value={formatCurrencyAmount(listing.generated_price_suggestion)}
+                          copyable
+                        />
+                        {listing.external_url ? (
+                          <View style={{ gap: 4 }}>
+                            <Text
+                              selectable
+                              style={{
+                                color: colors.mutedText,
+                                fontSize: 12,
+                                fontWeight: '700',
+                                letterSpacing: 0.8,
+                              }}
+                            >
+                              LIVE URL
+                            </Text>
+                            <CopyableText label="Live URL" value={listing.external_url} />
+                          </View>
+                        ) : (
+                          <DetailMetaRow label="Live URL" value="No live URL saved" copyable />
+                        )}
+                        <DetailMetaRow
+                          label="URL added"
+                          value={formatProductDetailTimestamp(listing.external_url_added_at)}
+                          copyable
+                        />
+                        <DetailMetaRow
+                          label="Tags"
+                          value={listing.generated_tags.length ? listing.generated_tags.join(', ') : 'No tags yet'}
+                          copyable
+                        />
+                        <DetailMetaRow
+                          label="Warnings"
+                          value={
+                            listing.compliance_warnings.length
+                              ? listing.compliance_warnings.join(', ')
+                              : 'No compliance warnings'
+                          }
+                          copyable
+                        />
+                        {publicationDraft?.storefrontEnabled ? (
+                          <>
+                            <TextField
+                              label={`${formatMarketplaceName(listing.marketplace)} live URL`}
+                              copyable
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              keyboardType="url"
+                              value={publicationDraft.marketplaceExternalUrls[listing.marketplace] ?? ''}
+                              onChangeText={(value) => {
+                                updateMarketplaceUrl(listing.marketplace, value);
+                              }}
+                            />
+                            <Button
+                              label="Open marketplace URL"
+                              kind="secondary"
+                              disabled={!(publicationDraft.marketplaceExternalUrls[listing.marketplace] ?? '').trim()}
+                              onPress={() => {
+                                const liveUrl = publicationDraft.marketplaceExternalUrls[listing.marketplace]?.trim();
 
-                            if (liveUrl) {
-                              void openExternalUrlSafely(liveUrl);
-                            }
-                          }}
-                        />
+                                if (liveUrl) {
+                                  void openExternalUrlSafely(liveUrl);
+                                }
+                              }}
+                            />
+                          </>
+                        ) : null}
                       </>
                     ) : null}
                   </View>

@@ -372,7 +372,8 @@ describe('ProductDetailScreen panels', () => {
     expect(screen.getByText('Nike Air Max 90 Vintage Sneakers')).toBeTruthy();
     expect(screen.getByText('$84.00 target')).toBeTruthy();
     expect(screen.getByText('eBay · generated')).toBeTruthy();
-    expect(screen.getByText('https://www.ebay.com/itm/1234567890')).toBeTruthy();
+    expect(screen.getByText('Tap to review generated listing details.')).toBeTruthy();
+    expect(screen.queryByText('https://www.ebay.com/itm/1234567890')).toBeNull();
     expect(
       screen.getByText('The latest processing run state is shown here while we build the richer review UI.'),
     ).toBeTruthy();
@@ -409,6 +410,19 @@ describe('ProductDetailScreen panels', () => {
       screen.getByText('Review product data, monitor AI processing, and manage the seller workflow.'),
     ).toBeTruthy();
     expect(screen.getByText('Managed product fields')).toBeTruthy();
+  });
+
+  it('toggles marketplace listings open and closed from the marketplace row', () => {
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Toggle eBay listing'));
+
+    expect(screen.getByText('https://www.ebay.com/itm/1234567890')).toBeTruthy();
+    expect(screen.getByText('Tap to hide generated listing details.')).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText('Toggle eBay listing'));
+
+    expect(screen.queryByText('https://www.ebay.com/itm/1234567890')).toBeNull();
   });
 
   it('hides raw Ecto changeset internals from the processing panel', () => {
@@ -460,6 +474,7 @@ describe('ProductDetailScreen panels', () => {
   it('opens image and marketplace URLs in the browser from link actions', () => {
     render(<ProductDetailScreen />);
 
+    fireEvent.press(screen.getByLabelText('Toggle eBay listing'));
     fireEvent.press(screen.getAllByText('Open Image in Browser')[0]);
     fireEvent.press(screen.getByText('Open marketplace URL'));
 
@@ -469,8 +484,46 @@ describe('ProductDetailScreen panels', () => {
     expect(mockedLinkingOpenURL).toHaveBeenCalledWith('https://www.ebay.com/itm/1234567890');
   });
 
+  it('hides marketplace live URL editing controls when storefront is disabled', () => {
+    const baseState = mockedUseProductDetail('token-123', 11);
+    const basePublicationForm = mockedUseProductPublicationForm({
+      product: baseState.product,
+      onSave: expect.any(Function),
+    });
+    const baseDraft = basePublicationForm.draft!;
+
+    mockedUseProductDetail.mockReturnValue({
+      ...baseState,
+      product: {
+        ...baseState.product!,
+        storefront_enabled: false,
+        storefront_published_at: null,
+      },
+    });
+
+    mockedUseProductPublicationForm.mockReturnValue({
+      ...basePublicationForm,
+      draft: {
+        ...baseDraft,
+        storefrontEnabled: false,
+        marketplaceExternalUrls: {
+          ...baseDraft.marketplaceExternalUrls,
+        },
+      },
+    });
+
+    render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Toggle eBay listing'));
+
+    expect(screen.queryByLabelText('Copy eBay live URL')).toBeNull();
+    expect(screen.queryByText('Open marketplace URL')).toBeNull();
+  });
+
   it('copies marketplace listing text blocks to the clipboard', async () => {
     render(<ProductDetailScreen />);
+
+    fireEvent.press(screen.getByLabelText('Toggle eBay listing'));
 
     await act(async () => {
       fireEvent.press(screen.getAllByLabelText('Copy Title')[1]);
