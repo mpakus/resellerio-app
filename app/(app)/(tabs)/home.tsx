@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
@@ -13,6 +14,44 @@ import { useDashboardOverview } from '@/src/features/dashboard/use-dashboard-ove
 import { productStatusLabel, productSubtitle } from '@/src/features/products/helpers';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { colors } from '@/src/theme/colors';
+
+function AddProductQuickAction() {
+  return (
+    <Pressable
+      accessibilityLabel="Add product"
+      accessibilityRole="button"
+      onPress={() => {
+        router.push('/products/new');
+      }}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        minHeight: 58,
+        borderRadius: 20,
+        backgroundColor: colors.accent,
+        paddingHorizontal: 18,
+        transform: [{ scale: pressed ? 0.985 : 1 }],
+        opacity: pressed ? 0.9 : 1,
+      })}
+    >
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 999,
+          backgroundColor: 'rgba(255,255,255,0.24)',
+        }}
+      >
+        <Ionicons color="#ffffff" name="camera-outline" size={18} />
+      </View>
+      <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '800' }}>Add product</Text>
+    </Pressable>
+  );
+}
 
 export default function HomeScreen() {
   const { session } = useAuth();
@@ -121,31 +160,19 @@ export default function HomeScreen() {
           </View>
 
           <View style={{ gap: 10 }}>
+            <AddProductQuickAction />
             <Button
-              label="+ Add product"
-              onPress={() => {
-                router.push('/products/new');
-              }}
-            />
-            <Button
-              label="Open products"
+              label="Products"
               kind="secondary"
               onPress={() => {
                 router.push('/products');
               }}
             />
             <Button
-              label="Open inquiries"
+              label="Inquiries"
               kind="secondary"
               onPress={() => {
                 router.push('/inquiries');
-              }}
-            />
-            <Button
-              label="Open Settings"
-              kind="secondary"
-              onPress={() => {
-                router.push('/settings');
               }}
             />
           </View>
