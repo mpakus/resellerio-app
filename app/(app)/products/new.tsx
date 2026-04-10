@@ -237,6 +237,20 @@ export default function NewProductScreen() {
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
             <Button
+              label={hasFailedUploads ? 'Start over' : 'Back'}
+              kind="secondary"
+              onPress={() => {
+                if (hasFailedUploads) {
+                  resetIntake();
+                  return;
+                }
+
+                router.back();
+              }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
               label={
                 isSubmitting
                   ? `Uploading ${progress.uploaded + progress.uploading}/${Math.max(totalAssets, 1)}`
@@ -247,20 +261,6 @@ export default function NewProductScreen() {
               disabled={isSubmitting}
               onPress={() => {
                 void handleSubmit();
-              }}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              label={hasFailedUploads ? 'Start over' : 'Back'}
-              kind="secondary"
-              onPress={() => {
-                if (hasFailedUploads) {
-                  resetIntake();
-                  return;
-                }
-
-                router.back();
               }}
             />
           </View>

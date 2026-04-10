@@ -535,7 +535,7 @@ export default function ProductsScreen() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Button
-                label="Apply filters"
+                label="Apply"
                 onPress={() => {
                   if (applyFilters()) {
                     setFiltersModalVisible(false);
@@ -545,7 +545,7 @@ export default function ProductsScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Button
-                label="Clear advanced"
+                label="Clear"
                 kind="secondary"
                 onPress={() => {
                   clearAdvancedFilters();
