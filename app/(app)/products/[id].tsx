@@ -608,7 +608,12 @@ export default function ProductDetailScreen() {
   }
 
   return (
-    <Screen footer={<StandardBottomNav activeTab="products" />} scrollable>
+    <Screen
+      footer={<StandardBottomNav activeTab="products" />}
+      includeBottomInset={false}
+      includeTopInset={false}
+      scrollable
+    >
       <Stack.Screen options={{ title: product?.title ?? 'Product', headerBackTitle: 'Back' }} />
 
       <View style={{ gap: 18 }}>

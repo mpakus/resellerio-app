@@ -32,7 +32,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <Screen scrollable>
+    <Screen includeBottomInset={false} includeTopInset={false} scrollable>
       <View style={{ gap: 18 }}>
         <View style={{ gap: 8 }}>
           <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700', letterSpacing: 1.2 }}>

@@ -26,12 +26,31 @@ type ScreenProps = PropsWithChildren<{
   scrollable?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
   footer?: ReactNode;
+  includeTopInset?: boolean;
+  includeBottomInset?: boolean;
 }>;
 
-export function Screen({ children, scrollable = false, contentContainerStyle, footer }: ScreenProps) {
+export function Screen({
+  children,
+  scrollable = false,
+  contentContainerStyle,
+  footer,
+  includeTopInset = true,
+  includeBottomInset = footer ? false : true,
+}: ScreenProps) {
+  const safeAreaEdges =
+    includeTopInset && includeBottomInset
+      ? undefined
+      : ([
+          'left',
+          'right',
+          ...(includeTopInset ? (['top'] as const) : []),
+          ...(includeBottomInset ? (['bottom'] as const) : []),
+        ] as const);
+
   if (scrollable) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={safeAreaEdges} style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           keyboardShouldPersistTaps="handled"
@@ -45,7 +64,7 @@ export function Screen({ children, scrollable = false, contentContainerStyle, fo
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={safeAreaEdges} style={styles.safeArea}>
       <View style={[styles.content, contentContainerStyle]}>{children}</View>
       {footer ? <View style={styles.footerWrap}>{footer}</View> : null}
     </SafeAreaView>
