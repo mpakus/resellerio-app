@@ -19,12 +19,12 @@ describe('useInquiriesOverview', () => {
       data: {
         inquiries: [
           {
-            id: 7,
+            id: 'inq-7',
             full_name: 'Jane Buyer',
             contact: 'jane@example.com',
             message: 'Is this still available?',
             source_path: '/store/my-store/products/1-vintage-jacket',
-            product_id: 12,
+            product_id: 'prod-12',
             inserted_at: '2026-04-02T10:00:00Z',
           },
         ],
@@ -35,7 +35,7 @@ describe('useInquiriesOverview', () => {
           total_pages: 1,
         },
       },
-    });
+    } as never);
   });
 
   it('loads inquiries on mount', async () => {
@@ -85,12 +85,12 @@ describe('useInquiriesOverview', () => {
         data: {
           inquiries: [
             {
-              id: 7,
+              id: 'inq-7',
               full_name: 'Jane Buyer',
               contact: 'jane@example.com',
               message: 'Is this still available?',
               source_path: '/store/my-store/products/1-vintage-jacket',
-              product_id: 12,
+              product_id: 'prod-12',
               inserted_at: '2026-04-02T10:00:00Z',
             },
           ],
@@ -101,17 +101,17 @@ describe('useInquiriesOverview', () => {
             total_pages: 2,
           },
         },
-      })
+      } as never)
       .mockResolvedValueOnce({
         data: {
           inquiries: [
             {
-              id: 8,
+              id: 'inq-8',
               full_name: 'Alex Customer',
               contact: 'alex@example.com',
               message: 'Can you ship this week?',
               source_path: '/store/my-store/products/2-bag',
-              product_id: 15,
+              product_id: 'prod-15',
               inserted_at: '2026-04-02T11:00:00Z',
             },
           ],
@@ -122,7 +122,7 @@ describe('useInquiriesOverview', () => {
             total_pages: 2,
           },
         },
-      });
+      } as never);
 
     const { result } = renderHook(() => useInquiriesOverview('token-123'));
 
@@ -153,10 +153,10 @@ describe('useInquiriesOverview', () => {
     });
 
     await act(async () => {
-      await result.current.removeInquiry(7);
+      await result.current.removeInquiry('inq-7');
     });
 
-    expect(mockedDeleteInquiry).toHaveBeenCalledWith('token-123', 7);
+    expect(mockedDeleteInquiry).toHaveBeenCalledWith('token-123', 'inq-7');
     expect(result.current.inquiries).toEqual([]);
   });
 });

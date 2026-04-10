@@ -68,7 +68,7 @@ describe('useDashboardOverview', () => {
         data: {
           products: [
             {
-              id: 11,
+              id: 'prod-11',
               status: 'ready',
               title: 'Nike Air Max 90',
               brand: 'Nike',
@@ -78,7 +78,7 @@ describe('useDashboardOverview', () => {
               product_tab: null,
             },
             {
-              id: 12,
+              id: 'prod-12',
               status: 'processing',
               title: 'Levi Jacket',
               brand: 'Levi',
@@ -108,8 +108,8 @@ describe('useDashboardOverview', () => {
         pagination: { page: 1, page_size: 20, total_count: 5, total_pages: 1 },
       },
     });
-    mockedLoadRecentExportIds.mockResolvedValue([11, 12]);
-    mockedLoadRecentImportIds.mockResolvedValue([21]);
+    mockedLoadRecentExportIds.mockResolvedValue(['export-11', 'export-12']);
+    mockedLoadRecentImportIds.mockResolvedValue(['import-21']);
   });
 
   it('loads mobile dashboard stats and recent products', async () => {

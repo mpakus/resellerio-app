@@ -1,5 +1,5 @@
 import { apiRequest } from '@/src/lib/api/client';
-import type { MeResponse } from '@/src/lib/api/types';
+import type { MeResponse, PublicId } from '@/src/lib/api/types';
 import type {
   StorefrontAssetKind,
   StorefrontAssetUploadResponse,
@@ -69,7 +69,7 @@ export function createStorefrontPage(
 
 export function updateStorefrontPage(
   token: string,
-  pageId: number,
+  pageId: PublicId,
   body: {
     page: {
       title?: string;
@@ -87,14 +87,14 @@ export function updateStorefrontPage(
   });
 }
 
-export function deleteStorefrontPage(token: string, pageId: number) {
+export function deleteStorefrontPage(token: string, pageId: PublicId) {
   return apiRequest<{ data: { deleted: boolean } }>(`/storefront/pages/${pageId}`, {
     method: 'DELETE',
     token,
   });
 }
 
-export function reorderStorefrontPages(token: string, pageIds: number[]) {
+export function reorderStorefrontPages(token: string, pageIds: PublicId[]) {
   return apiRequest<StorefrontPagesResponse>('/storefront/pages/order', {
     method: 'PUT',
     token,

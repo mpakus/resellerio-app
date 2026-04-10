@@ -31,7 +31,7 @@ describe('useProductsOverview', () => {
       data: {
         product_tabs: [
           {
-            id: 7,
+            id: '7',
             name: 'Shoes',
             position: 1,
             inserted_at: '2026-04-01T00:00:00Z',
@@ -39,13 +39,13 @@ describe('useProductsOverview', () => {
           },
         ],
       },
-    });
+    } as never);
 
     mockedListProducts.mockResolvedValue({
       data: {
         products: [
           {
-            id: 11,
+            id: '11',
             status: 'ready',
             title: 'Nike Air Max 90',
             brand: 'Nike',
@@ -53,7 +53,7 @@ describe('useProductsOverview', () => {
             price: '84.00',
             updated_at: '2026-04-01T00:00:00Z',
             product_tab: {
-              id: 7,
+              id: '7',
               name: 'Shoes',
               position: 1,
             },
@@ -75,7 +75,7 @@ describe('useProductsOverview', () => {
           dir: 'desc',
         },
       },
-    });
+    } as never);
   });
 
   it('loads products and tabs on mount', async () => {
@@ -210,7 +210,7 @@ describe('useProductsOverview', () => {
         data: {
           product_tabs: [
             {
-              id: 7,
+              id: '7',
               name: 'Shoes',
               position: 1,
               inserted_at: '2026-04-01T00:00:00Z',
@@ -218,19 +218,19 @@ describe('useProductsOverview', () => {
             },
           ],
         },
-      })
+      } as never)
       .mockResolvedValue({
         data: {
           product_tabs: [
             {
-              id: 7,
+              id: '7',
               name: 'Shoes',
               position: 1,
               inserted_at: '2026-04-01T00:00:00Z',
               updated_at: '2026-04-01T00:00:00Z',
             },
             {
-              id: 9,
+              id: '9',
               name: 'Outerwear',
               position: 2,
               inserted_at: '2026-04-01T00:00:00Z',
@@ -238,19 +238,19 @@ describe('useProductsOverview', () => {
             },
           ],
         },
-      });
+      } as never);
 
     mockedCreateProductTab.mockResolvedValue({
       data: {
         product_tab: {
-          id: 9,
+          id: '9',
           name: 'Outerwear',
           position: 2,
           inserted_at: '2026-04-01T00:00:00Z',
           updated_at: '2026-04-01T00:00:00Z',
         },
       },
-    });
+    } as never);
 
     const { result } = renderHook(() => useProductsOverview('token-123'));
 
@@ -269,7 +269,7 @@ describe('useProductsOverview', () => {
     expect(mockedCreateProductTab).toHaveBeenCalledWith('token-123', 'Outerwear');
     await waitFor(() => {
       expect(result.current.productTabs.map((tab) => tab.name)).toEqual(['Shoes', 'Outerwear']);
-      expect(result.current.filters.productTabId).toBe(9);
+      expect(result.current.filters.productTabId).toBe('9');
       expect(result.current.tabName).toBe('');
     });
   });
@@ -278,14 +278,14 @@ describe('useProductsOverview', () => {
     mockedUpdateProductTab.mockResolvedValue({
       data: {
         product_tab: {
-          id: 7,
+          id: '7',
           name: 'Sneakers',
           position: 1,
           inserted_at: '2026-04-01T00:00:00Z',
           updated_at: '2026-04-01T00:00:00Z',
         },
       },
-    });
+    } as never);
 
     const { result } = renderHook(() => useProductsOverview('token-123'));
 
@@ -302,7 +302,7 @@ describe('useProductsOverview', () => {
       await result.current.saveEditingTab();
     });
 
-    expect(mockedUpdateProductTab).toHaveBeenCalledWith('token-123', 7, 'Sneakers');
+    expect(mockedUpdateProductTab).toHaveBeenCalledWith('token-123', '7', 'Sneakers');
     expect(result.current.productTabs[0]?.name).toBe('Sneakers');
     expect(result.current.editingTabId).toBeNull();
   });
@@ -313,7 +313,7 @@ describe('useProductsOverview', () => {
         data: {
           product_tabs: [
             {
-              id: 7,
+              id: '7',
               name: 'Shoes',
               position: 1,
               inserted_at: '2026-04-01T00:00:00Z',
@@ -321,12 +321,12 @@ describe('useProductsOverview', () => {
             },
           ],
         },
-      })
+      } as never)
       .mockResolvedValue({
         data: {
           product_tabs: [],
         },
-      });
+      } as never);
 
     mockedDeleteProductTab.mockResolvedValue({
       data: { deleted: true },
@@ -339,14 +339,14 @@ describe('useProductsOverview', () => {
     });
 
     act(() => {
-      result.current.selectProductTab(7);
+      result.current.selectProductTab('7');
     });
 
     await act(async () => {
-      await result.current.removeProductTab(7);
+      await result.current.removeProductTab('7');
     });
 
-    expect(mockedDeleteProductTab).toHaveBeenCalledWith('token-123', 7);
+    expect(mockedDeleteProductTab).toHaveBeenCalledWith('token-123', '7');
     await waitFor(() => {
       expect(result.current.productTabs).toEqual([]);
       expect(result.current.filters.productTabId).toBeNull();

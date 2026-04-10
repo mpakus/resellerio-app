@@ -74,7 +74,7 @@ describe('useProductDetail', () => {
     mockedGetCurrentStorefront.mockResolvedValue({
       data: {
         storefront: {
-          id: 3,
+          id: '3',
           slug: 'my-store',
         },
       },
@@ -83,7 +83,7 @@ describe('useProductDetail', () => {
     mockedGetProduct.mockResolvedValue({
       data: {
         product: {
-          id: 11,
+          id: '11',
           status: 'review',
           source: 'manual',
           title: 'Nike Air Max 90',
@@ -95,9 +95,9 @@ describe('useProductDetail', () => {
           material: 'Leather',
           price: '84.00',
           cost: '30.00',
-          product_tab_id: 7,
+          product_tab_id: '7',
           product_tab: {
-            id: 7,
+            id: '7',
             name: 'Shoes',
             position: 1,
           },
@@ -113,7 +113,7 @@ describe('useProductDetail', () => {
           inserted_at: '2026-04-01T00:00:00Z',
           updated_at: '2026-04-01T00:00:00Z',
           latest_processing_run: {
-            id: 41,
+            id: '41',
             status: 'completed',
             step: 'variants_generated',
             started_at: '2026-04-01T00:00:00Z',
@@ -126,7 +126,7 @@ describe('useProductDetail', () => {
           },
           latest_lifestyle_generation_run: null,
           description_draft: {
-            id: 3,
+            id: '3',
             status: 'completed',
             provider: 'gemini',
             model: 'model-1',
@@ -140,7 +140,7 @@ describe('useProductDetail', () => {
             updated_at: '2026-04-01T00:00:00Z',
           },
           price_research: {
-            id: 8,
+            id: '8',
             status: 'completed',
             provider: 'gemini',
             model: 'model-1',
@@ -158,7 +158,7 @@ describe('useProductDetail', () => {
           },
           marketplace_listings: [
             {
-              id: 1,
+              id: '1',
               marketplace: 'ebay',
               status: 'generated',
               generated_title: 'Nike Air Max 90 Men Size 10',
@@ -176,7 +176,7 @@ describe('useProductDetail', () => {
           ],
           images: [
             {
-              id: 101,
+              id: '101',
               kind: 'original',
               position: 1,
               storage_key: 'users/1/products/11/original.jpg',
@@ -201,7 +201,7 @@ describe('useProductDetail', () => {
               updated_at: '2026-04-01T00:00:00Z',
             },
             {
-              id: 102,
+              id: '102',
               kind: 'background_removed',
               position: 1,
               storage_key: 'users/1/products/11/background.png',
@@ -219,14 +219,14 @@ describe('useProductDetail', () => {
               lifestyle_generation_run_id: null,
               scene_key: null,
               variant_index: null,
-              source_image_ids: [101],
+              source_image_ids: ['101'],
               seller_approved: false,
               approved_at: null,
               inserted_at: '2026-04-01T00:00:00Z',
               updated_at: '2026-04-01T00:00:00Z',
             },
             {
-              id: 103,
+              id: '103',
               kind: 'lifestyle_generated',
               position: 2,
               storage_key: 'users/1/products/11/lifestyle.jpg',
@@ -241,10 +241,10 @@ describe('useProductDetail', () => {
               original_filename: 'shoe-lifestyle.jpg',
               storefront_visible: false,
               storefront_position: null,
-              lifestyle_generation_run_id: 9,
+              lifestyle_generation_run_id: '9',
               scene_key: 'casual_lifestyle',
               variant_index: 1,
-              source_image_ids: [101],
+              source_image_ids: ['101'],
               seller_approved: false,
               approved_at: null,
               inserted_at: '2026-04-01T00:00:00Z',
@@ -253,26 +253,26 @@ describe('useProductDetail', () => {
           ],
         },
       },
-    });
+    } as never);
   });
 
   it('loads product detail on mount', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(mockedGetProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedGetProduct).toHaveBeenCalledWith('token-123', '11');
     expect(mockedGetCurrentStorefront).toHaveBeenCalledWith('token-123');
-    expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledWith('token-123', '11');
     expect(result.current.product?.title).toBe('Nike Air Max 90');
     expect(result.current.storefrontSlug).toBe('my-store');
     expect(result.current.product?.images).toHaveLength(3);
   });
 
   it('refreshes product detail on demand', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -288,7 +288,7 @@ describe('useProductDetail', () => {
   });
 
   it('saves product edits and updates local detail state', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -313,7 +313,7 @@ describe('useProductDetail', () => {
       });
     });
 
-    expect(mockedUpdateProduct).toHaveBeenCalledWith('token-123', 11, {
+    expect(mockedUpdateProduct).toHaveBeenCalledWith('token-123', '11', {
       product: {
         title: 'Updated title',
         tags: ['shell', 'winter'],
@@ -328,7 +328,7 @@ describe('useProductDetail', () => {
       .mockResolvedValueOnce({
         data: {
           product: {
-            id: 11,
+            id: '11',
             status: 'processing',
             source: 'manual',
             title: 'Nike Air Max 90',
@@ -340,9 +340,9 @@ describe('useProductDetail', () => {
             material: 'Leather',
             price: '84.00',
             cost: '30.00',
-            product_tab_id: 7,
+            product_tab_id: '7',
             product_tab: {
-              id: 7,
+              id: '7',
               name: 'Shoes',
               position: 1,
             },
@@ -358,7 +358,7 @@ describe('useProductDetail', () => {
             inserted_at: '2026-04-01T00:00:00Z',
             updated_at: '2026-04-01T00:00:00Z',
             latest_processing_run: {
-              id: 41,
+              id: '41',
               status: 'processing',
               step: 'background_removal',
               started_at: '2026-04-01T00:00:00Z',
@@ -380,7 +380,7 @@ describe('useProductDetail', () => {
       .mockResolvedValueOnce({
         data: {
           product: {
-            id: 11,
+            id: '11',
             status: 'review',
             source: 'manual',
             title: 'Nike Air Max 90',
@@ -392,9 +392,9 @@ describe('useProductDetail', () => {
             material: 'Leather',
             price: '84.00',
             cost: '30.00',
-            product_tab_id: 7,
+            product_tab_id: '7',
             product_tab: {
-              id: 7,
+              id: '7',
               name: 'Shoes',
               position: 1,
             },
@@ -410,7 +410,7 @@ describe('useProductDetail', () => {
             inserted_at: '2026-04-01T00:00:00Z',
             updated_at: '2026-04-01T00:01:00Z',
             latest_processing_run: {
-              id: 41,
+              id: '41',
               status: 'completed',
               step: 'variants_generated',
               started_at: '2026-04-01T00:00:00Z',
@@ -430,7 +430,7 @@ describe('useProductDetail', () => {
         },
       });
 
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -475,8 +475,8 @@ describe('useProductDetail', () => {
           material: 'Leather',
           price: '84.00',
           cost: '30.00',
-          product_tab_id: 7,
-          product_tab: { id: 7, name: 'Shoes', position: 1 },
+          product_tab_id: '7',
+          product_tab: { id: '7', name: 'Shoes', position: 1 },
           storefront_enabled: false,
           storefront_published_at: null,
           sku: 'NK-90',
@@ -507,7 +507,7 @@ describe('useProductDetail', () => {
           images: [],
         } as never,
         processing_run: {
-          id: 99,
+          id: '99',
           status: 'queued',
           step: 'queued',
           started_at: '2026-04-01T00:02:00Z',
@@ -521,7 +521,7 @@ describe('useProductDetail', () => {
       },
     });
 
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -531,13 +531,13 @@ describe('useProductDetail', () => {
       await result.current.retryProcessing();
     });
 
-    expect(mockedReprocessProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedReprocessProduct).toHaveBeenCalledWith('token-123', '11');
     expect(result.current.product?.status).toBe('processing');
     expect(result.current.isReprocessing).toBe(false);
   });
 
   it('runs sold/archive/restore lifecycle mutations through the dedicated endpoints', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -589,9 +589,9 @@ describe('useProductDetail', () => {
       await result.current.unarchive();
     });
 
-    expect(mockedMarkProductSold).toHaveBeenCalledWith('token-123', 11);
-    expect(mockedArchiveProduct).toHaveBeenCalledWith('token-123', 11);
-    expect(mockedUnarchiveProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedMarkProductSold).toHaveBeenCalledWith('token-123', '11');
+    expect(mockedArchiveProduct).toHaveBeenCalledWith('token-123', '11');
+    expect(mockedUnarchiveProduct).toHaveBeenCalledWith('token-123', '11');
     expect(result.current.product?.status).toBe('sold');
   });
 
@@ -602,7 +602,7 @@ describe('useProductDetail', () => {
       },
     });
 
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -614,14 +614,14 @@ describe('useProductDetail', () => {
       deleted = await result.current.removeProduct();
     });
 
-    expect(mockedDeleteProduct).toHaveBeenCalledWith('token-123', 11);
+    expect(mockedDeleteProduct).toHaveBeenCalledWith('token-123', '11');
     expect(deleted).toBe(true);
     expect(result.current.isDeleting).toBe(false);
   });
 
   it('loads lifestyle run history and generates a new lifestyle run', async () => {
     const queuedRun = {
-      id: 10,
+      id: '10',
       status: 'queued',
       step: 'queued',
       scene_family: 'apparel',
@@ -643,7 +643,7 @@ describe('useProductDetail', () => {
         data: {
           runs: [
             {
-              id: 9,
+              id: '9',
               status: 'completed',
               step: 'lifestyle_generated',
               scene_family: 'apparel',
@@ -666,9 +666,9 @@ describe('useProductDetail', () => {
         data: {
           runs: [queuedRun],
         },
-      });
+      } as never);
 
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoadingLifestyleRuns).toBe(false);
@@ -684,20 +684,20 @@ describe('useProductDetail', () => {
         } as never,
         lifestyle_generation_run: queuedRun,
       },
-    });
+    } as never);
 
     await act(async () => {
       await result.current.generateLifestyle();
     });
 
-    expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith('token-123', 11, undefined);
+    expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith('token-123', '11', undefined);
     await waitFor(() => {
       expect(mockedListLifestyleGenerationRuns).toHaveBeenCalledTimes(2);
     });
   });
 
   it('passes a scene key when regenerating one lifestyle scene', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -718,13 +718,13 @@ describe('useProductDetail', () => {
 
     expect(mockedGenerateLifestyleImages).toHaveBeenCalledWith(
       'token-123',
-      11,
+      '11',
       'casual_lifestyle',
     );
   });
 
   it('approves and deletes generated lifestyle images', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -735,7 +735,7 @@ describe('useProductDetail', () => {
         product: {
           ...result.current.product,
           images: result.current.product?.images.map((image) =>
-            image.id === 103
+            image.id === '103'
               ? { ...image, seller_approved: true, approved_at: '2026-04-01T00:12:00Z' }
               : image,
           ),
@@ -744,30 +744,30 @@ describe('useProductDetail', () => {
     });
 
     await act(async () => {
-      await result.current.approveLifestyleImage(103);
+      await result.current.approveLifestyleImage('103');
     });
 
-    expect(mockedApproveGeneratedImage).toHaveBeenCalledWith('token-123', 11, 103);
+    expect(mockedApproveGeneratedImage).toHaveBeenCalledWith('token-123', '11', '103');
 
     mockedDeleteGeneratedImage.mockResolvedValue({
       data: {
         product: {
           ...result.current.product,
-          images: result.current.product?.images.filter((image) => image.id !== 103),
+          images: result.current.product?.images.filter((image) => image.id !== '103'),
         } as never,
         deleted: true,
       },
     });
 
     await act(async () => {
-      await result.current.deleteLifestyleImage(103);
+      await result.current.deleteLifestyleImage('103');
     });
 
-    expect(mockedDeleteGeneratedImage).toHaveBeenCalledWith('token-123', 11, 103);
+    expect(mockedDeleteGeneratedImage).toHaveBeenCalledWith('token-123', '11', '103');
   });
 
   it('updates storefront visibility and reorders storefront images', async () => {
-    const { result } = renderHook(() => useProductDetail('token-123', 11));
+    const { result } = renderHook(() => useProductDetail('token-123', '11'));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -778,7 +778,7 @@ describe('useProductDetail', () => {
         product: {
           ...result.current.product,
           images: result.current.product?.images.map((image) =>
-            image.id === 102
+            image.id === '102'
               ? { ...image, storefront_visible: true, storefront_position: 2 }
               : image,
           ),
@@ -787,10 +787,10 @@ describe('useProductDetail', () => {
     });
 
     await act(async () => {
-      await result.current.setImageStorefrontVisibility(102, true, 2);
+      await result.current.setImageStorefrontVisibility('102', true, 2);
     });
 
-    expect(mockedUpdateImageStorefront).toHaveBeenCalledWith('token-123', 11, 102, {
+    expect(mockedUpdateImageStorefront).toHaveBeenCalledWith('token-123', '11', '102', {
       storefront_visible: true,
       storefront_position: 2,
     });
@@ -802,9 +802,9 @@ describe('useProductDetail', () => {
     });
 
     await act(async () => {
-      await result.current.saveStorefrontImageOrder([102, 101]);
+      await result.current.saveStorefrontImageOrder(['102', '101']);
     });
 
-    expect(mockedReorderStorefrontImages).toHaveBeenCalledWith('token-123', 11, [102, 101]);
+    expect(mockedReorderStorefrontImages).toHaveBeenCalledWith('token-123', '11', ['102', '101']);
   });
 });

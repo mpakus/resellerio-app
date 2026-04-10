@@ -1,3 +1,5 @@
+import type { PublicId } from '@/src/lib/api/types';
+
 export type ProductStatus =
   | 'draft'
   | 'uploading'
@@ -14,7 +16,7 @@ export type ProductSortDirection = 'asc' | 'desc';
 export type ManualProductStatus = 'draft' | 'review' | 'ready' | 'sold' | 'archived';
 
 export type ProductTab = {
-  id: number;
+  id: PublicId;
   name: string;
   position: number;
   inserted_at: string | null;
@@ -22,7 +24,7 @@ export type ProductTab = {
 };
 
 export type ProductSummary = {
-  id: number;
+  id: PublicId;
   status: ProductStatus;
   title: string | null;
   brand: string | null;
@@ -30,7 +32,7 @@ export type ProductSummary = {
   price: string | null;
   updated_at: string | null;
   product_tab: {
-    id: number;
+    id: PublicId;
     name: string;
     position: number;
   } | null;
@@ -46,7 +48,7 @@ export type ProductsPagination = {
 export type ProductsFilters = {
   status: ProductStatusFilter;
   query: string;
-  productTabId: number | null;
+  productTabId: PublicId | null;
   updatedFrom: string;
   updatedTo: string;
   sort: ProductSort;
@@ -61,7 +63,7 @@ export type ProductsResponse = {
     filters: {
       status: ProductStatusFilter;
       query: string | null;
-      product_tab_id: number | null;
+      product_tab_id: PublicId | null;
       updated_from: string | null;
       updated_to: string | null;
       sort: string;
@@ -71,7 +73,7 @@ export type ProductsResponse = {
 };
 
 export type ProductImage = {
-  id: number;
+  id: PublicId;
   kind: string;
   position: number | null;
   storage_key: string;
@@ -86,10 +88,10 @@ export type ProductImage = {
   original_filename: string | null;
   storefront_visible: boolean;
   storefront_position: number | null;
-  lifestyle_generation_run_id: number | null;
+  lifestyle_generation_run_id: PublicId | null;
   scene_key: string | null;
   variant_index: number | null;
-  source_image_ids: number[];
+  source_image_ids: PublicId[];
   seller_approved: boolean;
   approved_at: string | null;
   inserted_at: string | null;
@@ -97,7 +99,7 @@ export type ProductImage = {
 };
 
 export type ProductRun = {
-  id: number;
+  id: PublicId;
   status: string;
   step: string | null;
   started_at: string | null;
@@ -118,7 +120,7 @@ export type LifestyleGenerationRun = ProductRun & {
 };
 
 export type DescriptionDraft = {
-  id: number;
+  id: PublicId;
   status: string;
   provider: string | null;
   model: string | null;
@@ -133,7 +135,7 @@ export type DescriptionDraft = {
 };
 
 export type PriceResearch = {
-  id: number;
+  id: PublicId;
   status: string;
   provider: string | null;
   model: string | null;
@@ -151,7 +153,7 @@ export type PriceResearch = {
 };
 
 export type MarketplaceListing = {
-  id: number;
+  id: PublicId;
   marketplace: string;
   status: string;
   generated_title: string | null;
@@ -174,7 +176,7 @@ export type ProductDetail = ProductSummary & {
   size: string | null;
   material: string | null;
   cost: string | null;
-  product_tab_id: number | null;
+  product_tab_id: PublicId | null;
   sku: string | null;
   tags: string[];
   notes: string | null;
@@ -240,7 +242,7 @@ export type LifestyleGenerationRunsResponse = {
 };
 
 export type UploadInstruction = {
-  image_id: number;
+  image_id: PublicId;
   storage_key: string;
   method: 'PUT';
   upload_url: string;
@@ -256,7 +258,7 @@ export type ProductCreateResponse = {
 };
 
 export type FinalizedUploadImage = {
-  id: number;
+  id: PublicId;
   kind: string;
   processing_status: string;
 };

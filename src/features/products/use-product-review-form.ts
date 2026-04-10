@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import {
   buildProductUpdatePayload,
   createProductReviewDraft,
@@ -20,7 +21,7 @@ export function useProductReviewForm({
 }: UseProductReviewFormArgs) {
   const [draft, setDraft] = useState<ProductReviewDraft | null>(null);
   const [baseline, setBaseline] = useState<ProductReviewDraft | null>(null);
-  const [lastProductId, setLastProductId] = useState<number | null>(null);
+  const [lastProductId, setLastProductId] = useState<PublicId | null>(null);
   const [lastExternalKey, setLastExternalKey] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

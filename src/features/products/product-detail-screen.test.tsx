@@ -88,7 +88,7 @@ describe('ProductDetailScreen panels', () => {
         token: 'token-123',
         expiresAt: null,
         user: {
-          id: 1,
+          id: '1',
           email: 'seller@reseller.local',
           confirmed_at: null,
           selected_marketplaces: [],
@@ -116,11 +116,11 @@ describe('ProductDetailScreen panels', () => {
       signIn: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
-    });
+    } as never);
 
     mockedUseProductDetail.mockReturnValue({
       product: {
-        id: 11,
+        id: '11',
         status: 'ready',
         source: 'manual',
         title: 'Nike Air Max 90',
@@ -129,7 +129,7 @@ describe('ProductDetailScreen panels', () => {
         price: '84.00',
         updated_at: '2026-04-02T15:30:00Z',
         product_tab: {
-          id: 7,
+          id: '7',
           name: 'Shoes',
           position: 1,
         },
@@ -138,7 +138,7 @@ describe('ProductDetailScreen panels', () => {
         size: '10',
         material: 'Leather',
         cost: '30.00',
-        product_tab_id: 7,
+        product_tab_id: '7',
         sku: 'NK-90',
         tags: ['air-max', 'vintage'],
         notes: 'Minor wear on heel',
@@ -150,7 +150,7 @@ describe('ProductDetailScreen panels', () => {
         archived_at: null,
         inserted_at: '2026-04-01T00:00:00Z',
         latest_processing_run: {
-          id: 41,
+          id: '41',
           status: 'completed',
           step: 'variants_generated',
           started_at: '2026-04-02T15:00:00Z',
@@ -163,7 +163,7 @@ describe('ProductDetailScreen panels', () => {
         },
         latest_lifestyle_generation_run: null,
         description_draft: {
-          id: 8,
+          id: '8',
           status: 'completed',
           provider: 'gemini',
           model: 'model-1',
@@ -177,7 +177,7 @@ describe('ProductDetailScreen panels', () => {
           updated_at: '2026-04-02T15:11:00Z',
         },
         price_research: {
-          id: 4,
+          id: '4',
           status: 'completed',
           provider: 'gemini',
           model: 'model-1',
@@ -195,7 +195,7 @@ describe('ProductDetailScreen panels', () => {
         },
         marketplace_listings: [
           {
-            id: 9,
+            id: '9',
             marketplace: 'ebay',
             status: 'generated',
             generated_title: 'Nike Air Max 90 Men Size 10',
@@ -217,7 +217,7 @@ describe('ProductDetailScreen panels', () => {
         ],
         images: [
           {
-            id: 101,
+            id: '101',
             kind: 'original',
             position: 1,
             storage_key: 'users/1/products/11/original.jpg',
@@ -242,7 +242,7 @@ describe('ProductDetailScreen panels', () => {
             updated_at: '2026-04-02T15:10:00Z',
           },
           {
-            id: 201,
+            id: '201',
             kind: 'lifestyle_generated',
             position: 2,
             storage_key: 'users/1/products/11/lifestyle.jpg',
@@ -257,10 +257,10 @@ describe('ProductDetailScreen panels', () => {
             original_filename: 'lifestyle.jpg',
             storefront_visible: false,
             storefront_position: null,
-            lifestyle_generation_run_id: 19,
+            lifestyle_generation_run_id: '19',
             scene_key: 'casual_lifestyle',
             variant_index: 1,
-            source_image_ids: [101],
+            source_image_ids: ['101'],
             seller_approved: false,
             approved_at: null,
             inserted_at: '2026-04-02T15:15:00Z',
@@ -277,7 +277,7 @@ describe('ProductDetailScreen panels', () => {
       error: null,
       lifestyleRuns: [
         {
-          id: 19,
+          id: '19',
           status: 'completed',
           step: 'lifestyle_generated',
           scene_family: 'apparel',
@@ -313,7 +313,7 @@ describe('ProductDetailScreen panels', () => {
       deleteLifestyleImage: mockDeleteLifestyleImage,
       setImageStorefrontVisibility: mockSetImageStorefrontVisibility,
       saveStorefrontImageOrder: jest.fn(),
-    });
+    } as never);
 
     mockedUseProductPublicationForm.mockReturnValue({
       draft: {
@@ -329,14 +329,14 @@ describe('ProductDetailScreen panels', () => {
       updateMarketplaceUrl: jest.fn(),
       reset: jest.fn(),
       save: jest.fn(),
-    });
+    } as never);
 
     mockedUseProductTabs.mockReturnValue({
       productTabs: [],
       isLoading: false,
       error: null,
       refresh: jest.fn(),
-    });
+    } as never);
 
     mockedUseProductReviewForm.mockReturnValue({
       draft: {
@@ -353,7 +353,7 @@ describe('ProductDetailScreen panels', () => {
         notes: 'Minor wear on heel',
         tagsText: 'air-max, vintage',
         status: 'ready',
-        productTabId: 7,
+        productTabId: '7',
       },
       isDirty: false,
       isSaving: false,
@@ -361,7 +361,7 @@ describe('ProductDetailScreen panels', () => {
       updateField: jest.fn(),
       reset: jest.fn(),
       save: jest.fn(),
-    });
+    } as never);
   });
 
   it('renders storefront, description, price research, and marketplace panels from the product payload', () => {
@@ -426,7 +426,7 @@ describe('ProductDetailScreen panels', () => {
   });
 
   it('hides raw Ecto changeset internals from the processing panel', () => {
-    const baseState = mockedUseProductDetail('token-123', 11);
+    const baseState = mockedUseProductDetail('token-123', '11');
 
     mockedUseProductDetail.mockReturnValue({
       ...baseState,
@@ -485,7 +485,7 @@ describe('ProductDetailScreen panels', () => {
   });
 
   it('hides marketplace live URL editing controls when storefront is disabled', () => {
-    const baseState = mockedUseProductDetail('token-123', 11);
+    const baseState = mockedUseProductDetail('token-123', '11');
     const basePublicationForm = mockedUseProductPublicationForm({
       product: baseState.product,
       onSave: expect.any(Function),
@@ -572,19 +572,19 @@ describe('ProductDetailScreen panels', () => {
 
     fireEvent.press(screen.getByLabelText('Approve lifestyle image 201'));
 
-    expect(mockApproveLifestyleImage).toHaveBeenCalledWith(201);
+    expect(mockApproveLifestyleImage).toHaveBeenCalledWith('201');
     expect(screen.queryByLabelText('Unapprove lifestyle image 201')).toBeNull();
   });
 
   it('hides regenerate once a lifestyle image is already approved', () => {
-    const baseState = mockedUseProductDetail('token-123', 11);
+    const baseState = mockedUseProductDetail('token-123', '11');
 
     mockedUseProductDetail.mockReturnValue({
       ...baseState,
       product: {
         ...baseState.product!,
         images: baseState.product!.images.map((image) =>
-          image.id === 201
+          image.id === '201'
             ? {
                 ...image,
                 seller_approved: true,
@@ -621,7 +621,7 @@ describe('ProductDetailScreen panels', () => {
     fireEvent.press(screen.getByLabelText('Delete lifestyle image 201'));
     fireEvent.press(screen.getByText('Delete'));
 
-    expect(mockDeleteLifestyleImage).toHaveBeenCalledWith(201);
+    expect(mockDeleteLifestyleImage).toHaveBeenCalledWith('201');
   });
 
   it('toggles storefront image selection from the top-right circle control', () => {
@@ -630,8 +630,8 @@ describe('ProductDetailScreen panels', () => {
     fireEvent.press(screen.getByLabelText('Add image 201 to storefront'));
     fireEvent.press(screen.getByLabelText('Remove image 101 from storefront'));
 
-    expect(mockSetImageStorefrontVisibility).toHaveBeenCalledWith(201, true, 2);
-    expect(mockSetImageStorefrontVisibility).toHaveBeenCalledWith(101, false, null);
+    expect(mockSetImageStorefrontVisibility).toHaveBeenCalledWith('201', true, 2);
+    expect(mockSetImageStorefrontVisibility).toHaveBeenCalledWith('101', false, null);
   });
 
   it('keeps storefront gallery images in one list while using overlay toggles', () => {

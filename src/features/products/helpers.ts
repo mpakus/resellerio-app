@@ -1,3 +1,4 @@
+import type { PublicId } from '@/src/lib/api/types';
 import type {
   MarketplaceListing,
   ProductRun,
@@ -186,7 +187,7 @@ export function sortDisplayImages(images: ProductDetail['images']) {
     return (
       (left.position ?? 99_999) - (right.position ?? 99_999) ||
       (left.storefront_position ?? 99_999) - (right.storefront_position ?? 99_999) ||
-      left.id - right.id
+      left.id.localeCompare(right.id)
     );
   });
 }
@@ -212,14 +213,14 @@ export function sortStorefrontImages(images: ProductDetail['images']) {
       return (
         (left.storefront_position ?? 99_999) - (right.storefront_position ?? 99_999) ||
         (left.position ?? 99_999) - (right.position ?? 99_999) ||
-        left.id - right.id
+        left.id.localeCompare(right.id)
       );
     });
 }
 
 export function buildReorderedStorefrontImageIds(
-  imageIds: number[],
-  imageId: number,
+  imageIds: PublicId[],
+  imageId: PublicId,
   direction: 'earlier' | 'later',
 ) {
   const currentIndex = imageIds.indexOf(imageId);

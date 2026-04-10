@@ -41,7 +41,7 @@ describe('product intake helpers', () => {
   it('builds the create payload with upload metadata and optional tab id', () => {
     expect(
       buildCreateProductPayload(assets, {
-        id: 7,
+        id: 'tab-7',
         name: 'Shoes',
         position: 1,
         inserted_at: null,
@@ -49,7 +49,7 @@ describe('product intake helpers', () => {
       }),
     ).toEqual({
       product: {
-        product_tab_id: 7,
+        product_tab_id: 'tab-7',
       },
       uploads: [
         {
@@ -76,7 +76,7 @@ describe('product intake helpers', () => {
     expect(
       buildFinalizePayload(assets, [
         {
-          image_id: 10,
+          image_id: 'img-10',
           storage_key: 'users/1/products/1/originals/shoe-front.jpg',
           method: 'PUT',
           upload_url: 'https://example.com/1',
@@ -84,7 +84,7 @@ describe('product intake helpers', () => {
           expires_at: '2026-04-01T00:00:00Z',
         },
         {
-          image_id: 11,
+          image_id: 'img-11',
           storage_key: 'users/1/products/1/originals/shoe-side.jpg',
           method: 'PUT',
           upload_url: 'https://example.com/2',
@@ -93,18 +93,18 @@ describe('product intake helpers', () => {
         },
       ]),
     ).toEqual([
-      { id: 10, byte_size: 120000, width: 1200, height: 1600 },
-      { id: 11, byte_size: 90000, width: 1200, height: 1600 },
+      { id: 'img-10', byte_size: 120000, width: 1200, height: 1600 },
+      { id: 'img-11', byte_size: 90000, width: 1200, height: 1600 },
     ]);
   });
 
   it('creates, uploads, and finalizes a product in order', async () => {
     mockedCreateProduct.mockResolvedValue({
       data: {
-        product: { id: 33 } as never,
+        product: { id: 'prod-33' } as never,
         upload_instructions: [
           {
-            image_id: 10,
+            image_id: 'img-10',
             storage_key: 'users/1/products/33/originals/a.jpg',
             method: 'PUT',
             upload_url: 'https://example.com/a',
@@ -112,7 +112,7 @@ describe('product intake helpers', () => {
             expires_at: '2026-04-01T00:00:00Z',
           },
           {
-            image_id: 11,
+            image_id: 'img-11',
             storage_key: 'users/1/products/33/originals/b.jpg',
             method: 'PUT',
             upload_url: 'https://example.com/b',
@@ -121,15 +121,15 @@ describe('product intake helpers', () => {
           },
         ],
       },
-    });
+    } as never);
 
     mockedFinalizeProductUploads.mockResolvedValue({
       data: {
-        product: { id: 33 } as never,
+        product: { id: 'prod-33' } as never,
         finalized_images: [],
         processing_run: null,
       },
-    });
+    } as never);
 
     const uploadBinary = jest.fn().mockResolvedValue(undefined);
 
@@ -164,10 +164,10 @@ describe('product intake helpers', () => {
       ],
     });
     expect(uploadBinary).toHaveBeenCalledTimes(2);
-    expect(mockedFinalizeProductUploads).toHaveBeenCalledWith('token-123', 33, [
-      { id: 10, byte_size: 120000, width: 1200, height: 1600 },
-      { id: 11, byte_size: 90000, width: 1200, height: 1600 },
+    expect(mockedFinalizeProductUploads).toHaveBeenCalledWith('token-123', 'prod-33', [
+      { id: 'img-10', byte_size: 120000, width: 1200, height: 1600 },
+      { id: 'img-11', byte_size: 90000, width: 1200, height: 1600 },
     ]);
-    expect(result.finalizeResponse.data.product.id).toBe(33);
+    expect(result.finalizeResponse.data.product.id).toBe('prod-33');
   });
 });

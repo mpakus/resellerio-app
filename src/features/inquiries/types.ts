@@ -1,10 +1,12 @@
+import type { PublicId } from '@/src/lib/api/types';
+
 export type Inquiry = {
-  id: number;
+  id: PublicId;
   full_name: string | null;
   contact: string | null;
   message: string | null;
   source_path: string | null;
-  product_id: number | null;
+  product_id: PublicId | null;
   inserted_at: string | null;
 };
 

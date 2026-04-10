@@ -95,6 +95,7 @@ Recommended target structure:
 - Treat `401` as session loss: clear credentials and route back to auth.
 - Treat `402 limit_exceeded` as a product state, not a generic crash.
 - A 1-year mobile session is now supported by backend token TTL configuration.
+- Public API `id` and `*_id` fields now use ULID strings. Do not coerce route params or serialized IDs with `Number(...)`, and keep local recent-ID caches string-based too.
 
 Important current backend fact:
 
@@ -171,11 +172,14 @@ Completed in the app:
 - Marketplace selection now lives inside a dedicated Marketplaces block with shorter save copy, and branding blocks hide filename/size details when previews are available
 - Settings Logo/Header branding cards now use compact upload and trash icon actions instead of text buttons
 - External link opening/sharing is now gated through a shared safe-URL helper that blocks unsupported schemes and unsafe public `http://` links
+- External link opening/sharing also blocks URLs with embedded credentials such as `https://user:pass@host/...`
 - API response parsing now fails safely on non-JSON responses, and web auth fallback storage is session-scoped instead of long-lived local storage
+- API requests fail closed on redirects so bearer-auth API calls do not silently follow unexpected redirect chains
 - Expo Go on physical devices now prefers Expo's detected LAN host for local API calls instead of `localhost`, but Phoenix dev must also bind to `0.0.0.0` for phone access
 - Environment setup now includes a committed `.env.production` for production API builds and a `.env.local.example` template for machine-specific local LAN API URLs
 - Product detail processing errors are sanitized on mobile so internal backend dumps like raw `Ecto.Changeset` strings do not leak into seller-facing UI
 - Transfers workspace in Settings with catalog export creation, finished-download open action, ZIP import, and recent transfer polling
+- Public API ULID migration completed in mobile models, route params, product/media actions, storefront page actions, inquiry deletes, and transfer history caches
 
 Still in progress:
 

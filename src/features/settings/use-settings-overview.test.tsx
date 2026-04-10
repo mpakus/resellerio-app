@@ -81,7 +81,7 @@ describe('useSettingsOverview', () => {
     mockedGetCurrentUser.mockResolvedValue({
       data: {
         user: {
-          id: 1,
+          id: '1',
           email: 'seller@reseller.local',
           confirmed_at: null,
           selected_marketplaces: ['ebay', 'depop'],
@@ -98,7 +98,7 @@ describe('useSettingsOverview', () => {
           { id: 'mercari', label: 'Mercari' },
         ],
       },
-    });
+    } as never);
 
     mockedGetCurrentUsage.mockResolvedValue({
       data: {
@@ -121,7 +121,7 @@ describe('useSettingsOverview', () => {
     mockedGetStorefront.mockResolvedValue({
       data: {
         storefront: {
-          id: 3,
+          id: '3',
           slug: 'my-store',
           title: 'My Store',
           tagline: 'Curated resale.',
@@ -152,13 +152,13 @@ describe('useSettingsOverview', () => {
           },
         ],
       },
-    });
+    } as never);
 
     mockedListStorefrontPages.mockResolvedValue({
       data: {
         pages: [
           {
-            id: 7,
+            id: '7',
             title: 'About',
             slug: 'about',
             menu_label: 'About',
@@ -170,7 +170,7 @@ describe('useSettingsOverview', () => {
           },
         ],
       },
-    });
+    } as never);
 
     mockedRequestMediaLibraryPermissionsAsync.mockResolvedValue({
       granted: true,
@@ -196,7 +196,7 @@ describe('useSettingsOverview', () => {
     mockedPrepareStorefrontAssetUpload.mockResolvedValue({
       data: {
         asset: {
-          id: 9,
+          id: '9',
           kind: 'logo',
           storage_key: 'users/1/storefronts/3/logo/logo.png',
           content_type: 'image/png',
@@ -216,7 +216,7 @@ describe('useSettingsOverview', () => {
           expires_at: '2026-04-02T01:00:00Z',
         },
       },
-    });
+    } as never);
 
     mockedUploadStorefrontAssetWithInstruction.mockResolvedValue(undefined);
   });
@@ -253,7 +253,7 @@ describe('useSettingsOverview', () => {
         },
         supported_marketplaces: result.current.supportedMarketplaces,
       },
-    });
+    } as never);
 
     await act(async () => {
       await result.current.saveMarketplaceDraft();
@@ -285,7 +285,7 @@ describe('useSettingsOverview', () => {
         },
         themes: result.current.themes,
       },
-    });
+    } as never);
 
     await act(async () => {
       await result.current.saveStorefrontDraft();
@@ -311,7 +311,7 @@ describe('useSettingsOverview', () => {
     mockedCreateStorefrontPage.mockResolvedValue({
       data: {
         page: {
-          id: 8,
+          id: '8',
           title: 'Shipping',
           slug: 'shipping',
           menu_label: 'Shipping',
@@ -322,7 +322,7 @@ describe('useSettingsOverview', () => {
           updated_at: '2026-04-01T00:00:00Z',
         },
       },
-    });
+    } as never);
 
     await act(async () => {
       await result.current.createPage({
@@ -346,7 +346,7 @@ describe('useSettingsOverview', () => {
     });
 
     await act(async () => {
-      await result.current.savePage(7, {
+      await result.current.savePage('7', {
         title: 'About Us',
         slug: 'about',
         menu_label: 'About',
@@ -370,13 +370,13 @@ describe('useSettingsOverview', () => {
           },
         ],
       },
-    });
+    } as never);
 
     await act(async () => {
-      await result.current.savePageOrder([8, 7], 8);
+      await result.current.savePageOrder(['8', '7'], '8');
     });
 
-    expect(result.current.storefrontPages[0]?.id).toBe(8);
+    expect(result.current.storefrontPages[0]?.id).toBe('8');
 
     mockedDeleteStorefrontPage.mockResolvedValue({
       data: {
@@ -385,7 +385,7 @@ describe('useSettingsOverview', () => {
     });
 
     await act(async () => {
-      await result.current.removePage(8);
+      await result.current.removePage('8');
     });
 
     expect(result.current.storefrontPages).toHaveLength(1);

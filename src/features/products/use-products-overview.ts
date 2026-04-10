@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import {
   createProductTab,
   deleteProductTab,
@@ -55,10 +56,10 @@ export function useProductsOverview(token: string) {
   const [tabError, setTabError] = useState<string | null>(null);
   const [filtersError, setFiltersError] = useState<string | null>(null);
   const [isCreatingTab, setIsCreatingTab] = useState(false);
-  const [editingTabId, setEditingTabId] = useState<number | null>(null);
+  const [editingTabId, setEditingTabId] = useState<PublicId | null>(null);
   const [editingTabName, setEditingTabName] = useState('');
   const [isUpdatingTab, setIsUpdatingTab] = useState(false);
-  const [deletingTabId, setDeletingTabId] = useState<number | null>(null);
+  const [deletingTabId, setDeletingTabId] = useState<PublicId | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,7 +114,7 @@ export function useProductsOverview(token: string) {
     setFilters((current) => ({ ...current, status, page: 1 }));
   }
 
-  function selectProductTab(tabId: number | null) {
+  function selectProductTab(tabId: PublicId | null) {
     setFilters((current) => ({ ...current, productTabId: tabId, page: 1 }));
   }
 
@@ -286,7 +287,7 @@ export function useProductsOverview(token: string) {
     }
   }
 
-  async function removeProductTab(tabId: number) {
+  async function removeProductTab(tabId: PublicId) {
     setDeletingTabId(tabId);
     setTabError(null);
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import { deleteInquiry, listInquiries } from '@/src/features/inquiries/api';
 import type {
   InquiriesFilters,
@@ -26,7 +27,7 @@ export function useInquiriesOverview(token: string) {
   const [pagination, setPagination] = useState<InquiriesPagination>(defaultPagination);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [deletingInquiryId, setDeletingInquiryId] = useState<number | null>(null);
+  const [deletingInquiryId, setDeletingInquiryId] = useState<PublicId | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,7 +116,7 @@ export function useInquiriesOverview(token: string) {
     setFilters((current) => ({ ...current, page: current.page + 1 }));
   }
 
-  async function removeInquiry(inquiryId: number) {
+  async function removeInquiry(inquiryId: PublicId) {
     setDeletingInquiryId(inquiryId);
     setError(null);
 

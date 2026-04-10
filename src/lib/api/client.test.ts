@@ -21,6 +21,7 @@ describe('api client', () => {
       expect.stringContaining('/health'),
       expect.objectContaining({
         method: 'POST',
+        redirect: 'error',
         headers: expect.objectContaining({
           Authorization: 'Bearer mobile-token',
           'Content-Type': 'application/json',
@@ -28,6 +29,14 @@ describe('api client', () => {
         body: JSON.stringify({ hello: 'world' }),
       }),
     );
+  });
+
+  it('fails closed when the API responds with a redirect instead of following it', async () => {
+    jest.spyOn(global, 'fetch').mockRejectedValue(new TypeError('redirect mode is set to error'));
+
+    await expect(apiRequest('/health')).rejects.toMatchObject({
+      message: 'redirect mode is set to error',
+    });
   });
 
   it('formats validation field errors first', () => {

@@ -1,4 +1,5 @@
 import { apiRequest } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import type { InquiriesFilters, InquiriesResponse } from '@/src/features/inquiries/types';
 
 export function buildInquiriesQuery(filters: InquiriesFilters) {
@@ -21,7 +22,7 @@ export function listInquiries(token: string, filters: InquiriesFilters) {
   });
 }
 
-export function deleteInquiry(token: string, inquiryId: number) {
+export function deleteInquiry(token: string, inquiryId: PublicId) {
   return apiRequest<{ data: { deleted: boolean } }>(`/inquiries/${inquiryId}`, {
     method: 'DELETE',
     token,

@@ -10,6 +10,8 @@ jest.mock('expo-router', () => ({
   },
 }));
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
 jest.mock('@/src/lib/auth/auth-provider', () => ({
   useAuth: jest.fn(),
 }));
@@ -29,7 +31,7 @@ describe('HomeScreen', () => {
         token: 'token-123',
         expiresAt: null,
         user: {
-          id: 1,
+          id: 'user-1',
           email: 'seller@reseller.local',
           confirmed_at: null,
           selected_marketplaces: [],
@@ -68,7 +70,7 @@ describe('HomeScreen', () => {
       trackedImports: 1,
       recentProducts: [
         {
-          id: 11,
+          id: 'prod-11',
           status: 'ready',
           title: 'Nike Air Max 90',
           brand: 'Nike',
@@ -98,10 +100,9 @@ describe('HomeScreen', () => {
   it('renders quick action buttons', () => {
     render(<HomeScreen />);
 
-    fireEvent.press(screen.getByText('+ Add product'));
-    fireEvent.press(screen.getByText('Open products'));
-    fireEvent.press(screen.getByText('Open inquiries'));
-    fireEvent.press(screen.getByText('Open Settings'));
+    fireEvent.press(screen.getByText('Add product'));
+    fireEvent.press(screen.getByText('Products'));
+    fireEvent.press(screen.getByText('Inquiries'));
 
     expect(screen.getByText('Jump into the next workflow')).toBeTruthy();
   });

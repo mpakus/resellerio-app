@@ -62,13 +62,13 @@ describe('ProductsScreen tab dialogs', () => {
       signIn: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
-    });
+    } as never);
 
     mockedUseProductsOverview.mockReturnValue({
       products: [],
       productTabs: [
         {
-          id: 7,
+          id: 'tab-7',
           name: 'Shoes',
           position: 1,
           inserted_at: '2026-04-01T00:00:00Z',
@@ -78,7 +78,7 @@ describe('ProductsScreen tab dialogs', () => {
       filters: {
         status: 'all',
         query: '',
-        productTabId: 7,
+        productTabId: 'tab-7',
         updatedFrom: '',
         updatedTo: '',
         sort: 'updated_at',
@@ -123,7 +123,7 @@ describe('ProductsScreen tab dialogs', () => {
       deletingTabId: null,
       removeProductTab: jest.fn().mockResolvedValue(undefined),
       hasActiveAdvancedFilters: false,
-    });
+    } as never);
   });
 
   it('keeps create and manage tab dialogs hidden by default and opens them on demand', () => {
@@ -168,7 +168,7 @@ describe('ProductsScreen tab dialogs', () => {
       products: [],
       productTabs: [
         {
-          id: 7,
+          id: 'tab-7',
           name: 'Shoes',
           position: 1,
           inserted_at: '2026-04-01T00:00:00Z',
@@ -178,7 +178,7 @@ describe('ProductsScreen tab dialogs', () => {
       filters: {
         status: 'all',
         query: 'nike',
-        productTabId: 7,
+        productTabId: 'tab-7',
         updatedFrom: '',
         updatedTo: '',
         sort: 'updated_at',
@@ -223,7 +223,7 @@ describe('ProductsScreen tab dialogs', () => {
       deletingTabId: null,
       removeProductTab: jest.fn().mockResolvedValue(undefined),
       hasActiveAdvancedFilters: false,
-    });
+    } as never);
 
     render(<ProductsScreen />);
 

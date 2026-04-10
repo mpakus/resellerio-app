@@ -1,12 +1,13 @@
 import type {
   MeResponse,
+  PublicId,
   SupportedMarketplace,
   UsageCounters,
   User,
 } from '@/src/lib/api/types';
 
 export type StorefrontAsset = {
-  id: number | null;
+  id: PublicId | null;
   kind: string;
   storage_key: string | null;
   url?: string | null;
@@ -22,7 +23,7 @@ export type StorefrontAsset = {
 export type StorefrontAssetKind = 'logo' | 'header';
 
 export type StorefrontPage = {
-  id: number;
+  id: PublicId;
   title: string;
   slug: string;
   menu_label: string | null;
@@ -34,7 +35,7 @@ export type StorefrontPage = {
 };
 
 export type Storefront = {
-  id: number | null;
+  id: PublicId | null;
   slug: string | null;
   title: string | null;
   tagline: string | null;

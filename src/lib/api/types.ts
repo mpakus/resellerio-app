@@ -1,10 +1,12 @@
+export type PublicId = string;
+
 export type SupportedMarketplace = {
   id: string;
   label: string;
 };
 
 export type User = {
-  id: number;
+  id: PublicId;
   email: string;
   confirmed_at: string | null;
   selected_marketplaces: string[];

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import { pickImportArchive } from '@/src/features/transfers/archive';
 import { createExport, createImport, getExport, getImport } from '@/src/features/transfers/api';
 import { hasActiveTransfers } from '@/src/features/transfers/helpers';
@@ -18,8 +19,8 @@ const TRANSFER_POLL_INTERVAL_MS = 5000;
 export function useTransfersOverview(token: string) {
   const refreshRequestedRef = useRef(false);
   const pollRequestedRef = useRef(false);
-  const recentExportIdsRef = useRef<number[]>([]);
-  const recentImportIdsRef = useRef<number[]>([]);
+  const recentExportIdsRef = useRef<PublicId[]>([]);
+  const recentImportIdsRef = useRef<PublicId[]>([]);
   const [recentExports, setRecentExports] = useState<ExportJob[]>([]);
   const [recentImports, setRecentImports] = useState<ImportJob[]>([]);
   const [exportNameDraft, setExportNameDraft] = useState('');
@@ -192,10 +193,10 @@ export function useTransfersOverview(token: string) {
   };
 }
 
-async function loadExportJobs(token: string, ids: number[]) {
+async function loadExportJobs(token: string, ids: PublicId[]) {
   const settled = await Promise.allSettled(ids.map((id) => getExport(token, id)));
   const jobs: ExportJob[] = [];
-  const validIds: number[] = [];
+  const validIds: PublicId[] = [];
 
   settled.forEach((result, index) => {
     if (result.status !== 'fulfilled') {
@@ -212,10 +213,10 @@ async function loadExportJobs(token: string, ids: number[]) {
   };
 }
 
-async function loadImportJobs(token: string, ids: number[]) {
+async function loadImportJobs(token: string, ids: PublicId[]) {
   const settled = await Promise.allSettled(ids.map((id) => getImport(token, id)));
   const jobs: ImportJob[] = [];
-  const validIds: number[] = [];
+  const validIds: PublicId[] = [];
 
   settled.forEach((result, index) => {
     if (result.status !== 'fulfilled') {

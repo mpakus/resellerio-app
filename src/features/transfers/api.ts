@@ -1,4 +1,5 @@
 import { apiRequest } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import type { ExportJobResponse, ImportJobResponse } from '@/src/features/transfers/types';
 
 export function createExport(token: string, name?: string | null) {
@@ -18,7 +19,7 @@ export function createExport(token: string, name?: string | null) {
   });
 }
 
-export function getExport(token: string, exportId: number) {
+export function getExport(token: string, exportId: PublicId) {
   return apiRequest<ExportJobResponse>(`/exports/${exportId}`, { token });
 }
 
@@ -35,6 +36,6 @@ export function createImport(token: string, filename: string, archiveBase64: str
   });
 }
 
-export function getImport(token: string, importId: number) {
+export function getImport(token: string, importId: PublicId) {
   return apiRequest<ImportJobResponse>(`/imports/${importId}`, { token });
 }

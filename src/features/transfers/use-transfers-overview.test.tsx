@@ -46,12 +46,12 @@ describe('useTransfersOverview', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockedLoadRecentExportIds.mockResolvedValue([11]);
-    mockedLoadRecentImportIds.mockResolvedValue([21]);
+    mockedLoadRecentExportIds.mockResolvedValue(['export-11']);
+    mockedLoadRecentImportIds.mockResolvedValue(['import-21']);
     mockedGetExport.mockResolvedValue({
       data: {
         export: {
-          id: 11,
+          id: 'export-11',
           name: 'Catalog export',
           file_name: 'catalog.zip',
           filter_params: {},
@@ -71,7 +71,7 @@ describe('useTransfersOverview', () => {
     mockedGetImport.mockResolvedValue({
       data: {
         import: {
-          id: 21,
+          id: 'import-21',
           status: 'completed',
           source_filename: 'catalog.zip',
           source_storage_key: 'users/1/imports/21/source.zip',
@@ -106,17 +106,17 @@ describe('useTransfersOverview', () => {
 
     expect(mockedLoadRecentExportIds).toHaveBeenCalled();
     expect(mockedLoadRecentImportIds).toHaveBeenCalled();
-    expect(mockedGetExport).toHaveBeenCalledWith('token-123', 11);
-    expect(mockedGetImport).toHaveBeenCalledWith('token-123', 21);
-    expect(result.current.recentExports[0]?.id).toBe(11);
-    expect(result.current.recentImports[0]?.id).toBe(21);
+    expect(mockedGetExport).toHaveBeenCalledWith('token-123', 'export-11');
+    expect(mockedGetImport).toHaveBeenCalledWith('token-123', 'import-21');
+    expect(result.current.recentExports[0]?.id).toBe('export-11');
+    expect(result.current.recentImports[0]?.id).toBe('import-21');
   });
 
   it('starts a new export and persists it in recent history', async () => {
     mockedCreateExport.mockResolvedValue({
       data: {
         export: {
-          id: 12,
+          id: 'export-12',
           name: 'Ready inventory',
           file_name: 'ready-inventory.zip',
           filter_params: {},
@@ -149,8 +149,8 @@ describe('useTransfersOverview', () => {
     });
 
     expect(mockedCreateExport).toHaveBeenCalledWith('token-123', '  Ready inventory  ');
-    expect(mockedSaveRecentExportIds).toHaveBeenCalledWith([12, 11]);
-    expect(result.current.recentExports[0]?.id).toBe(12);
+    expect(mockedSaveRecentExportIds).toHaveBeenCalledWith(['export-12', 'export-11']);
+    expect(result.current.recentExports[0]?.id).toBe('export-12');
     expect(result.current.exportNameDraft).toBe('');
   });
 
@@ -158,7 +158,7 @@ describe('useTransfersOverview', () => {
     mockedCreateImport.mockResolvedValue({
       data: {
         import: {
-          id: 22,
+          id: 'import-22',
           status: 'queued',
           source_filename: 'catalog.zip',
           source_storage_key: 'users/1/imports/22/source.zip',
@@ -193,18 +193,18 @@ describe('useTransfersOverview', () => {
       'catalog.zip',
       'YmFzZTY0LXppcA==',
     );
-    expect(mockedSaveRecentImportIds).toHaveBeenCalledWith([22, 21]);
-    expect(result.current.recentImports[0]?.id).toBe(22);
+    expect(mockedSaveRecentImportIds).toHaveBeenCalledWith(['import-22', 'import-21']);
+    expect(result.current.recentImports[0]?.id).toBe('import-22');
   });
 
   it('polls recent jobs while any transfer is active and stops after completion', async () => {
-    mockedLoadRecentExportIds.mockResolvedValue([31]);
+    mockedLoadRecentExportIds.mockResolvedValue(['export-31']);
     mockedLoadRecentImportIds.mockResolvedValue([]);
     mockedGetExport
       .mockResolvedValueOnce({
         data: {
           export: {
-            id: 31,
+            id: 'export-31',
             name: 'Queued export',
             file_name: 'queued-export.zip',
             filter_params: {},
@@ -224,7 +224,7 @@ describe('useTransfersOverview', () => {
       .mockResolvedValueOnce({
         data: {
           export: {
-            id: 31,
+            id: 'export-31',
             name: 'Queued export',
             file_name: 'queued-export.zip',
             filter_params: {},

@@ -35,6 +35,7 @@ describe('external URL helpers', () => {
     expect(sanitizeExternalUrl('javascript:alert(1)')).toBeNull();
     expect(sanitizeExternalUrl('data:text/html,boom')).toBeNull();
     expect(sanitizeExternalUrl('http://example.com')).toBeNull();
+    expect(sanitizeExternalUrl('https://user:secret@resellerio.com/store/my-store')).toBeNull();
     expect(isSafeExternalUrl('ftp://example.com/file.txt')).toBe(false);
   });
 

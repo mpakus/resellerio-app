@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import {
   approveGeneratedImage,
   archiveProduct,
@@ -25,7 +26,7 @@ import type { LifestyleGenerationRun, ProductDetail } from '@/src/features/produ
 
 const PRODUCT_DETAIL_POLL_INTERVAL_MS = 5000;
 
-export function useProductDetail(token: string, productId: number) {
+export function useProductDetail(token: string, productId: PublicId) {
   const refreshRequestedRef = useRef(false);
   const pollRequestedRef = useRef(false);
   const lifestyleRunsRefreshRequestedRef = useRef(false);
@@ -272,14 +273,14 @@ export function useProductDetail(token: string, productId: number) {
     }
   }
 
-  async function approveLifestyleImage(imageId: number) {
+  async function approveLifestyleImage(imageId: PublicId) {
     return mutateMedia(async () => {
       const response = await approveGeneratedImage(token, productId, imageId);
       return response.data.product;
     });
   }
 
-  async function deleteLifestyleImage(imageId: number) {
+  async function deleteLifestyleImage(imageId: PublicId) {
     return mutateMedia(async () => {
       const response = await deleteGeneratedImage(token, productId, imageId);
       return response.data.product;
@@ -287,7 +288,7 @@ export function useProductDetail(token: string, productId: number) {
   }
 
   async function setImageStorefrontVisibility(
-    imageId: number,
+    imageId: PublicId,
     storefrontVisible: boolean,
     storefrontPosition?: number | null,
   ) {
@@ -300,7 +301,7 @@ export function useProductDetail(token: string, productId: number) {
     });
   }
 
-  async function saveStorefrontImageOrder(imageIds: number[]) {
+  async function saveStorefrontImageOrder(imageIds: PublicId[]) {
     return mutateMedia(async () => {
       const response = await reorderStorefrontImages(token, productId, imageIds);
       return response.data.product;

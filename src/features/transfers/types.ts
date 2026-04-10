@@ -1,9 +1,11 @@
+import type { PublicId } from '@/src/lib/api/types';
+
 export type ExportJobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'stalled' | string;
 
 export type ImportJobStatus = 'queued' | 'running' | 'completed' | 'failed' | string;
 
 export type ExportJob = {
-  id: number;
+  id: PublicId;
   name: string | null;
   file_name: string | null;
   filter_params: Record<string, unknown>;
@@ -32,7 +34,7 @@ export type ImportFailureDetails = {
 };
 
 export type ImportJob = {
-  id: number;
+  id: PublicId;
   status: ImportJobStatus;
   source_filename: string | null;
   source_storage_key: string | null;

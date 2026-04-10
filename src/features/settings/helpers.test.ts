@@ -12,7 +12,7 @@ describe('settings helpers', () => {
   it('describes storefront assets with preview-ready copy', () => {
     expect(
       storefrontAssetDetails({
-        id: 9,
+        id: 'asset-9',
         kind: 'logo',
         storage_key: 'users/1/logo.png',
         content_type: 'image/png',

@@ -66,17 +66,17 @@ describe('InquiriesScreen', () => {
       signIn: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
-    });
+    } as never);
 
     mockedUseInquiriesOverview.mockReturnValue({
       inquiries: [
         {
-          id: 7,
+          id: 'inq-7',
           full_name: 'Jane Buyer',
           contact: 'jane@example.com',
           message: 'Is this still available?',
           source_path: '/store/my-store/products/1-vintage-jacket',
-          product_id: 12,
+          product_id: 'prod-12',
           inserted_at: '2026-04-02T10:00:00Z',
         },
       ],
@@ -101,7 +101,7 @@ describe('InquiriesScreen', () => {
       clearSearch: jest.fn(),
       loadNextPage: jest.fn(),
       removeInquiry: mockRemoveInquiry.mockResolvedValue(true),
-    });
+    } as never);
   });
 
   it('renders compact inquiry rows with name, contact, and received time', () => {
@@ -183,7 +183,7 @@ describe('InquiriesScreen', () => {
     fireEvent.press(screen.getByText('Delete'));
 
     await waitFor(() => {
-      expect(mockRemoveInquiry).toHaveBeenCalledWith(7);
+      expect(mockRemoveInquiry).toHaveBeenCalledWith('inq-7');
     });
   });
 });

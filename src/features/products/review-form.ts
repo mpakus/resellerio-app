@@ -1,3 +1,4 @@
+import type { PublicId } from '@/src/lib/api/types';
 import type { ManualProductStatus, ProductDetail } from '@/src/features/products/types';
 
 export type ProductReviewDraft = {
@@ -14,7 +15,7 @@ export type ProductReviewDraft = {
   notes: string;
   tagsText: string;
   status: ManualProductStatus;
-  productTabId: number | null;
+  productTabId: PublicId | null;
 };
 
 export const manualProductStatusOptions: { label: string; value: ManualProductStatus }[] = [

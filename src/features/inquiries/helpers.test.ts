@@ -8,7 +8,7 @@ import {
 describe('inquiry helpers', () => {
   it('returns seller-facing fallback values', () => {
     const inquiry = {
-      id: 1,
+      id: 'inq-1',
       full_name: null,
       contact: null,
       message: null,

@@ -29,7 +29,7 @@ const mockedCreateAndUploadProduct = jest.mocked(createAndUploadProduct);
 describe('useProductIntake', () => {
   const productTabs = [
     {
-      id: 7,
+      id: 'tab-7',
       name: 'Shoes',
       position: 1,
       inserted_at: '2026-04-01T00:00:00Z',
@@ -89,7 +89,7 @@ describe('useProductIntake', () => {
         finalizeResponse: {
           data: {
             product: {
-              id: 44,
+              id: 'prod-44',
             },
           },
         },
@@ -103,7 +103,7 @@ describe('useProductIntake', () => {
     });
 
     act(() => {
-      result.current.setSelectedProductTabId(7);
+      result.current.setSelectedProductTabId('tab-7');
     });
 
     let product = null;
@@ -120,7 +120,7 @@ describe('useProductIntake', () => {
     );
     expect(result.current.queueItems[0]?.status).toBe('uploaded');
     expect(result.current.progress.uploaded).toBe(1);
-    expect(product).toMatchObject({ id: 44 });
+    expect(product).toMatchObject({ id: 'prod-44' });
   });
 
   it('marks a failed upload and exposes retry state', async () => {

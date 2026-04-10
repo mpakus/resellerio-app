@@ -11,7 +11,7 @@ describe('transfer helpers', () => {
       hasActiveTransfers(
         [
           {
-            id: 1,
+            id: '1',
             name: 'Catalog',
             file_name: null,
             filter_params: {},
@@ -35,7 +35,7 @@ describe('transfer helpers', () => {
   it('formats transfer details for export and import cards', () => {
     expect(
       describeExportJob({
-        id: 9,
+        id: '9',
         name: null,
         file_name: 'catalog.zip',
         filter_params: {
@@ -57,7 +57,7 @@ describe('transfer helpers', () => {
 
     expect(
       describeImportJob({
-        id: 4,
+        id: '4',
         status: 'completed',
         source_filename: 'catalog.zip',
         source_storage_key: 'users/1/imports/4/source.zip',

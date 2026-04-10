@@ -43,7 +43,7 @@ const mockStartImport = jest.fn();
 function buildSettingsOverviewMock(overrides: Record<string, unknown> = {}) {
   return {
     user: {
-      id: 1,
+      id: '1',
       email: 'seller@reseller.local',
       confirmed_at: null,
       selected_marketplaces: ['ebay'],
@@ -71,7 +71,7 @@ function buildSettingsOverviewMock(overrides: Record<string, unknown> = {}) {
       price_research: 25,
     },
     storefront: {
-      id: 3,
+      id: '3',
       slug: 'my-store',
       title: 'My Store',
       tagline: 'Curated resale.',
@@ -128,7 +128,7 @@ function buildSettingsOverviewMock(overrides: Record<string, unknown> = {}) {
     headerAsset: null,
     storefrontPages: [
       {
-        id: 7,
+        id: '7',
         title: 'About',
         slug: 'about',
         menu_label: 'About',
@@ -199,7 +199,7 @@ describe('SettingsScreen', () => {
         token: 'token-123',
         expiresAt: null,
         user: {
-          id: 1,
+          id: '1',
           email: 'seller@reseller.local',
           confirmed_at: null,
           selected_marketplaces: ['ebay'],
@@ -227,14 +227,14 @@ describe('SettingsScreen', () => {
       signIn: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
-    });
+    } as never);
 
-    mockedUseSettingsOverview.mockReturnValue(buildSettingsOverviewMock());
+    mockedUseSettingsOverview.mockReturnValue(buildSettingsOverviewMock() as never);
 
     mockedUseTransfersOverview.mockReturnValue({
       recentExports: [
         {
-          id: 11,
+          id: '11',
           name: 'Catalog export',
           file_name: 'catalog.zip',
           filter_params: {},
@@ -252,7 +252,7 @@ describe('SettingsScreen', () => {
       ],
       recentImports: [
         {
-          id: 21,
+          id: '21',
           status: 'completed',
           source_filename: 'catalog.zip',
           source_storage_key: 'users/1/imports/21/source.zip',
@@ -284,7 +284,7 @@ describe('SettingsScreen', () => {
       setExportNameDraft: jest.fn(),
       startExport: mockStartExport,
       startImport: mockStartImport,
-    });
+    } as never);
   });
 
   it('renders settings data and storefront pages', () => {
@@ -369,7 +369,7 @@ describe('SettingsScreen', () => {
   it('renders storefront asset previews and shorter replace/remove labels', () => {
     mockedUseSettingsOverview.mockReturnValue(buildSettingsOverviewMock({
       logoAsset: {
-        id: 10,
+        id: '10',
         kind: 'logo',
         storage_key: 'users/1/storefronts/3/logo.png',
         url: 'https://cdn.example.test/storefront/logo.png',
@@ -382,7 +382,7 @@ describe('SettingsScreen', () => {
         updated_at: '2026-04-01T00:00:00Z',
       },
       headerAsset: {
-        id: 11,
+        id: '11',
         kind: 'header',
         storage_key: 'users/1/storefronts/3/header.png',
         url: 'https://cdn.example.test/storefront/header.png',
@@ -394,7 +394,7 @@ describe('SettingsScreen', () => {
         inserted_at: '2026-04-01T00:00:00Z',
         updated_at: '2026-04-01T00:00:00Z',
       },
-    }));
+    }) as never);
 
     render(<SettingsScreen />);
 
@@ -410,7 +410,7 @@ describe('SettingsScreen', () => {
   it('uses icon branding actions for replace and remove', () => {
     mockedUseSettingsOverview.mockReturnValue(buildSettingsOverviewMock({
       logoAsset: {
-        id: 10,
+        id: '10',
         kind: 'logo',
         storage_key: 'users/1/storefronts/3/logo.png',
         url: 'https://cdn.example.test/storefront/logo.png',
@@ -422,7 +422,7 @@ describe('SettingsScreen', () => {
         inserted_at: '2026-04-01T00:00:00Z',
         updated_at: '2026-04-01T00:00:00Z',
       },
-    }));
+    }) as never);
 
     render(<SettingsScreen />);
 
@@ -449,7 +449,7 @@ describe('SettingsScreen', () => {
       fireEvent.press(screen.getByText('Delete'));
     });
 
-    expect(mockRemovePage).toHaveBeenCalledWith(7);
+    expect(mockRemovePage).toHaveBeenCalledWith('7');
   });
 
   it('renders theme cards and expands the theme list on demand', () => {

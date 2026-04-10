@@ -1,4 +1,5 @@
 import { apiRequest } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import { buildProductsQuery } from '@/src/features/products/helpers';
 import type { StorefrontResponse } from '@/src/features/settings/types';
 import type {
@@ -21,7 +22,7 @@ export function listProducts(token: string, filters: ProductsFilters) {
   });
 }
 
-export function getProduct(token: string, productId: number) {
+export function getProduct(token: string, productId: PublicId) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}`, { token });
 }
 
@@ -31,7 +32,7 @@ export function getCurrentStorefront(token: string) {
 
 export function updateProduct(
   token: string,
-  productId: number,
+  productId: PublicId,
   body: {
     product: Record<string, unknown>;
     marketplace_external_urls?: Record<string, string | null>;
@@ -44,7 +45,7 @@ export function updateProduct(
   });
 }
 
-export function reprocessProduct(token: string, productId: number) {
+export function reprocessProduct(token: string, productId: PublicId) {
   return apiRequest<ProductReprocessResponse>(`/products/${productId}/reprocess`, {
     method: 'POST',
     token,
@@ -52,7 +53,7 @@ export function reprocessProduct(token: string, productId: number) {
   });
 }
 
-export function markProductSold(token: string, productId: number) {
+export function markProductSold(token: string, productId: PublicId) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}/mark_sold`, {
     method: 'POST',
     token,
@@ -60,7 +61,7 @@ export function markProductSold(token: string, productId: number) {
   });
 }
 
-export function archiveProduct(token: string, productId: number) {
+export function archiveProduct(token: string, productId: PublicId) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}/archive`, {
     method: 'POST',
     token,
@@ -68,7 +69,7 @@ export function archiveProduct(token: string, productId: number) {
   });
 }
 
-export function unarchiveProduct(token: string, productId: number) {
+export function unarchiveProduct(token: string, productId: PublicId) {
   return apiRequest<ProductDetailResponse>(`/products/${productId}/unarchive`, {
     method: 'POST',
     token,
@@ -76,14 +77,14 @@ export function unarchiveProduct(token: string, productId: number) {
   });
 }
 
-export function deleteProduct(token: string, productId: number) {
+export function deleteProduct(token: string, productId: PublicId) {
   return apiRequest<{ data: { deleted: boolean } }>(`/products/${productId}`, {
     method: 'DELETE',
     token,
   });
 }
 
-export function generateLifestyleImages(token: string, productId: number, sceneKey?: string) {
+export function generateLifestyleImages(token: string, productId: PublicId, sceneKey?: string) {
   return apiRequest<LifestyleGenerationResponse>(`/products/${productId}/generate_lifestyle_images`, {
     method: 'POST',
     token,
@@ -91,13 +92,13 @@ export function generateLifestyleImages(token: string, productId: number, sceneK
   });
 }
 
-export function listLifestyleGenerationRuns(token: string, productId: number) {
+export function listLifestyleGenerationRuns(token: string, productId: PublicId) {
   return apiRequest<LifestyleGenerationRunsResponse>(`/products/${productId}/lifestyle_generation_runs`, {
     token,
   });
 }
 
-export function approveGeneratedImage(token: string, productId: number, imageId: number) {
+export function approveGeneratedImage(token: string, productId: PublicId, imageId: PublicId) {
   return apiRequest<ProductMutationResponse>(`/products/${productId}/generated_images/${imageId}/approve`, {
     method: 'POST',
     token,
@@ -105,7 +106,7 @@ export function approveGeneratedImage(token: string, productId: number, imageId:
   });
 }
 
-export function deleteGeneratedImage(token: string, productId: number, imageId: number) {
+export function deleteGeneratedImage(token: string, productId: PublicId, imageId: PublicId) {
   return apiRequest<ProductMutationResponse>(`/products/${productId}/generated_images/${imageId}`, {
     method: 'DELETE',
     token,
@@ -114,8 +115,8 @@ export function deleteGeneratedImage(token: string, productId: number, imageId: 
 
 export function updateImageStorefront(
   token: string,
-  productId: number,
-  imageId: number,
+  productId: PublicId,
+  imageId: PublicId,
   body: {
     storefront_visible?: boolean;
     storefront_position?: number | null;
@@ -128,7 +129,7 @@ export function updateImageStorefront(
   });
 }
 
-export function reorderStorefrontImages(token: string, productId: number, imageIds: number[]) {
+export function reorderStorefrontImages(token: string, productId: PublicId, imageIds: PublicId[]) {
   return apiRequest<ProductMutationResponse>(`/products/${productId}/images/storefront_order`, {
     method: 'PUT',
     token,
@@ -154,7 +155,7 @@ export function createProduct(
 
 export function finalizeProductUploads(
   token: string,
-  productId: number,
+  productId: PublicId,
   uploads: Record<string, unknown>[],
 ) {
   return apiRequest<FinalizeUploadsResponse>(`/products/${productId}/finalize_uploads`, {
@@ -180,7 +181,7 @@ export function createProductTab(token: string, name: string) {
   });
 }
 
-export function updateProductTab(token: string, tabId: number, name: string) {
+export function updateProductTab(token: string, tabId: PublicId, name: string) {
   return apiRequest<ProductTabResponse>(`/product_tabs/${tabId}`, {
     method: 'PATCH',
     token,
@@ -192,7 +193,7 @@ export function updateProductTab(token: string, tabId: number, name: string) {
   });
 }
 
-export function deleteProductTab(token: string, tabId: number) {
+export function deleteProductTab(token: string, tabId: PublicId) {
   return apiRequest<{ data: { deleted: boolean } }>(`/product_tabs/${tabId}`, {
     method: 'DELETE',
     token,

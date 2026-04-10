@@ -34,21 +34,21 @@ describe('product detail presentation helpers', () => {
     expect(
       sortStorefrontImages([
         {
-          id: 3,
+          id: 'img-3',
           processing_status: 'ready',
           storefront_visible: true,
           storefront_position: 2,
           position: 3,
         },
         {
-          id: 2,
+          id: 'img-2',
           processing_status: 'ready',
           storefront_visible: true,
           storefront_position: 1,
           position: 2,
         },
         {
-          id: 1,
+          id: 'img-1',
           processing_status: 'processing',
           storefront_visible: true,
           storefront_position: 3,
@@ -56,15 +56,15 @@ describe('product detail presentation helpers', () => {
         },
       ] as never),
     ).toEqual([
-      expect.objectContaining({ id: 2 }),
-      expect.objectContaining({ id: 3 }),
+      expect.objectContaining({ id: 'img-2' }),
+      expect.objectContaining({ id: 'img-3' }),
     ]);
   });
 
   it('moves storefront image ids earlier or later', () => {
-    expect(buildReorderedStorefrontImageIds([10, 20, 30], 20, 'earlier')).toEqual([20, 10, 30]);
-    expect(buildReorderedStorefrontImageIds([10, 20, 30], 20, 'later')).toEqual([10, 30, 20]);
-    expect(buildReorderedStorefrontImageIds([10, 20, 30], 10, 'earlier')).toEqual([10, 20, 30]);
+    expect(buildReorderedStorefrontImageIds(['img-10', 'img-20', 'img-30'], 'img-20', 'earlier')).toEqual(['img-20', 'img-10', 'img-30']);
+    expect(buildReorderedStorefrontImageIds(['img-10', 'img-20', 'img-30'], 'img-20', 'later')).toEqual(['img-10', 'img-30', 'img-20']);
+    expect(buildReorderedStorefrontImageIds(['img-10', 'img-20', 'img-30'], 'img-10', 'earlier')).toEqual(['img-10', 'img-20', 'img-30']);
   });
 
   it('formats timestamps, confidence, and currency for detail panels', () => {
@@ -106,18 +106,18 @@ describe('product detail presentation helpers', () => {
   it('builds the public storefront product URL and filters previewable images', () => {
     expect(
       buildStorefrontProductUrl('my-store', {
-        id: 11,
+        id: 'prod-11',
         title: 'Nike Air Max 90',
       } as never, 'https://resellerio.com'),
-    ).toBe('https://resellerio.com/store/my-store/products/11-nike-air-max-90');
+    ).toBe('https://resellerio.com/store/my-store/products/prod-11-nike-air-max-90');
 
     expect(
       filterRenderableImages([
-        { id: 1, kind: 'original', url: null, position: 2, storefront_position: null },
-        { id: 2, kind: 'original', url: 'https://cdn.example/original.jpg', position: 1, storefront_position: null },
-        { id: 3, kind: 'background_removed', url: 'https://cdn.example/processed.png', position: 1, storefront_position: null },
+        { id: 'img-1', kind: 'original', url: null, position: 2, storefront_position: null },
+        { id: 'img-2', kind: 'original', url: 'https://cdn.example/original.jpg', position: 1, storefront_position: null },
+        { id: 'img-3', kind: 'background_removed', url: 'https://cdn.example/processed.png', position: 1, storefront_position: null },
       ] as never, 'original'),
-    ).toEqual([expect.objectContaining({ id: 2 })]);
+    ).toEqual([expect.objectContaining({ id: 'img-2' })]);
   });
 
   it('humanizes and collects lifestyle scene keys', () => {
@@ -137,7 +137,7 @@ describe('product detail presentation helpers', () => {
       buildProductsQuery({
         status: 'ready',
         query: 'nike',
-        productTabId: 7,
+        productTabId: 'tab-7',
         updatedFrom: '2026-03-01',
         updatedTo: '2026-03-31',
         sort: 'price',
@@ -145,7 +145,7 @@ describe('product detail presentation helpers', () => {
         page: 2,
       }),
     ).toBe(
-      'status=ready&page=2&sort=price&dir=asc&query=nike&product_tab_id=7&updated_from=2026-03-01&updated_to=2026-03-31',
+      'status=ready&page=2&sort=price&dir=asc&query=nike&product_tab_id=tab-7&updated_from=2026-03-01&updated_to=2026-03-31',
     );
 
     expect(

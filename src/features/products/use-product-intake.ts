@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import {
   createAndUploadProduct,
   ProductUploadError,
@@ -19,7 +20,7 @@ export type IntakeQueueItem = {
 
 export function useProductIntake(token: string, productTabs: ProductTab[]) {
   const [queueItems, setQueueItems] = useState<IntakeQueueItem[]>([]);
-  const [selectedProductTabId, setSelectedProductTabId] = useState<number | null>(null);
+  const [selectedProductTabId, setSelectedProductTabId] = useState<PublicId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

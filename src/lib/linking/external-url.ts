@@ -35,6 +35,11 @@ export function sanitizeExternalUrl(value: string | null | undefined) {
     const parsed = new URL(trimmedValue);
     const protocol = parsed.protocol.toLowerCase();
 
+    // Never allow externally opened URLs to embed credentials.
+    if (parsed.username || parsed.password) {
+      return null;
+    }
+
     if (protocol === 'https:') {
       return parsed.toString();
     }

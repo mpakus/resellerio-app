@@ -1,3 +1,4 @@
+import type { PublicId } from '@/src/lib/api/types';
 import type {
   Storefront,
   StorefrontDraft,
@@ -182,8 +183,8 @@ export function addonCreditsSummary(addonCredits: Record<string, number>) {
 }
 
 export function buildReorderedStorefrontPageIds(
-  pageIds: number[],
-  pageId: number,
+  pageIds: PublicId[],
+  pageId: PublicId,
   direction: 'earlier' | 'later',
 ) {
   const currentIndex = pageIds.indexOf(pageId);

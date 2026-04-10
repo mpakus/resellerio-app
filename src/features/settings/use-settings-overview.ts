@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { getCurrentUsage, getCurrentUser } from '@/src/lib/api/auth';
 import { formatApiError } from '@/src/lib/api/client';
+import type { PublicId } from '@/src/lib/api/types';
 import { emptySession } from '@/src/lib/auth/session';
 import {
   buildStorefrontAssetPayload,
@@ -77,8 +78,8 @@ export function useSettingsOverview(token: string) {
   const [isSavingPage, setIsSavingPage] = useState(false);
   const [uploadingAssetKind, setUploadingAssetKind] = useState<StorefrontAssetKind | null>(null);
   const [deletingAssetKind, setDeletingAssetKind] = useState<StorefrontAssetKind | null>(null);
-  const [deletingPageId, setDeletingPageId] = useState<number | null>(null);
-  const [reorderingPageId, setReorderingPageId] = useState<number | null>(null);
+  const [deletingPageId, setDeletingPageId] = useState<PublicId | null>(null);
+  const [reorderingPageId, setReorderingPageId] = useState<PublicId | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [marketplaceError, setMarketplaceError] = useState<string | null>(null);
@@ -329,7 +330,7 @@ export function useSettingsOverview(token: string) {
     }
   }
 
-  async function savePage(pageId: number, draft: StorefrontPageDraft) {
+  async function savePage(pageId: PublicId, draft: StorefrontPageDraft) {
     setIsSavingPage(true);
     setPageError(null);
 
@@ -356,7 +357,7 @@ export function useSettingsOverview(token: string) {
     }
   }
 
-  async function removePage(pageId: number) {
+  async function removePage(pageId: PublicId) {
     setDeletingPageId(pageId);
     setPageError(null);
 
@@ -381,7 +382,7 @@ export function useSettingsOverview(token: string) {
     }
   }
 
-  async function savePageOrder(pageIds: number[], activePageId: number) {
+  async function savePageOrder(pageIds: PublicId[], activePageId: PublicId) {
     setReorderingPageId(activePageId);
     setPageError(null);
 

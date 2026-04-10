@@ -16,6 +16,7 @@ import {
   StandardBottomNav,
   TextField,
 } from '@/src/components/ui';
+import type { PublicId } from '@/src/lib/api/types';
 import { openExternalUrlSafely, shareExternalUrlSafely } from '@/src/lib/linking/external-url';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { manualProductStatusOptions } from '@/src/features/products/review-form';
@@ -292,7 +293,7 @@ function StorefrontSelectionToggle({
   disabled,
   onToggle,
 }: {
-  imageId: number;
+  imageId: PublicId;
   isSelected: boolean;
   disabled: boolean;
   onToggle: () => void;
@@ -468,11 +469,11 @@ export default function ProductDetailScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ProductImage | null>(null);
   const [deleteLifestyleTarget, setDeleteLifestyleTarget] = useState<ProductImage | null>(null);
-  const [expandedMarketplaceIds, setExpandedMarketplaceIds] = useState<number[]>([]);
+  const [expandedMarketplaceIds, setExpandedMarketplaceIds] = useState<PublicId[]>([]);
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { session } = useAuth();
 
-  const productId = Number(id);
+  const productId = typeof id === 'string' && id.trim().length > 0 ? id : null;
 
   const {
     product,
@@ -502,7 +503,7 @@ export default function ProductDetailScreen() {
     saveStorefrontImageOrder,
   } = useProductDetail(
     session.token,
-    Number.isFinite(productId) ? productId : 0,
+    productId ?? '',
   );
   const {
     productTabs,
@@ -535,7 +536,7 @@ export default function ProductDetailScreen() {
     onSave: saveProduct,
   });
 
-  if (!Number.isFinite(productId) || productId <= 0) {
+  if (!productId) {
     return (
       <Screen contentContainerStyle={{ justifyContent: 'center' }}>
         <InlineError message="Invalid product ID." />
@@ -589,7 +590,7 @@ export default function ProductDetailScreen() {
     setSelectedImage((currentImage) => (currentImage?.id === deletedImageId ? null : currentImage));
   }
 
-  async function handleMoveStorefrontImage(imageId: number, direction: 'earlier' | 'later') {
+  async function handleMoveStorefrontImage(imageId: PublicId, direction: 'earlier' | 'later') {
     const reorderedIds = buildReorderedStorefrontImageIds(
       storefrontImages.map((image) => image.id),
       imageId,
@@ -599,7 +600,7 @@ export default function ProductDetailScreen() {
     await saveStorefrontImageOrder(reorderedIds);
   }
 
-  function toggleMarketplaceListing(listingId: number) {
+  function toggleMarketplaceListing(listingId: PublicId) {
     setExpandedMarketplaceIds((currentIds) =>
       currentIds.includes(listingId)
         ? currentIds.filter((currentId) => currentId !== listingId)

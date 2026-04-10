@@ -5,7 +5,7 @@ import type { ProductDetail } from '@/src/features/products/types';
 
 describe('useProductReviewForm', () => {
   const product = {
-    id: 11,
+    id: 'prod-11',
     status: 'review',
     source: 'manual',
     title: 'Nike Air Max 90',
@@ -17,9 +17,9 @@ describe('useProductReviewForm', () => {
     material: 'Leather',
     price: '84.00',
     cost: '30.00',
-    product_tab_id: 7,
+    product_tab_id: 'tab-7',
     product_tab: {
-      id: 7,
+      id: 'tab-7',
       name: 'Shoes',
       position: 1,
     },

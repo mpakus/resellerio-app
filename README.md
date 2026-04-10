@@ -4,6 +4,8 @@ Expo + React Native mobile app for ResellerIO sellers on iOS and Android.
 
 The app mirrors the web seller workspace as closely as practical against the existing Phoenix `/api/v1` backend. Current mobile coverage includes auth, products, upload-first intake, AI review, lifestyle images, storefront controls, inquiries, settings, transfers, and the home dashboard.
 
+Public API identifiers now use ULID strings. In mobile code, treat serialized `id` and `*_id` values as strings across route params, API models, and any locally cached recent-resource IDs.
+
 ## Backend
 
 - Local web/API: [http://localhost:4000](http://localhost:4000)
@@ -121,7 +123,9 @@ Recent hardening in this repo:
   - `https://...`
   - local-development `http://...` URLs such as `localhost`, `10.0.2.2`, private LAN ranges, and `.local`
 - Unsupported schemes like `javascript:` and unsafe public `http://` URLs are blocked
+- Credential-bearing URLs like `https://user:pass@host/...` are blocked from open/share flows
 - API responses are parsed defensively so non-JSON proxy/server errors fail safely instead of crashing the client
+- API requests now fail closed on HTTP redirects instead of following unexpected redirect chains
 - Native auth persistence uses Expo SecureStore
 - Web fallback auth persistence now uses session-scoped storage instead of long-lived `localStorage`
 

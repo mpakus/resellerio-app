@@ -20,7 +20,7 @@ export const emptySession: Session = {
   token: '',
   expiresAt: null,
   user: {
-    id: 0,
+    id: '',
     email: '',
     confirmed_at: null,
     selected_marketplaces: [],

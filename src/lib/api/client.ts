@@ -22,6 +22,7 @@ export class ApiError extends Error {
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}) {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: options.method ?? 'GET',
+    redirect: 'error',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
