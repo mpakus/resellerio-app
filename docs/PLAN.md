@@ -108,6 +108,7 @@ Primary seller journey:
 - [x] 2026-04-10 Step 85: Finished a follow-up security and warning pass by removing the remaining Home test warning, blocking credential-bearing external URLs, making API redirects fail closed, and adding regression tests plus documentation for those protections.
 - [x] 2026-04-12 Step 86: Optimized New Product intake by resizing picked images to a 1200px-wide JPEG at 0.7 compression before signed upload, added a visible resize-progress bar and preparing state, aligned picker limits to the real 3-image cap, and expanded intake plus shared-UI unit coverage.
 - [x] 2026-04-12 Step 87: Fixed mobile seller registration to match the backend password rule by enforcing a 12-72 character password client-side, correcting sign-up copy, and adding validation plus screen regression tests.
+- [x] 2026-04-12 Step 88: Fixed the New Product photo cap so the library picker now uses remaining slots instead of always allowing three more selections, blocks add-actions once the queue is full, and adds regression coverage for the 3-image limit.
 
 ## Current Web Functionality Analyzed
 

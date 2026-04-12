@@ -119,6 +119,49 @@ describe('useProductIntake', () => {
     );
   });
 
+  it('limits the library picker to the remaining queue slots', async () => {
+    const { result } = renderHook(() => useProductIntake('token-123', productTabs));
+
+    await act(async () => {
+      await result.current.pickImages();
+    });
+
+    mockedLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [selectedAssets[0]],
+    });
+
+    await act(async () => {
+      await result.current.pickImages();
+    });
+
+    expect(mockedLaunchImageLibraryAsync).toHaveBeenLastCalledWith(
+      expect.objectContaining({ selectionLimit: MAX_INTAKE_IMAGES - 1 }),
+    );
+  });
+
+  it('blocks opening the picker when the queue is already full', async () => {
+    mockedLaunchImageLibraryAsync.mockResolvedValue({
+      canceled: false,
+      assets: [selectedAssets[0], selectedAssets[0], selectedAssets[0]],
+    });
+
+    const { result } = renderHook(() => useProductIntake('token-123', productTabs));
+
+    await act(async () => {
+      await result.current.pickImages();
+    });
+
+    expect(result.current.remainingSlots).toBe(0);
+
+    await act(async () => {
+      await result.current.pickImages();
+    });
+
+    expect(result.current.error).toBe('You can add up to 3 images per product.');
+    expect(mockedLaunchImageLibraryAsync).toHaveBeenCalledTimes(1);
+  });
+
   it('tracks resize progress before the upload queue begins', async () => {
     const resizeDeferred = createDeferred<OptimizedAsset>();
     mockedOptimizeIntakeAsset.mockImplementation(() => resizeDeferred.promise);

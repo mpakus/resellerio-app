@@ -53,6 +53,7 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
     );
   }, [queueItems]);
   const hasFailedUploads = progress.failed > 0;
+  const remainingSlots = Math.max(0, MAX_INTAKE_IMAGES - queueItems.length);
 
   async function appendAssets(pickedAssets: IntakeAsset[]) {
     if (isPreparingAssets || isSubmitting) {
@@ -61,14 +62,12 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
 
     setError(null);
 
-    const availableSlots = Math.max(0, MAX_INTAKE_IMAGES - queueItems.length);
-
-    if (availableSlots === 0) {
+    if (remainingSlots === 0) {
       setError(`You can add up to ${MAX_INTAKE_IMAGES} images per product.`);
       return;
     }
 
-    const nextAssets = pickedAssets.slice(0, availableSlots);
+    const nextAssets = pickedAssets.slice(0, remainingSlots);
 
     if (nextAssets.length < pickedAssets.length) {
       setError(`Only the first ${MAX_INTAKE_IMAGES} images are kept for a new product.`);
@@ -131,6 +130,11 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
   }
 
   async function pickImages() {
+    if (remainingSlots === 0) {
+      setError(`You can add up to ${MAX_INTAKE_IMAGES} images per product.`);
+      return;
+    }
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
@@ -142,7 +146,7 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
       quality: 1,
-      selectionLimit: MAX_INTAKE_IMAGES,
+      selectionLimit: remainingSlots,
     });
 
     if (result.canceled) {
@@ -153,6 +157,11 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
   }
 
   async function captureImage() {
+    if (remainingSlots === 0) {
+      setError(`You can add up to ${MAX_INTAKE_IMAGES} images per product.`);
+      return;
+    }
+
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
@@ -253,6 +262,7 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
     error,
     progress,
     hasFailedUploads,
+    remainingSlots,
     pickImages,
     captureImage,
     removeAsset,

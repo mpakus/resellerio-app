@@ -21,6 +21,7 @@ export default function NewProductScreen() {
     error,
     progress,
     hasFailedUploads,
+    remainingSlots,
     pickImages,
     captureImage,
     removeAsset,
@@ -34,6 +35,7 @@ export default function NewProductScreen() {
       ? `Uploading ${progress.uploaded + progress.uploading} of ${totalAssets}`
       : `${totalAssets} selected · ${progress.uploaded} uploaded · ${progress.failed} failed`;
   const isBusy = isPreparingAssets || isSubmitting;
+  const isAtImageLimit = remainingSlots === 0;
   const resizeBarProgress =
     resizeProgress.total > 0 ? resizeProgress.completed / resizeProgress.total : 0;
   const resizeCurrentFileName = resizeProgress.currentFileName?.trim() || 'selected image';
@@ -75,7 +77,7 @@ export default function NewProductScreen() {
             <View style={{ flex: 1 }}>
               <Button
                 label="Pick Photos"
-                disabled={isBusy}
+                disabled={isBusy || isAtImageLimit}
                 onPress={() => {
                   void pickImages();
                 }}
@@ -85,7 +87,7 @@ export default function NewProductScreen() {
               <Button
                 label="Use Camera"
                 kind="secondary"
-                disabled={isBusy}
+                disabled={isBusy || isAtImageLimit}
                 onPress={() => {
                   void captureImage();
                 }}
@@ -96,6 +98,11 @@ export default function NewProductScreen() {
             Up to 3 images. We resize each photo before upload and use the optimized width,
             height, and byte size for upload finalization.
           </Text>
+          {isAtImageLimit ? (
+            <Text style={{ color: colors.accent, fontSize: 13, fontWeight: '700' }}>
+              Maximum 3 images selected. Remove one to add another.
+            </Text>
+          ) : null}
         </View>
 
         {isPreparingAssets ? (

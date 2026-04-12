@@ -161,7 +161,7 @@ Completed in the app:
 - Storefront Gallery selection now uses a top-right circle toggle instead of add/remove buttons
 - Storefront Gallery now keeps images in one stable list and places the selection toggle directly over the image preview
 - Inquiries inbox now uses compact rows with full name, contact, and received-at time, opening a detail dialog for message review and delete
-- Upload-first product intake now resizes picked images to 1200px-wide JPEGs at 0.7 compression before signed upload, with a visible mobile resize-progress state before the upload queue starts
+- Upload-first product intake now resizes picked images to 1200px-wide JPEGs at 0.7 compression before signed upload, with a visible mobile resize-progress state before the upload queue starts, a real remaining-slots picker limit, and add-actions that lock once the 3-image cap is reached
 - Product review editing and lifecycle actions
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions
 - Lifestyle generation controls, regenerate-all and regenerate-by-scene actions, approval/delete actions, storefront image selection/order, and storefront publish/share flows
