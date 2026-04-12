@@ -2,6 +2,7 @@ import {
   buildCreateProductPayload,
   buildFinalizePayload,
   createAndUploadProduct,
+  optimizeIntakeAsset,
 } from '@/src/features/products/intake';
 import * as productApi from '@/src/features/products/api';
 
@@ -36,6 +37,81 @@ describe('product intake helpers', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('optimizes selected images before upload with the mobile resize settings', async () => {
+    const manipulateImage = jest.fn().mockResolvedValue({
+      uri: 'file:///shoe-front-optimized.jpg',
+      width: 1200,
+      height: 900,
+    });
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({
+      blob: jest.fn().mockResolvedValue({ size: 64000 }),
+    } as never);
+
+    try {
+      const result = await optimizeIntakeAsset(
+        {
+          assetId: '1',
+          fileName: 'shoe-front.png',
+          fileSize: 120000,
+          height: 1600,
+          mimeType: 'image/png',
+          type: 'image',
+          uri: 'file:///shoe-front.png',
+          width: 1600,
+        },
+        manipulateImage,
+      );
+
+      expect(manipulateImage).toHaveBeenCalledWith(
+        'file:///shoe-front.png',
+        [{ resize: { width: 1200 } }],
+        { compress: 0.7, format: 'jpeg' },
+      );
+      expect(global.fetch).toHaveBeenCalledWith('file:///shoe-front-optimized.jpg');
+      expect(result).toMatchObject({
+        uri: 'file:///shoe-front-optimized.jpg',
+        width: 1200,
+        height: 900,
+        fileSize: 64000,
+        mimeType: 'image/jpeg',
+        fileName: 'shoe-front.jpg',
+      });
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('falls back to the original byte size when the optimized file size cannot be read', async () => {
+    const manipulateImage = jest.fn().mockResolvedValue({
+      uri: 'file:///shoe-front-optimized.jpg',
+      width: 1200,
+      height: 900,
+    });
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockRejectedValue(new Error('Cannot read optimized blob'));
+
+    try {
+      const result = await optimizeIntakeAsset(
+        {
+          assetId: '1',
+          fileName: 'shoe-front.png',
+          fileSize: 120000,
+          height: 1600,
+          mimeType: 'image/png',
+          type: 'image',
+          uri: 'file:///shoe-front.png',
+          width: 1600,
+        },
+        manipulateImage,
+      );
+
+      expect(result.fileSize).toBe(120000);
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   it('builds the create payload with upload metadata and optional tab id', () => {

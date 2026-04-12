@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { BrandedTitle, LinkText, StandardBottomNav, TextField } from '@/src/components/ui';
+import { BrandedTitle, LinkText, ProgressBar, StandardBottomNav, TextField } from '@/src/components/ui';
 
 jest.mock('expo-router', () => ({
   router: {
@@ -63,5 +63,11 @@ describe('TextField copy action', () => {
     expect(screen.getByText('Products')).toBeTruthy();
     expect(screen.getByText('Inquiries')).toBeTruthy();
     expect(screen.getByText('Settings')).toBeTruthy();
+  });
+
+  it('renders a determinate progress bar', () => {
+    render(<ProgressBar progress={0.5} />);
+
+    expect(screen.getByTestId('progress-bar')).toBeTruthy();
   });
 });

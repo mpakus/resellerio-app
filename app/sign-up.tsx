@@ -5,6 +5,11 @@ import { Text, View } from 'react-native';
 import { BrandedTitle, Button, InlineError, Screen, TextField } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { formatApiError } from '@/src/lib/api/client';
+import {
+  REGISTRATION_PASSWORD_MIN_LENGTH,
+  REGISTRATION_PASSWORD_MAX_LENGTH,
+  validateRegistrationCredentials,
+} from '@/src/lib/auth/validation';
 import { colors } from '@/src/theme/colors';
 
 export default function SignUpScreen() {
@@ -15,6 +20,13 @@ export default function SignUpScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
+    const validationError = validateRegistrationCredentials(email, password);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -65,7 +77,7 @@ export default function SignUpScreen() {
             label="Password"
             autoCapitalize="none"
             autoComplete="new-password"
-            placeholder="At least 8 characters"
+            placeholder={`At least ${REGISTRATION_PASSWORD_MIN_LENGTH} characters`}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -73,6 +85,9 @@ export default function SignUpScreen() {
               void handleSubmit();
             }}
           />
+          <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+            {`Password must be ${REGISTRATION_PASSWORD_MIN_LENGTH}-${REGISTRATION_PASSWORD_MAX_LENGTH} characters to match the current seller API requirements.`}
+          </Text>
 
           {error ? <InlineError message={error} /> : null}
 

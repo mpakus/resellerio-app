@@ -248,6 +248,20 @@ export function InlineError({ message }: { message: string }) {
   );
 }
 
+type ProgressBarProps = {
+  progress: number;
+};
+
+export function ProgressBar({ progress }: ProgressBarProps) {
+  const clampedProgress = Math.max(0, Math.min(1, progress));
+
+  return (
+    <View accessibilityRole="progressbar" testID="progress-bar" style={styles.progressTrack}>
+      <View style={[styles.progressFill, { width: `${clampedProgress * 100}%` }]} />
+    </View>
+  );
+}
+
 type SectionCardProps = {
   eyebrow: string;
   title: string;
@@ -575,6 +589,17 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontSize: 14,
     lineHeight: 20,
+  },
+  progressTrack: {
+    height: 10,
+    overflow: 'hidden',
+    borderRadius: 999,
+    backgroundColor: colors.accentSoft,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: colors.accent,
   },
   sectionCard: {
     gap: 8,

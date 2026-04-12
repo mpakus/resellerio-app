@@ -4,6 +4,8 @@ Expo + React Native mobile app for ResellerIO sellers on iOS and Android.
 
 The app mirrors the web seller workspace as closely as practical against the existing Phoenix `/api/v1` backend. Current mobile coverage includes auth, products, upload-first intake, AI review, lifestyle images, storefront controls, inquiries, settings, transfers, and the home dashboard.
 
+New-product intake now optimizes picked images on-device before upload by resizing them to a 1200px-wide JPEG at 0.7 compression, then uploading the lighter files through the existing signed-storage flow.
+
 Public API identifiers now use ULID strings. In mobile code, treat serialized `id` and `*_id` values as strings across route params, API models, and any locally cached recent-resource IDs.
 
 ## Backend
@@ -93,6 +95,10 @@ Use the local seller account for development and manual testing:
 
 - Email: `seller@reseller.local`
 - Password: `very-secure-password`
+
+Registration note:
+
+- seller password sign-up currently requires `12-72` characters because the mobile app follows the backend `User.registration_changeset` rule
 
 ## Scripts
 

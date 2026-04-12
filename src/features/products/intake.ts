@@ -1,12 +1,19 @@
 import type { ImagePickerAsset } from 'expo-image-picker';
+import { SaveFormat, manipulateAsync } from 'expo-image-manipulator';
 
 import { createProduct, finalizeProductUploads } from '@/src/features/products/api';
 import type { ProductTab, UploadInstruction } from '@/src/features/products/types';
+
+export const MAX_INTAKE_IMAGES = 3;
+const MAX_UPLOAD_WIDTH = 1200;
+const IMAGE_COMPRESSION = 0.7;
 
 export type IntakeAsset = Pick<
   ImagePickerAsset,
   'assetId' | 'fileName' | 'fileSize' | 'height' | 'mimeType' | 'type' | 'uri' | 'width'
 >;
+
+type ManipulateImage = typeof manipulateAsync;
 
 type CreateAndUploadProductArgs = {
   token: string;
@@ -43,6 +50,32 @@ export function buildCreateProductPayload(assets: IntakeAsset[], productTab: Pro
       height: asset.height,
     })),
   };
+}
+
+export async function optimizeIntakeAsset(
+  asset: IntakeAsset,
+  manipulateImage: ManipulateImage = manipulateAsync,
+) {
+  const targetWidth =
+    asset.width && asset.width > 0
+      ? Math.min(asset.width, MAX_UPLOAD_WIDTH)
+      : MAX_UPLOAD_WIDTH;
+  const optimized = await manipulateImage(
+    asset.uri,
+    [{ resize: { width: targetWidth } }],
+    { compress: IMAGE_COMPRESSION, format: SaveFormat.JPEG },
+  );
+  const optimizedByteSize = await resolveOptimizedByteSize(optimized.uri, asset.fileSize);
+
+  return {
+    ...asset,
+    uri: optimized.uri,
+    width: optimized.width,
+    height: optimized.height,
+    fileSize: optimizedByteSize,
+    mimeType: 'image/jpeg',
+    fileName: buildOptimizedFileName(asset.fileName),
+  } satisfies IntakeAsset;
 }
 
 export function buildFinalizePayload(
@@ -133,4 +166,24 @@ function resolveUploadErrorMessage(asset: IntakeAsset, cause: unknown) {
   }
 
   return `Upload failed for ${asset.fileName ?? 'image'}.`;
+}
+
+function buildOptimizedFileName(fileName: string | null | undefined) {
+  const trimmed = fileName?.trim();
+
+  if (!trimmed) {
+    return 'photo.jpg';
+  }
+
+  return trimmed.replace(/\.[a-z0-9]+$/i, '.jpg');
+}
+
+async function resolveOptimizedByteSize(uri: string, fallbackByteSize: number | null | undefined) {
+  try {
+    const optimizedBlob = await fetch(uri).then((response) => response.blob());
+
+    return optimizedBlob.size || fallbackByteSize || undefined;
+  } catch {
+    return fallbackByteSize || undefined;
+  }
 }

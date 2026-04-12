@@ -5,12 +5,14 @@ import { formatApiError } from '@/src/lib/api/client';
 import type { PublicId } from '@/src/lib/api/types';
 import {
   createAndUploadProduct,
+  MAX_INTAKE_IMAGES,
+  optimizeIntakeAsset,
   ProductUploadError,
   type IntakeAsset,
 } from '@/src/features/products/intake';
 import type { ProductDetail, ProductTab } from '@/src/features/products/types';
 
-export type IntakeQueueStatus = 'queued' | 'uploading' | 'uploaded' | 'failed';
+export type IntakeQueueStatus = 'resizing' | 'queued' | 'uploading' | 'uploaded' | 'failed';
 
 export type IntakeQueueItem = {
   asset: IntakeAsset;
@@ -18,10 +20,22 @@ export type IntakeQueueItem = {
   error: string | null;
 };
 
+export type ResizeProgress = {
+  completed: number;
+  currentFileName: string | null;
+  total: number;
+};
+
 export function useProductIntake(token: string, productTabs: ProductTab[]) {
   const [queueItems, setQueueItems] = useState<IntakeQueueItem[]>([]);
   const [selectedProductTabId, setSelectedProductTabId] = useState<PublicId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPreparingAssets, setIsPreparingAssets] = useState(false);
+  const [resizeProgress, setResizeProgress] = useState<ResizeProgress>({
+    completed: 0,
+    currentFileName: null,
+    total: 0,
+  });
   const [error, setError] = useState<string | null>(null);
 
   const selectedProductTab = useMemo(
@@ -35,14 +49,85 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
         counts[item.status] += 1;
         return counts;
       },
-      { queued: 0, uploading: 0, uploaded: 0, failed: 0 },
+      { resizing: 0, queued: 0, uploading: 0, uploaded: 0, failed: 0 },
     );
   }, [queueItems]);
   const hasFailedUploads = progress.failed > 0;
 
-  function appendAssets(pickedAssets: IntakeAsset[]) {
+  async function appendAssets(pickedAssets: IntakeAsset[]) {
+    if (isPreparingAssets || isSubmitting) {
+      return;
+    }
+
     setError(null);
-    setQueueItems((current) => [...current, ...pickedAssets.map(appendQueueItem)].slice(0, 10));
+
+    const availableSlots = Math.max(0, MAX_INTAKE_IMAGES - queueItems.length);
+
+    if (availableSlots === 0) {
+      setError(`You can add up to ${MAX_INTAKE_IMAGES} images per product.`);
+      return;
+    }
+
+    const nextAssets = pickedAssets.slice(0, availableSlots);
+
+    if (nextAssets.length < pickedAssets.length) {
+      setError(`Only the first ${MAX_INTAKE_IMAGES} images are kept for a new product.`);
+    }
+
+    if (nextAssets.length === 0) {
+      return;
+    }
+
+    const queueOffset = queueItems.length;
+
+    setIsPreparingAssets(true);
+    setResizeProgress({
+      completed: 0,
+      currentFileName: nextAssets[0]?.fileName ?? null,
+      total: nextAssets.length,
+    });
+    setQueueItems((current) => [...current, ...nextAssets.map(createResizingQueueItem)]);
+
+    try {
+      for (const [index, asset] of nextAssets.entries()) {
+        setResizeProgress({
+          completed: index,
+          currentFileName: asset.fileName ?? `Photo ${queueOffset + index + 1}`,
+          total: nextAssets.length,
+        });
+
+        const optimizedAsset = await optimizeIntakeAsset(asset);
+
+        setQueueItems((current) =>
+          updateQueueItem(current, queueOffset + index, {
+            asset: optimizedAsset,
+            status: 'queued',
+            error: null,
+          }),
+        );
+
+        setResizeProgress({
+          completed: index + 1,
+          currentFileName: asset.fileName ?? `Photo ${queueOffset + index + 1}`,
+          total: nextAssets.length,
+        });
+      }
+    } catch (preparationError) {
+      const message =
+        preparationError instanceof Error && preparationError.message.trim().length > 0
+          ? preparationError.message
+          : 'Image preparation failed.';
+
+      setError(message);
+      setQueueItems((current) => current.filter((_item, itemIndex) => itemIndex < queueOffset));
+    } finally {
+      setIsPreparingAssets(false);
+      setResizeProgress({
+        completed: 0,
+        currentFileName: null,
+        total: 0,
+      });
+    }
   }
 
   async function pickImages() {
@@ -57,14 +142,14 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
       quality: 1,
-      selectionLimit: 10,
+      selectionLimit: MAX_INTAKE_IMAGES,
     });
 
     if (result.canceled) {
       return;
     }
 
-    appendAssets(result.assets);
+    await appendAssets(result.assets);
   }
 
   async function captureImage() {
@@ -84,7 +169,7 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
       return;
     }
 
-    appendAssets(result.assets);
+    await appendAssets(result.assets);
   }
 
   function removeAsset(uri: string) {
@@ -94,9 +179,20 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
   function resetIntake() {
     setError(null);
     setQueueItems([]);
+    setIsPreparingAssets(false);
+    setResizeProgress({
+      completed: 0,
+      currentFileName: null,
+      total: 0,
+    });
   }
 
   async function submit() {
+    if (isPreparingAssets) {
+      setError('Wait for image optimization to finish before creating the product.');
+      return null;
+    }
+
     if (assets.length === 0) {
       setError('Choose at least one image to start a new product.');
       return null;
@@ -152,6 +248,8 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
     setSelectedProductTabId,
     selectedProductTab,
     isSubmitting,
+    isPreparingAssets,
+    resizeProgress,
     error,
     progress,
     hasFailedUploads,
@@ -163,10 +261,10 @@ export function useProductIntake(token: string, productTabs: ProductTab[]) {
   };
 }
 
-function appendQueueItem(asset: IntakeAsset): IntakeQueueItem {
+function createResizingQueueItem(asset: IntakeAsset): IntakeQueueItem {
   return {
     asset,
-    status: 'queued',
+    status: 'resizing',
     error: null,
   };
 }
@@ -174,7 +272,7 @@ function appendQueueItem(asset: IntakeAsset): IntakeQueueItem {
 function updateQueueItem(
   items: IntakeQueueItem[],
   index: number,
-  patch: Partial<Pick<IntakeQueueItem, 'status' | 'error'>>,
+  patch: Partial<Pick<IntakeQueueItem, 'asset' | 'status' | 'error'>>,
 ) {
   return items.map((item, itemIndex) => {
     if (itemIndex !== index) {

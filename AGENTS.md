@@ -149,7 +149,7 @@ Completed in the app:
 - Native splash and animated intro splash branded with the current ResellerIO backend logo
 - Inline page-header branding with the backend logo on the same row as each main screen title
 - Home dashboard tab with account summary, product and inquiry metrics, tracked transfer counts, quota visibility, quick actions, and recent products
-- Auth with secure persistence and bearer token restore
+- Auth with secure persistence, bearer token restore, and seller sign-up validation aligned to the backend 12-72 character password requirement
 - Products list, tabs, search, pagination, and detail
 - Products hidden search modal with active-query summary and normalized search state
 - Clickable external-link actions for storefront URLs, inquiry source paths, marketplace live URLs, and image URLs
@@ -161,7 +161,7 @@ Completed in the app:
 - Storefront Gallery selection now uses a top-right circle toggle instead of add/remove buttons
 - Storefront Gallery now keeps images in one stable list and places the selection toggle directly over the image preview
 - Inquiries inbox now uses compact rows with full name, contact, and received-at time, opening a detail dialog for message review and delete
-- Upload-first product intake with signed uploads and finalize
+- Upload-first product intake now resizes picked images to 1200px-wide JPEGs at 0.7 compression before signed upload, with a visible mobile resize-progress state before the upload queue starts
 - Product review editing and lifecycle actions
 - Original/background-removed image preview, full-screen media lightbox, and lifestyle preview actions
 - Lifestyle generation controls, regenerate-all and regenerate-by-scene actions, approval/delete actions, storefront image selection/order, and storefront publish/share flows

@@ -106,6 +106,8 @@ Primary seller journey:
 - [x] 2026-04-08 Step 83: Sanitized Product detail processing errors on mobile so raw backend `Ecto.Changeset` and similar internal failure dumps collapse into seller-facing retry guidance, with helper and screen regression tests.
 - [x] 2026-04-10 Step 84: Migrated public mobile API identifiers from numeric assumptions to ULID string handling across typed models, route params, product and inquiry actions, storefront page actions, transfer history caches, and test fixtures after the backend contract update.
 - [x] 2026-04-10 Step 85: Finished a follow-up security and warning pass by removing the remaining Home test warning, blocking credential-bearing external URLs, making API redirects fail closed, and adding regression tests plus documentation for those protections.
+- [x] 2026-04-12 Step 86: Optimized New Product intake by resizing picked images to a 1200px-wide JPEG at 0.7 compression before signed upload, added a visible resize-progress bar and preparing state, aligned picker limits to the real 3-image cap, and expanded intake plus shared-UI unit coverage.
+- [x] 2026-04-12 Step 87: Fixed mobile seller registration to match the backend password rule by enforcing a 12-72 character password client-side, correcting sign-up copy, and adding validation plus screen regression tests.
 
 ## Current Web Functionality Analyzed
 
@@ -242,6 +244,7 @@ Mirror the current web `/app/products/new` flow.
 - [x] `POST /api/v1/products/:id/finalize_uploads`
 - [x] Redirect user into Product Detail after finalize
 - [x] Show upload progress and actionable failure states per file
+- [x] Resize picked images before upload and show resize progress on mobile
 
 Acceptance:
 

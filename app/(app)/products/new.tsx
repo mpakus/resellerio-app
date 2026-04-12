@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 
-import { BrandedTitle, Button, InlineError, Screen } from '@/src/components/ui';
+import { BrandedTitle, Button, InlineError, ProgressBar, Screen } from '@/src/components/ui';
 import { useAuth } from '@/src/lib/auth/auth-provider';
 import { useProductsOverview } from '@/src/features/products/use-products-overview';
 import { useProductIntake } from '@/src/features/products/use-product-intake';
@@ -16,6 +16,8 @@ export default function NewProductScreen() {
     selectedProductTabId,
     setSelectedProductTabId,
     isSubmitting,
+    isPreparingAssets,
+    resizeProgress,
     error,
     progress,
     hasFailedUploads,
@@ -26,9 +28,15 @@ export default function NewProductScreen() {
     submit,
   } = useProductIntake(session.token, productTabs);
   const totalAssets = queueItems.length;
-  const uploadSummaryLabel = isSubmitting
-    ? `Uploading ${progress.uploaded + progress.uploading} of ${totalAssets}`
-    : `${totalAssets} selected · ${progress.uploaded} uploaded · ${progress.failed} failed`;
+  const uploadSummaryLabel = isPreparingAssets
+    ? `Optimizing ${resizeProgress.completed} of ${resizeProgress.total}`
+    : isSubmitting
+      ? `Uploading ${progress.uploaded + progress.uploading} of ${totalAssets}`
+      : `${totalAssets} selected · ${progress.uploaded} uploaded · ${progress.failed} failed`;
+  const isBusy = isPreparingAssets || isSubmitting;
+  const resizeBarProgress =
+    resizeProgress.total > 0 ? resizeProgress.completed / resizeProgress.total : 0;
+  const resizeCurrentFileName = resizeProgress.currentFileName?.trim() || 'selected image';
 
   async function handleSubmit() {
     const product = await submit();
@@ -67,7 +75,7 @@ export default function NewProductScreen() {
             <View style={{ flex: 1 }}>
               <Button
                 label="Pick Photos"
-                disabled={isSubmitting}
+                disabled={isBusy}
                 onPress={() => {
                   void pickImages();
                 }}
@@ -77,7 +85,7 @@ export default function NewProductScreen() {
               <Button
                 label="Use Camera"
                 kind="secondary"
-                disabled={isSubmitting}
+                disabled={isBusy}
                 onPress={() => {
                   void captureImage();
                 }}
@@ -85,10 +93,34 @@ export default function NewProductScreen() {
             </View>
           </View>
           <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
-            Up to 3 images. We use image width, height, and byte size from the picker metadata for
-            upload finalization.
+            Up to 3 images. We resize each photo before upload and use the optimized width,
+            height, and byte size for upload finalization.
           </Text>
         </View>
+
+        {isPreparingAssets ? (
+          <View
+            style={{
+              gap: 10,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.card,
+              padding: 18,
+            }}
+          >
+            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.1 }}>
+              IMAGE OPTIMIZATION
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>
+              Resizing photos before upload
+            </Text>
+            <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
+              {`Preparing ${resizeCurrentFileName} for a faster upload. ${resizeProgress.completed} of ${resizeProgress.total} finished.`}
+            </Text>
+            <ProgressBar progress={resizeBarProgress} />
+          </View>
+        ) : null}
 
         {totalAssets > 0 ? (
           <View
@@ -110,7 +142,9 @@ export default function NewProductScreen() {
             <Text style={{ color: colors.mutedText, fontSize: 14, lineHeight: 22 }}>
               {hasFailedUploads
                 ? 'A failed file can be retried with the same selected photos, or you can start over with a fresh queue.'
-                : 'Uploads run in order so we can finalize the product as soon as every original image reaches storage.'}
+                : isPreparingAssets
+                  ? 'Each selected photo is resized to a lighter JPEG before upload starts so the queue finishes faster on mobile connections.'
+                  : 'Uploads run in order so we can finalize the product as soon as every original image reaches storage.'}
             </Text>
           </View>
         ) : null}
@@ -123,6 +157,7 @@ export default function NewProductScreen() {
             <Button
               label="No Tab"
               kind={selectedProductTabId === null ? 'primary' : 'secondary'}
+              disabled={isBusy}
               onPress={() => {
                 setSelectedProductTabId(null);
               }}
@@ -132,6 +167,7 @@ export default function NewProductScreen() {
                 key={tab.id}
                 label={tab.name}
                 kind={selectedProductTabId === tab.id ? 'primary' : 'secondary'}
+                disabled={isBusy}
                 onPress={() => {
                   setSelectedProductTabId(tab.id);
                 }}
@@ -225,7 +261,7 @@ export default function NewProductScreen() {
               <Button
                 label="Remove"
                 kind="secondary"
-                disabled={isSubmitting}
+                disabled={isBusy}
                 onPress={() => {
                   removeAsset(item.asset.uri);
                 }}
@@ -239,6 +275,7 @@ export default function NewProductScreen() {
             <Button
               label={hasFailedUploads ? 'Start over' : 'Back'}
               kind="secondary"
+              disabled={isBusy}
               onPress={() => {
                 if (hasFailedUploads) {
                   resetIntake();
@@ -252,13 +289,15 @@ export default function NewProductScreen() {
           <View style={{ flex: 1 }}>
             <Button
               label={
-                isSubmitting
+                isPreparingAssets
+                  ? `Optimizing ${resizeProgress.completed}/${Math.max(resizeProgress.total, 1)}`
+                  : isSubmitting
                   ? `Uploading ${progress.uploaded + progress.uploading}/${Math.max(totalAssets, 1)}`
                   : hasFailedUploads
                     ? 'Retry upload'
                     : 'Create'
               }
-              disabled={isSubmitting}
+              disabled={isBusy}
               onPress={() => {
                 void handleSubmit();
               }}
@@ -270,8 +309,10 @@ export default function NewProductScreen() {
   );
 }
 
-function statusLabel(status: 'queued' | 'uploading' | 'uploaded' | 'failed') {
+function statusLabel(status: 'resizing' | 'queued' | 'uploading' | 'uploaded' | 'failed') {
   switch (status) {
+    case 'resizing':
+      return 'Resizing';
     case 'uploading':
       return 'Uploading';
     case 'uploaded':
@@ -284,8 +325,10 @@ function statusLabel(status: 'queued' | 'uploading' | 'uploaded' | 'failed') {
   }
 }
 
-function statusBackgroundColor(status: 'queued' | 'uploading' | 'uploaded' | 'failed') {
+function statusBackgroundColor(status: 'resizing' | 'queued' | 'uploading' | 'uploaded' | 'failed') {
   switch (status) {
+    case 'resizing':
+      return '#fff2e7';
     case 'uploading':
       return '#fff3da';
     case 'uploaded':
@@ -298,8 +341,10 @@ function statusBackgroundColor(status: 'queued' | 'uploading' | 'uploaded' | 'fa
   }
 }
 
-function statusTextColor(status: 'queued' | 'uploading' | 'uploaded' | 'failed') {
+function statusTextColor(status: 'resizing' | 'queued' | 'uploading' | 'uploaded' | 'failed') {
   switch (status) {
+    case 'resizing':
+      return colors.accent;
     case 'uploading':
       return '#875b00';
     case 'uploaded':

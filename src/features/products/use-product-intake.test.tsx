@@ -1,7 +1,12 @@
-import { act, renderHook } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
 
-import { createAndUploadProduct, ProductUploadError } from '@/src/features/products/intake';
+import {
+  createAndUploadProduct,
+  MAX_INTAKE_IMAGES,
+  optimizeIntakeAsset,
+  ProductUploadError,
+} from '@/src/features/products/intake';
 import { useProductIntake } from '@/src/features/products/use-product-intake';
 
 jest.mock('expo-image-picker', () => ({
@@ -17,6 +22,7 @@ jest.mock('@/src/features/products/intake', () => {
   return {
     ...actual,
     createAndUploadProduct: jest.fn(),
+    optimizeIntakeAsset: jest.fn(),
   };
 });
 
@@ -25,6 +31,17 @@ const mockedRequestMediaLibraryPermissionsAsync = jest.mocked(
 );
 const mockedLaunchImageLibraryAsync = jest.mocked(ImagePicker.launchImageLibraryAsync);
 const mockedCreateAndUploadProduct = jest.mocked(createAndUploadProduct);
+const mockedOptimizeIntakeAsset = jest.mocked(optimizeIntakeAsset);
+type OptimizedAsset = Awaited<ReturnType<typeof optimizeIntakeAsset>>;
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolver) => {
+    resolve = resolver;
+  });
+
+  return { promise, resolve };
+}
 
 describe('useProductIntake', () => {
   const productTabs = [
@@ -64,6 +81,16 @@ describe('useProductIntake', () => {
       canceled: false,
       assets: selectedAssets,
     });
+
+    mockedOptimizeIntakeAsset.mockImplementation(async (asset) => ({
+      ...asset,
+      uri: `${asset.uri.replace('.jpg', '')}-optimized.jpg`,
+      fileName: 'shoe-front-optimized.jpg',
+      fileSize: 64000,
+      height: 900,
+      mimeType: 'image/jpeg',
+      width: 1200,
+    }));
   });
 
   it('queues selected photo-library assets for upload', async () => {
@@ -75,8 +102,105 @@ describe('useProductIntake', () => {
 
     expect(result.current.queueItems).toHaveLength(1);
     expect(result.current.queueItems[0]).toMatchObject({
+      asset: expect.objectContaining({
+        fileName: 'shoe-front-optimized.jpg',
+        fileSize: 64000,
+        height: 900,
+        mimeType: 'image/jpeg',
+        uri: 'file:///shoe-front-optimized.jpg',
+        width: 1200,
+      }),
       status: 'queued',
       error: null,
+    });
+    expect(mockedOptimizeIntakeAsset).toHaveBeenCalledWith(selectedAssets[0]);
+    expect(mockedLaunchImageLibraryAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ selectionLimit: MAX_INTAKE_IMAGES }),
+    );
+  });
+
+  it('tracks resize progress before the upload queue begins', async () => {
+    const resizeDeferred = createDeferred<OptimizedAsset>();
+    mockedOptimizeIntakeAsset.mockImplementation(() => resizeDeferred.promise);
+
+    const { result } = renderHook(() => useProductIntake('token-123', productTabs));
+
+    let pendingPick!: Promise<void>;
+    act(() => {
+      pendingPick = result.current.pickImages();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isPreparingAssets).toBe(true);
+    });
+    expect(result.current.resizeProgress).toEqual({
+      completed: 0,
+      currentFileName: 'shoe-front.jpg',
+      total: 1,
+    });
+    expect(result.current.queueItems[0]).toMatchObject({
+      status: 'resizing',
+    });
+
+    resizeDeferred.resolve({
+      ...selectedAssets[0],
+      uri: 'file:///shoe-front-optimized.jpg',
+      fileName: 'shoe-front-optimized.jpg',
+      fileSize: 64000,
+      height: 900,
+      mimeType: 'image/jpeg',
+      width: 1200,
+    });
+
+    await act(async () => {
+      await pendingPick;
+    });
+
+    expect(result.current.isPreparingAssets).toBe(false);
+    expect(result.current.resizeProgress).toEqual({
+      completed: 0,
+      currentFileName: null,
+      total: 0,
+    });
+    expect(result.current.queueItems[0]?.status).toBe('queued');
+  });
+
+  it('blocks submit while image optimization is still running', async () => {
+    const resizeDeferred = createDeferred<OptimizedAsset>();
+    mockedOptimizeIntakeAsset.mockImplementation(() => resizeDeferred.promise);
+
+    const { result } = renderHook(() => useProductIntake('token-123', productTabs));
+
+    let pendingPick!: Promise<void>;
+    act(() => {
+      pendingPick = result.current.pickImages();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isPreparingAssets).toBe(true);
+    });
+
+    await act(async () => {
+      await expect(result.current.submit()).resolves.toBeNull();
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Wait for image optimization to finish before creating the product.');
+    });
+    expect(mockedCreateAndUploadProduct).not.toHaveBeenCalled();
+
+    resizeDeferred.resolve({
+      ...selectedAssets[0],
+      uri: 'file:///shoe-front-optimized.jpg',
+      fileName: 'shoe-front-optimized.jpg',
+      fileSize: 64000,
+      height: 900,
+      mimeType: 'image/jpeg',
+      width: 1200,
+    });
+
+    await act(async () => {
+      await pendingPick;
     });
   });
 
